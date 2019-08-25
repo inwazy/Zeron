@@ -29,7 +29,8 @@ Code released under the MIT license.
 # TODO
 
 - Scheduled Task
-- Api key and security
+- Api key and Security
+- Logger System
 - More control actions
 - More examples
 
