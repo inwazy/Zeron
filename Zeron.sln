@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29102.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeron", "Zeron\Zeron.csproj", "{4CEBEAD3-2394-43C4-8FDB-DFC17611D61D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeron.Demand", "Zeron.Demand\Zeron.Demand.csproj", "{D19E2BEC-4E52-476D-846D-142D8332DA3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeron.Client", "Zeron.Client\Zeron.Client.csproj", "{FDE0C386-B736-4AE1-BF2A-8F1A8A5AAA24}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4CEBEAD3-2394-43C4-8FDB-DFC17611D61D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CEBEAD3-2394-43C4-8FDB-DFC17611D61D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CEBEAD3-2394-43C4-8FDB-DFC17611D61D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CEBEAD3-2394-43C4-8FDB-DFC17611D61D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D19E2BEC-4E52-476D-846D-142D8332DA3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D19E2BEC-4E52-476D-846D-142D8332DA3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D19E2BEC-4E52-476D-846D-142D8332DA3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D19E2BEC-4E52-476D-846D-142D8332DA3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDE0C386-B736-4AE1-BF2A-8F1A8A5AAA24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDE0C386-B736-4AE1-BF2A-8F1A8A5AAA24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDE0C386-B736-4AE1-BF2A-8F1A8A5AAA24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDE0C386-B736-4AE1-BF2A-8F1A8A5AAA24}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {735F2D05-027A-41A8-B854-CD0A3E477C12}
+	EndGlobalSection
+EndGlobal
