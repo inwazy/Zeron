@@ -1,8 +1,8 @@
-﻿using Zeron.Interfaces;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using System;
 using System.Dynamic;
 using Zeron.Core;
-using System;
+using Zeron.Interfaces;
 
 namespace Zeron.Demand.Services
 {
@@ -24,7 +24,8 @@ namespace Zeron.Demand.Services
 
             response.success = true;
             response.machine_name = Environment.MachineName;
-            response.os_version = Environment.OSVersion;
+            response.os_version = Environment.OSVersion.ToString();
+            response.user_name = Environment.UserName;
 
             return JsonConvert.SerializeObject(response);
         }
