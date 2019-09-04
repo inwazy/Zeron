@@ -3,9 +3,9 @@
 namespace Zeron.Client.Client.Impls
 {
     /// <summary>
-    /// ServerInfoRequest
+    /// ProcessInfoRequest
     /// </summary>
-    public class ServerInfoRequest : IServicesRequest
+    public class ProcessInfoRequest : IServicesRequest
     {
         // APIName.
         public string APIName { get; }
@@ -17,9 +17,9 @@ namespace Zeron.Client.Client.Impls
         /// ServerInfo
         /// </summary>
         /// <returns>Returns void.</returns>
-        public ServerInfoRequest()
+        public ProcessInfoRequest()
         {
-            APIName = "ServerInfo";
+            APIName = "ProcessInfo";
             APIKey = "";
         }
     }

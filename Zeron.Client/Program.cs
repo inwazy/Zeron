@@ -18,7 +18,20 @@ namespace Zeron.Client
         /// <returns>Returns void.</returns>
         public static void Main(string[] args)
         {
-            object requestParams = new ServerInfoRequest();
+            /*object requestParams = new ServerInfoRequest();
+            string requestMessage = JsonConvert.SerializeObject(requestParams);
+
+            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            {
+                client.SendFrame(requestMessage);
+
+                string message = client.ReceiveFrameString();
+
+                Console.WriteLine("requestSocket : Received '{0}'", message);
+            }*/
+
+            object requestParams = new ProcessInfoRequest();
+
             string requestMessage = JsonConvert.SerializeObject(requestParams);
 
             using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))

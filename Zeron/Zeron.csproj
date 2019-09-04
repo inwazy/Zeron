@@ -69,6 +69,7 @@
     <Compile Include="Interfaces\IImpl.cs" />
     <Compile Include="Interfaces\IServer.cs" />
     <Compile Include="Interfaces\IServices.cs" />
+    <Compile Include="Interfaces\IServicesRequest.cs" />
     <Compile Include="Servers\ConfigServer.cs" />
     <Compile Include="Servers\DeployServer.cs" />
     <Compile Include="Servers\Impls\ConfigImpl.cs" />
