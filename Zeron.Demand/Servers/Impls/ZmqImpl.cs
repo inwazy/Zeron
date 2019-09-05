@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using Zeron.Core;
+using Zeron.Core.Utils;
 using Zeron.Interfaces;
 
 namespace Zeron.Demand.Servers.Impls
@@ -244,6 +245,8 @@ namespace Zeron.Demand.Servers.Impls
 
                     if (serviceAttribute == null || serviceType == null)
                         continue;
+
+                    Encryption.Decrypt(apiKey);
 
                     IServices serviceInstance = Activator.CreateInstance(serviceType) as IServices;
                     string requestMessage = serviceInstance.OnRequest(json);

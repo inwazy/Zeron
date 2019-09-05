@@ -14,7 +14,7 @@ namespace Zeron.Client.Client.Impls
         public string APIKey { get; set; }
 
         /// <summary>
-        /// ServerInfo
+        /// ServerInfoRequest
         /// </summary>
         /// <returns>Returns void.</returns>
         public ServerInfoRequest()

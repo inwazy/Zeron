@@ -18,30 +18,44 @@ namespace Zeron.Client
         /// <returns>Returns void.</returns>
         public static void Main(string[] args)
         {
-            /*object requestParams = new ServerInfoRequest();
-            string requestMessage = JsonConvert.SerializeObject(requestParams);
+            // Core.Utils.Encryption.Encrypt("zeron.testkey");
+            string clientRequestKey = "8TAoVPkmYaphto4LFTCtKw==";
+
+            Console.WriteLine(Core.Utils.Encryption.Decrypt(clientRequestKey) );
+
+            // ServerInfoRequest
+            /*object serverInfoRequestParams = new ServerInfoRequest
+            {
+                APIKey = clientRequestKey
+            };
+
+            string serverInfoRequestMessage = JsonConvert.SerializeObject(serverInfoRequestParams);
 
             using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
             {
-                client.SendFrame(requestMessage);
+                client.SendFrame(serverInfoRequestMessage);
 
                 string message = client.ReceiveFrameString();
 
-                Console.WriteLine("requestSocket : Received '{0}'", message);
-            }*/
-
-            object requestParams = new ProcessInfoRequest();
-
-            string requestMessage = JsonConvert.SerializeObject(requestParams);
-
-            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
-            {
-                client.SendFrame(requestMessage);
-
-                string message = client.ReceiveFrameString();
-
-                Console.WriteLine("requestSocket : Received '{0}'", message);
+                Console.WriteLine("ServerInfoRequest : Received '{0}'", message);
             }
+
+            // ProcessInfoRequest
+            object processInfoRequestParams = new ProcessInfoRequest
+            {
+                APIKey = clientRequestKey
+            };
+
+            string processInfoRequestMessage = JsonConvert.SerializeObject(processInfoRequestParams);
+
+            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            {
+                client.SendFrame(processInfoRequestMessage);
+
+                string message = client.ReceiveFrameString();
+
+                Console.WriteLine("ProcessInfoRequest : Received '{0}'", message);
+            }*/
 
             Console.ReadKey();
         }

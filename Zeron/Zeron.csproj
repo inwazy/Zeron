@@ -65,11 +65,13 @@
     <Compile Include="Core\Base\ConfigurationTable.cs" />
     <Compile Include="Core\Container\ServerIntegrate.cs" />
     <Compile Include="Core\Helper.cs" />
+    <Compile Include="Core\Utils\Encryption.cs" />
     <Compile Include="Core\ZNLogger.cs" />
     <Compile Include="Interfaces\IImpl.cs" />
     <Compile Include="Interfaces\IServer.cs" />
     <Compile Include="Interfaces\IServices.cs" />
     <Compile Include="Interfaces\IServicesRequest.cs" />
+    <Compile Include="Servers\ApplicationServer.cs" />
     <Compile Include="Servers\ConfigServer.cs" />
     <Compile Include="Servers\DeployServer.cs" />
     <Compile Include="Servers\Impls\ConfigImpl.cs" />
@@ -77,9 +79,7 @@
     <Compile Include="Zeron.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Core\Utils\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
