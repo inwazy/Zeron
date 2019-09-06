@@ -58,6 +58,13 @@ namespace Zeron.Demand.Servers
             set;
         }
 
+        // RepApiKey
+        public static string RepApiKey
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// LoadConfig
         /// </summary>
@@ -75,6 +82,7 @@ namespace Zeron.Demand.Servers
 
                 RepSocketEnabled = bool.Parse(aConfig.AppSettings["zmq_rep_enabled"]);
                 RepSocketAddr = aConfig.AppSettings["zmq_rep_addr"];
+                RepApiKey = aConfig.AppSettings["zmq_rep_api_key"];
             }
             catch (Exception e)
             {
@@ -98,7 +106,7 @@ namespace Zeron.Demand.Servers
 
                 if (RepSocketEnabled)
                 {
-                    m_ZmqImpl.PrepareRepAPI();
+                    m_ZmqImpl.PrepareRepAPI(RepApiKey);
                     m_ZmqImpl.PrepareRepSocket(RepSocketAddr);
                 }
             }

@@ -73,6 +73,7 @@ namespace Zeron.Demand
             {
                 // Shared Servers
                 ServerIntegrate.Fork<ConfigServer>();
+                ServerIntegrate.Fork<ApplicationServer>();
                 ServerIntegrate.Fork<DeployServer>();
                 ServerIntegrate.Fork<MailerServer>();
 

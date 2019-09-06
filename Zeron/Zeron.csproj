@@ -43,7 +43,7 @@
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.6.6\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.6.7\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -65,10 +65,13 @@
     <Compile Include="Core\Base\ConfigurationTable.cs" />
     <Compile Include="Core\Container\ServerIntegrate.cs" />
     <Compile Include="Core\Helper.cs" />
+    <Compile Include="Core\Utils\Encryption.cs" />
     <Compile Include="Core\ZNLogger.cs" />
     <Compile Include="Interfaces\IImpl.cs" />
     <Compile Include="Interfaces\IServer.cs" />
     <Compile Include="Interfaces\IServices.cs" />
+    <Compile Include="Interfaces\IServicesRequest.cs" />
+    <Compile Include="Servers\ApplicationServer.cs" />
     <Compile Include="Servers\ConfigServer.cs" />
     <Compile Include="Servers\DeployServer.cs" />
     <Compile Include="Servers\Impls\ConfigImpl.cs" />
@@ -76,9 +79,7 @@
     <Compile Include="Zeron.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Core\Utils\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
