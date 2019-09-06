@@ -53,6 +53,9 @@ namespace Zeron.Demand.Servers.Impls
         // Enable Response trigger.
         private static bool m_EnableResponseProc = false;
 
+        // Client Response Api key.
+        private static string m_ResponsetApiKey = "";
+        
         /// <summary>
         /// Dispose
         /// </summary>
@@ -79,8 +82,9 @@ namespace Zeron.Demand.Servers.Impls
         /// <summary>
         /// PrepareRepAPI
         /// </summary>
+        /// <param name="apiKey"></param>
         /// <returns>Returns void.</returns>
-        public void PrepareRepAPI()
+        public void PrepareRepAPI(string apiKey)
         {
             foreach (Type assemblyType in Assembly.GetExecutingAssembly().GetTypes())
             {
@@ -99,6 +103,8 @@ namespace Zeron.Demand.Servers.Impls
                     m_RepAPITypeResponse.TryAdd(apiName, assemblyType);
                 }
             }
+
+            m_ResponsetApiKey = apiKey;
         }
 
         /// <summary>
@@ -246,7 +252,8 @@ namespace Zeron.Demand.Servers.Impls
                     if (serviceAttribute == null || serviceType == null)
                         continue;
 
-                    Encryption.Decrypt(apiKey);
+                    if (!m_ResponsetApiKey.Contains(Encryption.Decrypt(apiKey)))
+                        continue;
 
                     IServices serviceInstance = Activator.CreateInstance(serviceType) as IServices;
                     string requestMessage = serviceInstance.OnRequest(json);

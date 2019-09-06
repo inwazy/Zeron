@@ -21,10 +21,11 @@ namespace Zeron.Client
             // Core.Utils.Encryption.Encrypt("zeron.testkey");
             string clientRequestKey = "8TAoVPkmYaphto4LFTCtKw==";
 
+            // Test Key
             Console.WriteLine(Core.Utils.Encryption.Decrypt(clientRequestKey) );
 
             // ServerInfoRequest
-            /*object serverInfoRequestParams = new ServerInfoRequest
+            object serverInfoRequestParams = new ServerInfoRequest
             {
                 APIKey = clientRequestKey
             };
@@ -37,6 +38,7 @@ namespace Zeron.Client
 
                 string message = client.ReceiveFrameString();
 
+                Console.WriteLine();
                 Console.WriteLine("ServerInfoRequest : Received '{0}'", message);
             }
 
@@ -54,8 +56,9 @@ namespace Zeron.Client
 
                 string message = client.ReceiveFrameString();
 
+                Console.WriteLine();
                 Console.WriteLine("ProcessInfoRequest : Received '{0}'", message);
-            }*/
+            }
 
             Console.ReadKey();
         }
