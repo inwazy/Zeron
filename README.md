@@ -2,6 +2,8 @@
 
 Zeron is an open source scheduled task application based on the ZMQ protocol and can be easily integrated with other systems. The built-in scripting language makes it easy to customize your own tasks or maintain your PC under Windows.
 
+![GitHub](https://img.shields.io/github/license/jiowcl/MQL-Quotes.svg)
+
 # Environment
 
 - Windows 7 above (recommend)

@@ -12,10 +12,10 @@ namespace Zeron.Core.Container
     public static class ServerIntegrate
     {
         // Signal collection list.
-        private static List<IServer> m_Collection = new List<IServer>();
+        private static readonly List<IServer> m_Collection = new List<IServer>();
 
         // Signal stop wait threading.
-        private static System.Threading.Semaphore m_StopSignal = new System.Threading.Semaphore(0, 20000);
+        private static readonly System.Threading.Semaphore m_StopSignal = new System.Threading.Semaphore(0, 20000);
 
         /// <summary>
         /// Fork

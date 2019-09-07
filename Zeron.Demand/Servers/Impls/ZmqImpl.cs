@@ -39,6 +39,12 @@ namespace Zeron.Demand.Servers.Impls
         private static readonly Semaphore m_PublisherSignal = new Semaphore(0, 20000);
 
         // ConcurrentDictionary Response APIs
+        private static readonly ConcurrentDictionary<string, ServicesSubAttribute> m_SubAPIResponse = new ConcurrentDictionary<string, ServicesSubAttribute>();
+
+        // ConcurrentDictionary Response APIs Type
+        private static readonly ConcurrentDictionary<string, Type> m_SubAPITypeResponse = new ConcurrentDictionary<string, Type>();
+
+        // ConcurrentDictionary Response APIs
         private static readonly ConcurrentDictionary<string, ServicesRepAttribute> m_RepAPIResponse = new ConcurrentDictionary<string, ServicesRepAttribute>();
 
         // ConcurrentDictionary Response APIs Type
@@ -52,6 +58,9 @@ namespace Zeron.Demand.Servers.Impls
 
         // Enable Response trigger.
         private static bool m_EnableResponseProc = false;
+
+        // Client Subscriber Api key.
+        private static string m_SubscriberApiKey = "";
 
         // Client Response Api key.
         private static string m_ResponsetApiKey = "";
@@ -76,7 +85,38 @@ namespace Zeron.Demand.Servers.Impls
 
             m_PublisherSignal.Dispose();
 
+            m_SubAPIResponse.Clear();
+            m_SubAPITypeResponse.Clear();
             m_RepAPIResponse.Clear();
+            m_RepAPITypeResponse.Clear();
+        }
+
+        /// <summary>
+        /// PrepareSubAPI
+        /// </summary>
+        /// <param name="apiKey"></param>
+        /// <returns>Returns void.</returns>
+        public void PrepareSubAPI(string apiKey)
+        {
+            foreach (Type assemblyType in Assembly.GetExecutingAssembly().GetTypes())
+            {
+                if (assemblyType.GetCustomAttributes(typeof(ServicesSubAttribute), true).Length > 0)
+                {
+                    ServicesSubAttribute repAttribute = assemblyType.GetCustomAttribute(typeof(ServicesSubAttribute)) as ServicesSubAttribute;
+                    string apiName = repAttribute.ZmqApiName;
+
+                    if (repAttribute.ZmqApiEnabled == false)
+                        continue;
+
+                    if (apiName == null || apiName == "")
+                        apiName = assemblyType.Name;
+
+                    m_SubAPIResponse.TryAdd(apiName, repAttribute);
+                    m_SubAPITypeResponse.TryAdd(apiName, assemblyType);
+                }
+            }
+
+            m_SubscriberApiKey = apiKey;
         }
 
         /// <summary>
@@ -178,7 +218,6 @@ namespace Zeron.Demand.Servers.Impls
                 while (m_EnablePublisherProc)
                 {
                     m_PublisherSignal.WaitOne();
-
                 }
             }
             catch (Exception e)
@@ -203,11 +242,11 @@ namespace Zeron.Demand.Servers.Impls
                     if (message == null || message == "")
                         continue;
 
-                    using (JsonReader reader = new JsonTextReader(new StringReader(message)))
-                    {
-                        JsonSerializer serializer = new JsonSerializer();
+                    dynamic json = JsonConvert.DeserializeObject<dynamic>(message);
 
-                    }
+
+
+                    Thread.Sleep(300);
                 }
             }
             catch (Exception e)
@@ -224,16 +263,12 @@ namespace Zeron.Demand.Servers.Impls
         private static void ResponseSocketProc(object aArg)
         {
             string message;
-            bool received;
 
             try
             {
                 while (m_EnableResponseProc)
                 {
-                    received = m_ResponseSocket.TryReceiveFrameString(TimeSpan.Zero, out message);
-
-                    if (received != true)
-                        continue;
+                    message = m_ResponseSocket.ReceiveFrameString();
 
                     if (message == null || message == "")
                     {
@@ -250,10 +285,18 @@ namespace Zeron.Demand.Servers.Impls
                     m_RepAPITypeResponse.TryGetValue(apiName, out Type serviceType);
 
                     if (serviceAttribute == null || serviceType == null)
+                    {
+                        m_ResponseSocket.SendFrameEmpty();
+
                         continue;
+                    }
 
                     if (!m_ResponsetApiKey.Contains(Encryption.Decrypt(apiKey)))
+                    {
+                        m_ResponseSocket.SendFrameEmpty();
+
                         continue;
+                    }
 
                     IServices serviceInstance = Activator.CreateInstance(serviceType) as IServices;
                     string requestMessage = serviceInstance.OnRequest(json);

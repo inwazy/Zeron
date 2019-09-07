@@ -58,6 +58,13 @@ namespace Zeron.Demand.Servers
             set;
         }
 
+        // SubApiKey
+        public static string SubApiKey
+        {
+            get;
+            set;
+        }
+
         // RepApiKey
         public static string RepApiKey
         {
@@ -79,6 +86,7 @@ namespace Zeron.Demand.Servers
 
                 SubSocketEnabled = bool.Parse(aConfig.AppSettings["zmq_sub_enabled"]);
                 SubSocketAddr = aConfig.AppSettings["zmq_sub_addr"];
+                SubApiKey = aConfig.AppSettings["zmq_sub_api_key"];
 
                 RepSocketEnabled = bool.Parse(aConfig.AppSettings["zmq_rep_enabled"]);
                 RepSocketAddr = aConfig.AppSettings["zmq_rep_addr"];
@@ -102,7 +110,10 @@ namespace Zeron.Demand.Servers
                     m_ZmqImpl.PreparePubSocket(PubSocketAddr);
 
                 if (SubSocketEnabled)
+                {
+                    m_ZmqImpl.PrepareSubAPI(SubApiKey);
                     m_ZmqImpl.PrepareSubSocket(SubSocketAddr);
+                }
 
                 if (RepSocketEnabled)
                 {
