@@ -84,6 +84,7 @@
     <Compile Include="Servers\Impls\ZmqImpl.cs" />
     <Compile Include="Servers\ZmqServer.cs" />
     <Compile Include="Services\Impls\AutoCalcImpl.cs" />
+    <Compile Include="Services\InstallGit.cs" />
     <Compile Include="Services\ProcessInfo.cs" />
     <Compile Include="Services\ServerInfo.cs" />
   </ItemGroup>

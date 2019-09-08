@@ -53,6 +53,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\Impls\InstallGitRequest.cs" />
     <Compile Include="Client\Impls\ProcessInfoRequest.cs" />
     <Compile Include="Client\Impls\ServerInfoRequest.cs" />
     <Compile Include="Program.cs" />
