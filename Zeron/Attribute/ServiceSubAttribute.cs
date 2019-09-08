@@ -3,9 +3,9 @@
 namespace Zeron.Core
 {
     /// <summary>
-    /// ServicesRepAttribute
+    /// ServicesSubAttribute
     /// </summary>
-    public class ServicesRepAttribute : Attribute
+    public class ServicesSubAttribute : Attribute
     {
         // ZmqApiName
         public string ZmqApiName
@@ -22,10 +22,10 @@ namespace Zeron.Core
         }
 
         /// <summary>
-        /// ServicesRepAttribute
+        /// ServicesSubAttribute
         /// </summary>
         /// <returns>Returns void.</returns>
-        public ServicesRepAttribute()
+        public ServicesSubAttribute()
         {
             ZmqApiEnabled = true;
         }

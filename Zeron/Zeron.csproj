@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="Attribute\ConfigAttribute.cs" />
     <Compile Include="Attribute\ServicesRepAttribute.cs" />
+    <Compile Include="Attribute\ServiceSubAttribute.cs" />
     <Compile Include="Core\Base\ConfigurationTable.cs" />
     <Compile Include="Core\Container\ServerIntegrate.cs" />
     <Compile Include="Core\Helper.cs" />
