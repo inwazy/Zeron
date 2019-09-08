@@ -3,7 +3,6 @@ using NetMQ.Sockets;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Reflection;
 using System.Threading;
 using Zeron.Core;
@@ -13,7 +12,7 @@ using Zeron.Interfaces;
 namespace Zeron.Demand.Servers.Impls
 {
     /// <summary>
-    /// ConfigImpl
+    /// ZmqImpl
     /// </summary>
     internal class ZmqImpl : IImpl
     {
@@ -218,6 +217,8 @@ namespace Zeron.Demand.Servers.Impls
                 while (m_EnablePublisherProc)
                 {
                     m_PublisherSignal.WaitOne();
+
+                    //m_PublisherSocket.SendMoreFrame("").SendFrame("");
                 }
             }
             catch (Exception e)
@@ -233,16 +234,29 @@ namespace Zeron.Demand.Servers.Impls
         /// <returns>Returns void.</returns>
         private static void SubscriberSocketProc(object aArg)
         {
+            string message;
+
             try
             {
                 while (m_EnableSubscriberProc)
                 {
-                    string message = m_SubscriberSocket.ReceiveFrameString();
+                    message = m_SubscriberSocket.ReceiveFrameString();
 
                     if (message == null || message == "")
                         continue;
 
                     dynamic json = JsonConvert.DeserializeObject<dynamic>(message);
+                    string apiName = (string)json["APIName"];
+                    string apiKey = (string)json["APIKey"];
+
+                    m_SubAPIResponse.TryGetValue(apiName, out ServicesSubAttribute serviceAttribute);
+                    m_SubAPITypeResponse.TryGetValue(apiName, out Type serviceType);
+
+                    if (serviceAttribute == null || serviceType == null)
+                        continue;
+
+                    if (!m_SubscriberApiKey.Contains(Encryption.Decrypt(apiKey)))
+                        continue;
 
 
 
@@ -299,9 +313,12 @@ namespace Zeron.Demand.Servers.Impls
                     }
 
                     IServices serviceInstance = Activator.CreateInstance(serviceType) as IServices;
-                    string requestMessage = serviceInstance.OnRequest(json);
+                    string responseMessage = serviceInstance.OnRequest(json);
+                    
+                    m_ResponseSocket.SendFrame(responseMessage);
 
-                    m_ResponseSocket.SendFrame(requestMessage);
+                    if (serviceAttribute.ZmqNotifySubscriber)
+                        serviceInstance.OnNotifySubscriber(json, responseMessage);
                 }
             }
             catch (Exception e)

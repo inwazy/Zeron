@@ -21,6 +21,13 @@ namespace Zeron.Core
             set;
         }
 
+        // ZmqNotifySubscriber
+        public bool ZmqNotifySubscriber
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// ServicesRepAttribute
         /// </summary>

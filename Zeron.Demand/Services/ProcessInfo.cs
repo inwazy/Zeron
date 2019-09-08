@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -7,7 +8,7 @@ using Zeron.Interfaces;
 
 namespace Zeron.Demand.Services
 {
-    [ServicesRep(ZmqApiName = "ProcessInfo", ZmqApiEnabled = true)]
+    [ServicesRep(ZmqApiName = "ProcessInfo", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
 
     /// <summary>
     /// ProcessInfo
@@ -26,29 +27,47 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.processes = null;
 
-            List<dynamic> processLists = new List<dynamic>();
-
-            Process[] processes = Process.GetProcesses();
-
-            foreach (Process process in processes)
+            try
             {
-                dynamic proc = new ExpandoObject();
+                List<dynamic> processLists = new List<dynamic>();
 
-                proc.id = process.Id;
-                proc.process_name = process.ProcessName;
-                proc.machine_name = process.MachineName;
-                proc.main_window_title = process.MainWindowTitle;
+                Process[] processes = Process.GetProcesses();
 
-                processLists.Add(proc);
+                foreach (Process process in processes)
+                {
+                    dynamic proc = new ExpandoObject();
+
+                    proc.id = process.Id;
+                    proc.process_name = process.ProcessName;
+                    proc.machine_name = process.MachineName;
+                    proc.main_window_title = process.MainWindowTitle;
+
+                    processLists.Add(proc);
+                }
+
+                if (processLists.Count > 0)
+                {
+                    response.success = true;
+                    response.processes = processLists;
+                }
             }
-
-            if (processLists.Count > 0)
+            catch (Exception e)
             {
-                response.success = true;
-                response.processes = processLists;
+                ZNLogger.Common.Error(string.Format("ProcessInfo Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
+        }
+
+        /// <summary>
+        /// OnNotifySubscriber
+        /// </summary>
+        /// <param name="aJson"></param>
+        /// <param name="processedMsg"></param>
+        /// <returns>Returns string.</returns>
+        public string OnNotifySubscriber(dynamic aJson, string processedMsg)
+        {
+            return "";
         }
     }
 }

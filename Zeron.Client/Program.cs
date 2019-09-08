@@ -60,6 +60,24 @@ namespace Zeron.Client
                 Console.WriteLine("ProcessInfoRequest : Received '{0}'", message);
             }
 
+            // InstallGitRequest
+            /*object installGitRequestParams = new InstallGitRequest
+            {
+                APIKey = clientRequestKey
+            };
+
+            string installGitRequestMessage = JsonConvert.SerializeObject(installGitRequestParams);
+
+            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            {
+                client.SendFrame(installGitRequestMessage);
+
+                string message = client.ReceiveFrameString();
+
+                Console.WriteLine();
+                Console.WriteLine("InstallGitRequest : Received '{0}'", message);
+            }*/
+
             Console.ReadKey();
         }
     }
