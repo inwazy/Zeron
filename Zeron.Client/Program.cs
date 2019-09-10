@@ -63,7 +63,8 @@ namespace Zeron.Client
             // InstallGitRequest
             /*object installGitRequestParams = new InstallGitRequest
             {
-                APIKey = clientRequestKey
+                APIKey = clientRequestKey,
+                Async = true
             };
 
             string installGitRequestMessage = JsonConvert.SerializeObject(installGitRequestParams);

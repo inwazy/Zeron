@@ -294,6 +294,7 @@ namespace Zeron.Demand.Servers.Impls
                     dynamic json = JsonConvert.DeserializeObject<dynamic>(message);
                     string apiName = (string) json["APIName"];
                     string apiKey = (string) json["APIKey"];
+                    bool asyncTask = (bool) json["Async"];
 
                     m_RepAPIResponse.TryGetValue(apiName, out ServicesRepAttribute serviceAttribute);
                     m_RepAPITypeResponse.TryGetValue(apiName, out Type serviceType);
@@ -313,7 +314,17 @@ namespace Zeron.Demand.Servers.Impls
                     }
 
                     IServices serviceInstance = Activator.CreateInstance(serviceType) as IServices;
-                    string responseMessage = serviceInstance.OnRequest(json);
+
+                    string responseMessage = "";
+
+                    if (asyncTask)
+                    {
+                        responseMessage = serviceInstance.OnRequestAsync(json);
+                    }
+                    else
+                    {
+                        responseMessage = serviceInstance.OnRequest(json);
+                    }
                     
                     m_ResponseSocket.SendFrame(responseMessage);
 

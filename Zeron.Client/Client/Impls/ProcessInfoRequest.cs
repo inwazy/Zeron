@@ -13,6 +13,9 @@ namespace Zeron.Client.Client.Impls
         // APIKey.
         public string APIKey { get; set; }
 
+        // Async.
+        public bool Async { get; set; }
+
         /// <summary>
         /// ProcessInfoRequest
         /// </summary>
@@ -21,6 +24,7 @@ namespace Zeron.Client.Client.Impls
         {
             APIName = "ProcessInfo";
             APIKey = "";
+            Async = false;
         }
     }
 }

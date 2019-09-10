@@ -10,5 +10,8 @@
 
         // APIKey.
         string APIKey { get; set; }
+
+        // Async.
+        bool Async { get; set; }
     }
 }
