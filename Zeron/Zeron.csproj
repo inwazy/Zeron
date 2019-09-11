@@ -66,7 +66,9 @@
     <Compile Include="Core\Base\ConfigurationTable.cs" />
     <Compile Include="Core\Container\ServerIntegrate.cs" />
     <Compile Include="Core\Helper.cs" />
+    <Compile Include="Core\Type\InstallQueuesType.cs" />
     <Compile Include="Core\Utils\Encryption.cs" />
+    <Compile Include="Core\Utils\Md5.cs" />
     <Compile Include="Core\ZNLogger.cs" />
     <Compile Include="Interfaces\IImpl.cs" />
     <Compile Include="Interfaces\IServer.cs" />
@@ -76,6 +78,7 @@
     <Compile Include="Servers\ConfigServer.cs" />
     <Compile Include="Servers\DeployServer.cs" />
     <Compile Include="Servers\Impls\ConfigImpl.cs" />
+    <Compile Include="Servers\InstallServer.cs" />
     <Compile Include="Servers\MailerServer.cs" />
     <Compile Include="Zeron.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

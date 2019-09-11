@@ -5,6 +5,8 @@ using System.Dynamic;
 using System.IO;
 using System.Net;
 using Zeron.Core;
+using Zeron.Core.Type;
+using Zeron.Core.Utils;
 using Zeron.Interfaces;
 using Zeron.Servers;
 
@@ -46,7 +48,7 @@ namespace Zeron.Demand.Services
                     webClient.DownloadFile(new Uri(gitUrl), gitFileSavePath);
                     webClient.Dispose();
 
-                    response.success = Process.Start(gitFileSavePath, "/SILENT");
+                    //response.success = Process.Start(gitFileSavePath, "/SILENT");
                 }
             }
             catch (Exception e)
@@ -85,7 +87,16 @@ namespace Zeron.Demand.Services
                 {
                     webClient.DownloadFileCompleted += (s, e) =>
                     {
-                        Process.Start(gitFileSavePath, "/SILENT");
+                        string installToken = Md5.GenerateBase64(gitFileSavePath);
+
+                        InstallQueuesType queuesType = new InstallQueuesType
+                        {
+                            FilePath = gitFileSavePath,
+                            FileName = gitFileName,
+                            Arguments = "/SILENT"
+                        };
+
+                        InstallServer.AddQueues(installToken, queuesType);
                     };
 
                     webClient.DownloadFileAsync(new Uri(gitUrl), gitFileSavePath);

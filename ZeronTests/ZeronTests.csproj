@@ -57,6 +57,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Core\Utils\EncryptionTests.cs" />
+    <Compile Include="Core\Utils\Md5Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
