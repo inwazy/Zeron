@@ -1,7 +1,5 @@
 language: csharp
-sudo: required
-dotnet: 2.0.0
-mono: none
+solution: Zeron.sln
+
 script:
- - cd "./Zeron"
- - dotnet build
+  - msbuild /p:Configuration=Debug Zeron/Zeron.csproj
