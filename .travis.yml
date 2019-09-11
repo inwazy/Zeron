@@ -1,0 +1,7 @@
+language: csharp
+sudo: required
+dotnet: 2.0.0
+mono: none
+script:
+ - cd "./Zeron"
+ - dotnet build
