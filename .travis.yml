@@ -2,4 +2,4 @@ language: csharp
 solution: Zeron.sln
 
 script:
-  - msbuild /p:Configuration=Debug Zeron/Zeron.csproj
+  - msbuild /p:Configuration=Debug Zeron.sln
