@@ -7,13 +7,19 @@ namespace Zeron.Client.Client.Impls
     /// </summary>
     public class InstallGitRequest : IServicesRequest
     {
-        // APIName.
+        /// <summary>
+        /// APIName
+        /// </summary>
         public string APIName { get; }
 
-        // APIKey.
+        /// <summary>
+        /// APIKey
+        /// </summary>
         public string APIKey { get; set; }
 
-        // Async.
+        /// <summary>
+        /// Async
+        /// </summary>
         public bool Async { get; set; }
 
         /// <summary>

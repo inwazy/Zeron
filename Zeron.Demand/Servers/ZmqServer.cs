@@ -16,56 +16,72 @@ namespace Zeron.Demand.Servers
         // ZmqImpl instance.
         private readonly ZmqImpl m_ZmqImpl = new ZmqImpl();
 
-        // PubSocketEnabled
+        /// <summary>
+        /// PubSocketEnabled
+        /// </summary>
         public static bool PubSocketEnabled
         {
             get;
             set;
         }
 
-        // PubSocketAddr
+        /// <summary>
+        /// PubSocketAddr
+        /// </summary>
         public static string PubSocketAddr
         {
             get;
             set;
         }
 
-        // SubSocketEnabled
+        /// <summary>
+        /// SubSocketEnabled
+        /// </summary>
         public static bool SubSocketEnabled
         {
             get;
             set;
         }
 
-        // SubSocketAddr
+        /// <summary>
+        /// SubSocketAddr
+        /// </summary>
         public static string SubSocketAddr
         {
             get;
             set;
         }
 
-        // RepSocketEnabled
+        /// <summary>
+        /// RepSocketEnabled
+        /// </summary>
         public static bool RepSocketEnabled
         {
             get;
             set;
         }
 
-        // RepSocketAddr
+        /// <summary>
+        /// RepSocketAddr
+        /// </summary>
         public static string RepSocketAddr
         {
             get;
             set;
         }
 
-        // SubApiKey
+        /// <summary>
+        /// SubApiKey
+        /// </summary>
         public static string SubApiKey
         {
             get;
             set;
         }
 
-        // RepApiKey
+        /// <summary>
+        /// RepApiKey
+        /// </summary>
         public static string RepApiKey
         {
             get;

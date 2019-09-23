@@ -37,10 +37,10 @@ namespace Zeron.Demand.Servers.Impls
         // Signal Publisher
         private static readonly Semaphore m_PublisherSignal = new Semaphore(0, 20000);
 
-        // ConcurrentDictionary Response APIs
+        // ConcurrentDictionary Subscriber APIs
         private static readonly ConcurrentDictionary<string, ServicesSubAttribute> m_SubAPIResponse = new ConcurrentDictionary<string, ServicesSubAttribute>();
 
-        // ConcurrentDictionary Response APIs Type
+        // ConcurrentDictionary Subscriber APIs Type
         private static readonly ConcurrentDictionary<string, Type> m_SubAPITypeResponse = new ConcurrentDictionary<string, Type>();
 
         // ConcurrentDictionary Response APIs
@@ -50,13 +50,13 @@ namespace Zeron.Demand.Servers.Impls
         private static readonly ConcurrentDictionary<string, Type> m_RepAPITypeResponse = new ConcurrentDictionary<string, Type>();
 
         // Enable Publisher trigger.
-        private static bool m_EnablePublisherProc = false;
+        private static bool m_EnablePublisherProc = true;
 
         // Enable Subscriber trigger.
-        private static bool m_EnableSubscriberProc = false;
+        private static bool m_EnableSubscriberProc = true;
 
         // Enable Response trigger.
-        private static bool m_EnableResponseProc = false;
+        private static bool m_EnableResponseProc = true;
 
         // Client Subscriber Api key.
         private static string m_SubscriberApiKey = "";
@@ -70,10 +70,6 @@ namespace Zeron.Demand.Servers.Impls
         /// <returns>Returns void.</returns>
         public void Dispose()
         {
-            m_EnablePublisherProc = false;
-            m_EnableSubscriberProc = false;
-            m_EnableResponseProc = false;
-
             m_PublisherThread.Abort();
             m_SubscriberThread.Abort();
             m_ResponseThread.Abort();
@@ -160,8 +156,6 @@ namespace Zeron.Demand.Servers.Impls
             m_PublisherSocket.Options.SendHighWatermark = 1000;
             m_PublisherSocket.Bind(addr);
 
-            m_EnablePublisherProc = true;
-
             m_PublisherThread.IsBackground = true;
             m_PublisherThread.Start();
         }
@@ -181,8 +175,6 @@ namespace Zeron.Demand.Servers.Impls
             m_SubscriberSocket.Connect(addr);
             m_SubscriberSocket.Subscribe("");
 
-            m_EnableSubscriberProc = true;
-
             m_SubscriberThread.IsBackground = true;
             m_SubscriberThread.Start();
         }
@@ -198,8 +190,6 @@ namespace Zeron.Demand.Servers.Impls
                 return;
 
             m_ResponseSocket.Bind(addr);
-
-            m_EnableResponseProc = true;
 
             m_ResponseThread.IsBackground = true;
             m_ResponseThread.Start();

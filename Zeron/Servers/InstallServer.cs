@@ -27,7 +27,7 @@ namespace Zeron.Servers
         private static readonly ConcurrentQueue<Tuple<string, InstallQueuesType>> m_InstallQueues = new ConcurrentQueue<Tuple<string, InstallQueuesType>>();
 
         // Enable Queues trigger.
-        private static bool m_EnableQueuesProc = false;
+        private static bool m_EnableQueuesProc = true;
 
         /// <summary>
         /// LoadConfig
@@ -54,8 +54,6 @@ namespace Zeron.Servers
         {
             try
             {
-                m_EnableQueuesProc = true;
-
                 m_QueuesThread.IsBackground = true;
                 m_QueuesThread.Start();
             }

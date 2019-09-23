@@ -5,21 +5,27 @@
     /// </summary>
     public class InstallQueuesType
     {
-        // FileName
+        /// <summary>
+        /// FileName
+        /// </summary>
         public string FileName
         {
             get;
             set;
         }
 
-        // FilePath
+        /// <summary>
+        /// FilePath
+        /// </summary>
         public string FilePath
         {
             get;
             set;
         }
 
-        // Arguments
+        /// <summary>
+        /// Arguments
+        /// </summary>
         public string Arguments
         {
             get;

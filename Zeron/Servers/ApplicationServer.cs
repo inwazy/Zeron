@@ -12,7 +12,9 @@ namespace Zeron.Servers
     /// </summary>
     public class ApplicationServer : ConfigurationTable, IServer
     {
-        // ApiKey
+        /// <summary>
+        /// ApiKey
+        /// </summary>
         public static string ApiKey
         {
             get;
