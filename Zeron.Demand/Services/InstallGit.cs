@@ -48,7 +48,7 @@ namespace Zeron.Demand.Services
                     webClient.DownloadFile(new Uri(gitUrl), gitFileSavePath);
                     webClient.Dispose();
 
-                    //response.success = Process.Start(gitFileSavePath, "/SILENT");
+                    response.success = Process.Start(gitFileSavePath, "/SILENT");
                 }
             }
             catch (Exception e)

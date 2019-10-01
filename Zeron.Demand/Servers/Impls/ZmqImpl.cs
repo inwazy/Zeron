@@ -282,9 +282,9 @@ namespace Zeron.Demand.Servers.Impls
                     }
 
                     dynamic json = JsonConvert.DeserializeObject<dynamic>(message);
-                    string apiName = (string) json["APIName"];
-                    string apiKey = (string) json["APIKey"];
-                    bool asyncTask = (bool) json["Async"];
+                    string apiName = Convert.ToString(json["APIName"]);
+                    string apiKey = Convert.ToString(json["APIKey"]);
+                    bool asyncTask = Convert.ToBoolean(json["Async"]);
 
                     m_RepAPIResponse.TryGetValue(apiName, out ServicesRepAttribute serviceAttribute);
                     m_RepAPITypeResponse.TryGetValue(apiName, out Type serviceType);
