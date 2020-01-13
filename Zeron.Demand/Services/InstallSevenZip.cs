@@ -12,12 +12,12 @@ using Zeron.Servers;
 
 namespace Zeron.Demand.Services
 {
-    [ServicesRep(ZmqApiName = "InstallGit", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "InstallSevenZip", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
 
     /// <summary>
     /// InstallGit
     /// </summary>
-    internal class InstallGit : IServices
+    internal class InstallSevenZip : IServices
     {
         /// <summary>
         /// OnRequest
@@ -31,29 +31,29 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-64-bit.exe";
-            string gitX86 = "https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-32-bit.exe";
-            string gitUrl = gitX86;
+            string zipX64 = "https://www.7-zip.org/a/7z1900-x64.exe";
+            string zipX86 = "https://www.7-zip.org/a/7z1900.exe";
+            string zipUrl = zipX86;
 
             if (DeployServer.Is64BitEnv)
-                gitUrl = gitX64;
+                zipUrl = zipX64;
 
-            string gitFileName = Path.GetFileName(gitUrl);
-            string gitFileSavePath = Path.Combine(Path.GetTempPath(), gitFileName);
+            string zipFileName = Path.GetFileName(zipUrl);
+            string zipFileSavePath = Path.Combine(Path.GetTempPath(), zipFileName);
 
             try
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.DownloadFile(new Uri(gitUrl), gitFileSavePath);
+                    webClient.DownloadFile(new Uri(zipUrl), zipFileSavePath);
                     webClient.Dispose();
 
-                    response.success = Process.Start(gitFileSavePath, "/SILENT");
+                    response.success = Process.Start(zipFileSavePath, "/S");
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallGit Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format("InstallSevenZip Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
@@ -71,15 +71,15 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-64-bit.exe";
-            string gitX86 = "https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-32-bit.exe";
-            string gitUrl = gitX86;
+            string zipX64 = "https://www.7-zip.org/a/7z1900-x64.exe";
+            string zipX86 = "https://www.7-zip.org/a/7z1900.exe";
+            string zipUrl = zipX86;
 
             if (DeployServer.Is64BitEnv)
-                gitUrl = gitX64;
+                zipUrl = zipX64;
 
-            string gitFileName = Path.GetFileName(gitUrl);
-            string gitFileSavePath = Path.Combine(Path.GetTempPath(), gitFileName);
+            string zipFileName = Path.GetFileName(zipUrl);
+            string zipFileSavePath = Path.Combine(Path.GetTempPath(), zipFileName);
 
             try
             {
@@ -87,26 +87,26 @@ namespace Zeron.Demand.Services
                 {
                     webClient.DownloadFileCompleted += (s, e) =>
                     {
-                        string installToken = Md5.GenerateBase64(gitFileSavePath);
+                        string installToken = Md5.GenerateBase64(zipFileSavePath);
 
                         InstallQueuesType queuesType = new InstallQueuesType
                         {
-                            FilePath = gitFileSavePath,
-                            FileName = gitFileName,
-                            Arguments = "/SILENT"
+                            FilePath = zipFileSavePath,
+                            FileName = zipFileName,
+                            Arguments = "/S"
                         };
 
                         InstallServer.AddQueues(installToken, queuesType);
                     };
 
-                    webClient.DownloadFileAsync(new Uri(gitUrl), gitFileSavePath);
+                    webClient.DownloadFileAsync(new Uri(zipUrl), zipFileSavePath);
 
                     response.success = true;
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallGit Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format("InstallSevenZip Async Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);

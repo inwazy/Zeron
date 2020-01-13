@@ -7,14 +7,18 @@ namespace Zeron.Core
     /// </summary>
     public class ServicesSubAttribute : Attribute
     {
-        // ZmqApiName
+        /// <summary>
+        /// ZmqApiName
+        /// </summary>
         public string ZmqApiName
         {
             get;
             set;
         }
 
-        // ZmqApiEnabled
+        /// <summary>
+        /// ZmqApiEnabled
+        /// </summary>
         public bool ZmqApiEnabled
         {
             get;

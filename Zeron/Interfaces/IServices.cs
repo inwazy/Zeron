@@ -13,6 +13,13 @@
         string OnRequest(dynamic aJson);
 
         /// <summary>
+        /// OnRequestAsync
+        /// </summary>
+        /// <param name="aJson"></param>
+        /// <returns>Returns string.</returns>
+        string OnRequestAsync(dynamic aJson);
+
+        /// <summary>
         /// OnNotifySubscriber
         /// </summary>
         /// <param name="aJson"></param>

@@ -39,7 +39,7 @@ namespace Zeron.Servers.Impls
 
                 foreach (Type assemblyType in assembly.GetTypes())
                 {
-                    if (assemblyType.GetCustomAttribute<ConfigAttribute>() == null)
+                    if (assemblyType.GetCustomAttribute<ConfigAttribute>() == null || assemblyType.IsAbstract)
                         continue;
 
                     ConfigurationTable item = Activator.CreateInstance(assemblyType) as ConfigurationTable;

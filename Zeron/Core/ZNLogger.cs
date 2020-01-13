@@ -7,7 +7,9 @@ namespace Zeron.Core
     /// </summary>
     public static class ZNLogger
     {
-        // CommonLog
+        /// <summary>
+        /// Common
+        /// </summary>
         public static Logger Common
         {
             get
@@ -16,7 +18,9 @@ namespace Zeron.Core
             }
         }
 
-        // ErrorLog
+        /// <summary>
+        /// Error
+        /// </summary>
         public static Logger Error
         {
             get
@@ -25,7 +29,9 @@ namespace Zeron.Core
             }
         }
 
-        // NativeErrorLog
+        /// <summary>
+        /// NativeError
+        /// </summary>
         public static Logger NativeError
         {
             get

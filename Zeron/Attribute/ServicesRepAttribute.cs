@@ -7,21 +7,27 @@ namespace Zeron.Core
     /// </summary>
     public class ServicesRepAttribute : Attribute
     {
-        // ZmqApiName
+        /// <summary>
+        /// ZmqApiName
+        /// </summary>
         public string ZmqApiName
         {
             get;
             set;
         }
 
-        // ZmqApiEnabled
+        /// <summary>
+        /// ZmqApiEnabled
+        /// </summary>
         public bool ZmqApiEnabled
         {
             get;
             set;
         }
 
-        // ZmqNotifySubscriber
+        /// <summary>
+        /// ZmqNotifySubscriber
+        /// </summary>
         public bool ZmqNotifySubscriber
         {
             get;

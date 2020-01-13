@@ -5,10 +5,19 @@
     /// </summary>
     public interface IServicesRequest
     {
-        // APIName.
+        /// <summary>
+        /// APIName
+        /// </summary>
         string APIName { get; }
 
-        // APIKey.
+        /// <summary>
+        /// APIKey
+        /// </summary>
         string APIKey { get; set; }
+
+        /// <summary>
+        /// Async
+        /// </summary>
+        bool Async { get; set; }
     }
 }

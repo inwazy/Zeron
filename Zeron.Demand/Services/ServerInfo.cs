@@ -38,6 +38,16 @@ namespace Zeron.Demand.Services
         }
 
         /// <summary>
+        /// OnRequestAsync
+        /// </summary>
+        /// <param name="aJson"></param>
+        /// <returns>Returns string.</returns>
+        public string OnRequestAsync(dynamic aJson)
+        {
+            return "";
+        }
+
+        /// <summary>
         /// OnNotifySubscriber
         /// </summary>
         /// <param name="aJson"></param>

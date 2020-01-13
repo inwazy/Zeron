@@ -3,9 +3,9 @@
 namespace Zeron.Client.Client.Impls
 {
     /// <summary>
-    /// ServerInfoRequest
+    /// InstallKLiteRequest
     /// </summary>
-    public class ServerInfoRequest : IServicesRequest
+    public class InstallKLiteRequest : IServicesRequest
     {
         /// <summary>
         /// APIName
@@ -23,12 +23,12 @@ namespace Zeron.Client.Client.Impls
         public bool Async { get; set; }
 
         /// <summary>
-        /// ServerInfoRequest
+        /// InstallKLiteRequest
         /// </summary>
         /// <returns>Returns void.</returns>
-        public ServerInfoRequest()
+        public InstallKLiteRequest()
         {
-            APIName = "ServerInfo";
+            APIName = "InstallKLite";
             APIKey = "";
             Async = false;
         }

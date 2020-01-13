@@ -75,6 +75,7 @@ namespace Zeron.Demand
                 ServerIntegrate.Fork<ConfigServer>();
                 ServerIntegrate.Fork<ApplicationServer>();
                 ServerIntegrate.Fork<DeployServer>();
+                ServerIntegrate.Fork<InstallServer>();
                 ServerIntegrate.Fork<MailerServer>();
 
                 // Local Servers

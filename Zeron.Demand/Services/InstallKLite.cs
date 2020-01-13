@@ -12,12 +12,12 @@ using Zeron.Servers;
 
 namespace Zeron.Demand.Services
 {
-    [ServicesRep(ZmqApiName = "InstallGit", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "InstallKLite", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
 
     /// <summary>
-    /// InstallGit
+    /// InstallKLite
     /// </summary>
-    internal class InstallGit : IServices
+    internal class InstallKLite : IServices
     {
         /// <summary>
         /// OnRequest
@@ -31,8 +31,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-64-bit.exe";
-            string gitX86 = "https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-32-bit.exe";
+            string gitX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
+            string gitX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
             string gitUrl = gitX86;
 
             if (DeployServer.Is64BitEnv)
@@ -48,12 +48,12 @@ namespace Zeron.Demand.Services
                     webClient.DownloadFile(new Uri(gitUrl), gitFileSavePath);
                     webClient.Dispose();
 
-                    response.success = Process.Start(gitFileSavePath, "/SILENT");
+                    response.success = Process.Start(gitFileSavePath, "/verysilent");
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallGit Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format("InstallKLite Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
@@ -71,8 +71,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-64-bit.exe";
-            string gitX86 = "https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-32-bit.exe";
+            string gitX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
+            string gitX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
             string gitUrl = gitX86;
 
             if (DeployServer.Is64BitEnv)
@@ -93,7 +93,7 @@ namespace Zeron.Demand.Services
                         {
                             FilePath = gitFileSavePath,
                             FileName = gitFileName,
-                            Arguments = "/SILENT"
+                            Arguments = "/verysilent"
                         };
 
                         InstallServer.AddQueues(installToken, queuesType);
@@ -106,7 +106,7 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallGit Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format("InstallKLite Async Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);

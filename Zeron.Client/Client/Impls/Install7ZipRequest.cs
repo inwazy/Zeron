@@ -3,9 +3,9 @@
 namespace Zeron.Client.Client.Impls
 {
     /// <summary>
-    /// ServerInfoRequest
+    /// Install7ZipRequest
     /// </summary>
-    public class ServerInfoRequest : IServicesRequest
+    public class Install7ZipRequest : IServicesRequest
     {
         /// <summary>
         /// APIName
@@ -23,12 +23,12 @@ namespace Zeron.Client.Client.Impls
         public bool Async { get; set; }
 
         /// <summary>
-        /// ServerInfoRequest
+        /// Install7ZipRequest
         /// </summary>
         /// <returns>Returns void.</returns>
-        public ServerInfoRequest()
+        public Install7ZipRequest()
         {
-            APIName = "ServerInfo";
+            APIName = "InstallSevenZip";
             APIKey = "";
             Async = false;
         }

@@ -12,56 +12,72 @@ namespace Zeron.Servers
     /// </summary>
     public class DeployServer : ConfigurationTable, IServer
     {
-        // AppTitle
+        /// <summary>
+        /// AppTitle
+        /// </summary>
         public static string AppTitle
         {
             get;
             set;
         }
 
-        // AppTitle
+        /// <summary>
+        /// AppDebug
+        /// </summary>
         public static bool AppDebug
         {
             get;
             set;
         }
 
-        // ServiceName
+        /// <summary>
+        /// ServiceName
+        /// </summary>
         public static string ServiceName
         {
             get;
             set;
         }
 
-        // ServiceDescription
+        /// <summary>
+        /// ServiceDescription
+        /// </summary>
         public static string ServiceDescription
         {
             get;
             set;
         }
 
-        // ServiceDisplayName
+        /// <summary>
+        /// ServiceDisplayName
+        /// </summary>
         public static string ServiceDisplayName
         {
             get;
             set;
         }
 
-        // ServiceInstanceName
+        /// <summary>
+        /// ServiceInstanceName
+        /// </summary>
         public static string ServiceInstanceName
         {
             get;
             set;
         }
 
-        // IsUserConsoleEnv
+        /// <summary>
+        /// IsConsoleEnv
+        /// </summary>
         public static bool IsConsoleEnv
         {
             get;
             set;
         }
 
-        // Is64BitEnv
+        /// <summary>
+        /// Is64BitEnv
+        /// </summary>
         public static bool Is64BitEnv
         {
             get;
