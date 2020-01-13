@@ -98,6 +98,25 @@ namespace Zeron.Client
                 Console.WriteLine("Install7ZipRequest : Received '{0}'", message);
             }*/
 
+            // InstallKLiteRequest
+            /*object installKLiteRequestParams = new InstallKLiteRequest
+            {
+                APIKey = clientRequestKey,
+                Async = true
+            };
+
+            string installKLiteRequestMessage = JsonConvert.SerializeObject(installKLiteRequestParams);
+
+            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            {
+                client.SendFrame(installKLiteRequestMessage);
+
+                string message = client.ReceiveFrameString();
+
+                Console.WriteLine();
+                Console.WriteLine("InstallKLiteRequest : Received '{0}'", message);
+            }*/
+
             Console.ReadKey();
         }
     }
