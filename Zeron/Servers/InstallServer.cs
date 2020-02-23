@@ -95,7 +95,7 @@ namespace Zeron.Servers
                 installToken = item.Item1;
                 queuesType = item.Item2;
 
-                if (installToken == null || installToken == "")
+                if (installToken == null || installToken.Length == 0)
                     continue;
 
                 if (!File.Exists(queuesType.FilePath))
@@ -122,7 +122,7 @@ namespace Zeron.Servers
         /// <returns>Returns void.</returns>
         public static void AddQueues(string token, InstallQueuesType queuesType)
         {
-            if (token == null || token == "")
+            if (token == null || token.Length == 0)
                 return;
 
             m_InstallQueues.Enqueue(new Tuple<string, InstallQueuesType>(token, queuesType));

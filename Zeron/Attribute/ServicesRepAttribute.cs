@@ -5,6 +5,7 @@ namespace Zeron.Core
     /// <summary>
     /// ServicesRepAttribute
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
     public class ServicesRepAttribute : Attribute
     {
         /// <summary>

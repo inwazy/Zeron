@@ -103,7 +103,7 @@ namespace Zeron.Demand.Servers.Impls
                     if (repAttribute.ZmqApiEnabled == false)
                         continue;
 
-                    if (apiName == null || apiName == "")
+                    if (apiName == null || string.IsNullOrEmpty(apiName))
                         apiName = assemblyType.Name;
 
                     m_SubAPIResponse.TryAdd(apiName, repAttribute);
@@ -131,7 +131,7 @@ namespace Zeron.Demand.Servers.Impls
                     if (repAttribute.ZmqApiEnabled == false)
                         continue;
 
-                    if (apiName == null || apiName == "")
+                    if (apiName == null || string.IsNullOrEmpty(apiName))
                         apiName = assemblyType.Name;
 
                     m_RepAPIResponse.TryAdd(apiName, repAttribute);
@@ -232,7 +232,7 @@ namespace Zeron.Demand.Servers.Impls
                 {
                     message = m_SubscriberSocket.ReceiveFrameString();
 
-                    if (message == null || message == "")
+                    if (message == null || string.IsNullOrEmpty(message))
                         continue;
 
                     dynamic json = JsonConvert.DeserializeObject<dynamic>(message);
@@ -273,8 +273,8 @@ namespace Zeron.Demand.Servers.Impls
                 while (m_EnableResponseProc)
                 {
                     message = m_ResponseSocket.ReceiveFrameString();
-
-                    if (message == null || message == "")
+                    
+                    if (message == null || string.IsNullOrEmpty(message))
                     {
                         m_ResponseSocket.SendFrameEmpty();
 

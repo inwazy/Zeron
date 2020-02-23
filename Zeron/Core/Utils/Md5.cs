@@ -19,7 +19,7 @@ namespace Zeron.Core.Utils
         /// <returns>Returns string.</returns>
         public static string GenerateBase64(string plainText)
         {
-            if (plainText == null || plainText == "")
+            if (plainText == null || plainText.Length == 0)
                 return "";
 
             byte[] byteSource = Encoding.Default.GetBytes(plainText);

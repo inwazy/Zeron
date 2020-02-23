@@ -11,7 +11,7 @@ namespace Zeron.Demand
     /// <summary>
     /// Program
     /// </summary>
-    public class Program
+    public static class Program
     {
         /// <summary>
         /// Main
