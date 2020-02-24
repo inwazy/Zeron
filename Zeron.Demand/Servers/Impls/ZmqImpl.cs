@@ -3,6 +3,7 @@ using NetMQ.Sockets;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Reflection;
 using System.Threading;
 using Zeron.Core;
@@ -213,7 +214,7 @@ namespace Zeron.Demand.Servers.Impls
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 
@@ -255,7 +256,7 @@ namespace Zeron.Demand.Servers.Impls
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 
@@ -324,7 +325,7 @@ namespace Zeron.Demand.Servers.Impls
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
     }

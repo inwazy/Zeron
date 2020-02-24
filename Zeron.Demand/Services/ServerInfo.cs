@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Dynamic;
+using System.Globalization;
 using Zeron.Core;
 using Zeron.Interfaces;
 
@@ -31,7 +32,7 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("ServerInfo Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ServerInfo Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);

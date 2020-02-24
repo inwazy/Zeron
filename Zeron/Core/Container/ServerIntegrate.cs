@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using Zeron.Interfaces;
 
@@ -39,7 +40,7 @@ namespace Zeron.Core.Container
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("ServerIntegrate Fork Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ServerIntegrate Fork Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 
@@ -69,7 +70,7 @@ namespace Zeron.Core.Container
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("ServerIntegrate StopAll Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ServerIntegrate StopAll Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             int finishCount = 0;
@@ -119,7 +120,7 @@ namespace Zeron.Core.Container
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("ServerIntegrate Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ServerIntegrate Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
     }

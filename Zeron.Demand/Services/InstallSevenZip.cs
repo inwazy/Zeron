@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using Zeron.Core;
@@ -53,7 +54,7 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallSevenZip Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallSevenZip Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
@@ -106,7 +107,7 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallSevenZip Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallSevenZip Async Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);

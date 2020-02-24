@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using Zeron.Core;
@@ -42,7 +43,7 @@ namespace Zeron.Servers
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("Config Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "Config Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 
@@ -59,7 +60,7 @@ namespace Zeron.Servers
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallServer Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 
@@ -107,7 +108,7 @@ namespace Zeron.Servers
                 }
                 catch (Exception e)
                 {
-                    ZNLogger.Common.Error(string.Format("installServer QueuesProc Error:{0}\n{1}", e.Message, e.StackTrace));
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer QueuesProc Error:{0}\n{1}", e.Message, e.StackTrace));
                 }
 
                 Thread.Sleep(100);
