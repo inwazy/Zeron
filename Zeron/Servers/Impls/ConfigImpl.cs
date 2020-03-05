@@ -1,5 +1,6 @@
 ﻿using NLog.Internal;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -34,7 +35,7 @@ namespace Zeron.Servers.Impls
 
             foreach (Assembly assembly in assemblies)
             {
-                if (!assembly.FullName.StartsWith("Zeron"))
+                if (!assembly.FullName.StartsWith("Zeron", StringComparison.InvariantCulture))
                     continue;
 
                 foreach (Type assemblyType in assembly.GetTypes())
@@ -53,13 +54,20 @@ namespace Zeron.Servers.Impls
         /// OnChanged
         /// </summary>
         /// <param name="source"></param>
-        /// <param name="e"></param>
+        /// <param name="eventArgs"></param>
         /// <returns>Returns void.</returns>
-        public void OnChanged(object source, FileSystemEventArgs e)
+        public void OnChanged(object source, FileSystemEventArgs eventArgs)
         {
-            System.Configuration.ConfigurationManager.RefreshSection("appSettings");
+            try
+            {
+                System.Configuration.ConfigurationManager.RefreshSection("appSettings");
 
-            PrepareObjects();
+                PrepareObjects();
+            }
+            catch (Exception e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ConfigImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
         }
     }
 }

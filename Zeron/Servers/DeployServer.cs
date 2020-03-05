@@ -92,6 +92,11 @@ namespace Zeron.Servers
         /// <returns>Returns void.</returns>
         public override void LoadConfig(ConfigurationManager aConfig)
         {
+            if (aConfig == null)
+            {
+                return;
+            }
+
             try
             {
                 AppTitle = aConfig.AppSettings["deploy_app_title"];

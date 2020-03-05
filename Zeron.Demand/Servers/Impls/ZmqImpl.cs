@@ -209,6 +209,7 @@ namespace Zeron.Demand.Servers.Impls
                 {
                     m_PublisherSignal.WaitOne();
 
+                    // TODO
                     //m_PublisherSocket.SendMoreFrame("").SendFrame("");
                 }
             }
@@ -227,9 +228,9 @@ namespace Zeron.Demand.Servers.Impls
         {
             string message;
 
-            try
+            while (m_EnableSubscriberProc)
             {
-                while (m_EnableSubscriberProc)
+                try
                 {
                     message = m_SubscriberSocket.ReceiveFrameString();
 
@@ -249,14 +250,14 @@ namespace Zeron.Demand.Servers.Impls
                     if (!m_SubscriberApiKey.Contains(Encryption.Decrypt(apiKey)))
                         continue;
 
-
+                    // TODO
 
                     Thread.Sleep(300);
                 }
-            }
-            catch (Exception e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                catch (Exception e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
             }
         }
 
@@ -269,12 +270,12 @@ namespace Zeron.Demand.Servers.Impls
         {
             string message;
 
-            try
+            while (m_EnableResponseProc)
             {
-                while (m_EnableResponseProc)
+                try
                 {
                     message = m_ResponseSocket.ReceiveFrameString();
-                    
+
                     if (message == null || string.IsNullOrEmpty(message))
                     {
                         m_ResponseSocket.SendFrameEmpty();
@@ -316,16 +317,16 @@ namespace Zeron.Demand.Servers.Impls
                     {
                         responseMessage = serviceInstance.OnRequest(json);
                     }
-                    
+
                     m_ResponseSocket.SendFrame(responseMessage);
 
                     if (serviceAttribute.ZmqNotifySubscriber)
                         serviceInstance.OnNotifySubscriber(json, responseMessage);
                 }
-            }
-            catch (Exception e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                catch (Exception e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
             }
         }
     }

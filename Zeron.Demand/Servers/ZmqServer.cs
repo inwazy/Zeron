@@ -96,6 +96,11 @@ namespace Zeron.Demand.Servers
         /// <returns>Returns void.</returns>
         public override void LoadConfig(ConfigurationManager aConfig)
         {
+            if (aConfig == null)
+            {
+                return;
+            }
+
             try
             {
                 PubSocketEnabled = bool.Parse(aConfig.AppSettings["zmq_pub_enabled"]);

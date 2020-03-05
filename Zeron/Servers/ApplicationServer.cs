@@ -29,6 +29,11 @@ namespace Zeron.Servers
         /// <returns>Returns void.</returns>
         public override void LoadConfig(ConfigurationManager aConfig)
         {
+            if (aConfig == null)
+            {
+                return;
+            }
+
             try
             {
                 ApiKey = aConfig.AppSettings["app_api_key"];
