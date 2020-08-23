@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -19,13 +20,32 @@ namespace Zeron.Core.Utils
         /// <returns>Returns string.</returns>
         public static string GenerateBase64(string plainText)
         {
+            string result = "";
+
             if (plainText == null || plainText.Length == 0)
-                return "";
+                return result;
 
-            byte[] byteSource = Encoding.Default.GetBytes(plainText);
-            byte[] byteMD5 = m_MD5Hasher.ComputeHash(byteSource);
+            try
+            {
+                byte[] byteSource = Encoding.Default.GetBytes(plainText);
+                byte[] byteMD5 = m_MD5Hasher.ComputeHash(byteSource);
 
-            return Convert.ToBase64String(byteMD5);
+                result = Convert.ToBase64String(byteMD5);
+            }
+            catch (ArgumentNullException e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "GenerateBase64 Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
+            catch (EncoderFallbackException e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "GenerateBase64 Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
+            catch (ObjectDisposedException e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "GenerateBase64 Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
+
+            return result;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using NLog.Internal;
 using System;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -58,7 +59,11 @@ namespace Zeron.Servers
                 m_QueuesThread.IsBackground = true;
                 m_QueuesThread.Start();
             }
-            catch (Exception e)
+            catch (ThreadStateException e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
+            catch (OutOfMemoryException e)
             {
                 ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer Error:{0}\n{1}", e.Message, e.StackTrace));
             }
@@ -106,7 +111,15 @@ namespace Zeron.Servers
                 {
                     Process.Start(queuesType.FilePath, queuesType.Arguments);
                 }
-                catch (Exception e)
+                catch (InvalidOperationException e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer QueuesProc Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
+                catch (Win32Exception e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer QueuesProc Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
+                catch (FileNotFoundException e)
                 {
                     ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer QueuesProc Error:{0}\n{1}", e.Message, e.StackTrace));
                 }

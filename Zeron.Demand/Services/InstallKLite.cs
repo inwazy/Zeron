@@ -32,8 +32,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
-            string gitX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
+            string gitX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1570_Mega.exe";
+            string gitX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1570_Mega.exe";
             string gitUrl = gitX86;
 
             if (DeployServer.Is64BitEnv)
@@ -72,8 +72,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
-            string gitX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
+            string gitX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1570_Mega.exe";
+            string gitX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1570_Mega.exe";
             string gitUrl = gitX86;
 
             if (DeployServer.Is64BitEnv)
