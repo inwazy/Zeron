@@ -13,12 +13,12 @@ using Zeron.Servers;
 
 namespace Zeron.Demand.Services
 {
-    [ServicesRep(ZmqApiName = "InstallKLite", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "InstallCCleaner", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
 
     /// <summary>
-    /// InstallKLite
+    /// InstallCCleaner
     /// </summary>
-    internal class InstallKLite : IServices
+    internal class InstallCCleaner : IServices
     {
         /// <summary>
         /// OnRequest
@@ -32,29 +32,29 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string kliteX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1575_Mega.exe";
-            string kliteX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1575_Mega.exe";
-            string kliteUrl = kliteX86;
+            string ccleanerX64 = "https://download.ccleaner.com/ccsetup572.exe";
+            string ccleanerX86 = "https://download.ccleaner.com/ccsetup572.exe";
+            string ccleanerUrl = ccleanerX86;
 
             if (DeployServer.Is64BitEnv)
-                kliteUrl = kliteX64;
+                ccleanerUrl = ccleanerX64;
 
-            string kliteFileName = Path.GetFileName(kliteUrl);
-            string kliteFileSavePath = Path.Combine(Path.GetTempPath(), kliteFileName);
+            string ccleanerFileName = Path.GetFileName(ccleanerUrl);
+            string ccleanerFileSavePath = Path.Combine(Path.GetTempPath(), ccleanerFileName);
 
             try
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.DownloadFile(new Uri(kliteUrl), kliteFileSavePath);
+                    webClient.DownloadFile(new Uri(ccleanerUrl), ccleanerFileSavePath);
                     webClient.Dispose();
 
-                    response.success = Process.Start(kliteFileSavePath, "/verysilent");
+                    response.success = Process.Start(ccleanerFileSavePath, "/S");
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallKLite Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallCCleaner Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
@@ -72,15 +72,15 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string kliteX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1570_Mega.exe";
-            string kliteX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1570_Mega.exe";
-            string kliteUrl = kliteX86;
+            string ccleanerX64 = "https://download.ccleaner.com/ccsetup572.exe";
+            string ccleanerX86 = "https://download.ccleaner.com/ccsetup572.exe";
+            string ccleanerUrl = ccleanerX86;
 
             if (DeployServer.Is64BitEnv)
-                kliteUrl = kliteX64;
+                ccleanerUrl = ccleanerX64;
 
-            string kliteFileName = Path.GetFileName(kliteUrl);
-            string kliteFileSavePath = Path.Combine(Path.GetTempPath(), kliteFileName);
+            string ccleanerFileName = Path.GetFileName(ccleanerUrl);
+            string ccleanerFileSavePath = Path.Combine(Path.GetTempPath(), ccleanerFileName);
 
             try
             {
@@ -88,26 +88,26 @@ namespace Zeron.Demand.Services
                 {
                     webClient.DownloadFileCompleted += (s, e) =>
                     {
-                        string installToken = Md5.GenerateBase64(kliteFileSavePath);
+                        string installToken = Md5.GenerateBase64(ccleanerFileSavePath);
 
                         InstallQueuesType queuesType = new InstallQueuesType
                         {
-                            FilePath = kliteFileSavePath,
-                            FileName = kliteFileName,
-                            Arguments = "/verysilent"
+                            FilePath = ccleanerFileSavePath,
+                            FileName = ccleanerFileName,
+                            Arguments = "/S"
                         };
 
                         InstallServer.AddQueues(installToken, queuesType);
                     };
 
-                    webClient.DownloadFileAsync(new Uri(kliteUrl), kliteFileSavePath);
+                    webClient.DownloadFileAsync(new Uri(ccleanerUrl), ccleanerFileSavePath);
 
                     response.success = true;
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallKLite Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallCCleaner Async Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
