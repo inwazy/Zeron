@@ -61,7 +61,7 @@ namespace Zeron.Client
             }
 
             // InstallCCleanerRequest
-            object installCCleanerRequestParams = new InstallCCleanerRequest
+            /*object installCCleanerRequestParams = new InstallCCleanerRequest
             {
                 APIKey = clientRequestKey,
                 Async = true
@@ -77,7 +77,7 @@ namespace Zeron.Client
 
                 Console.WriteLine();
                 Console.WriteLine("InstallCCleanerRequest : Received '{0}'", message);
-            }
+            }*/
 
             // InstallGitRequest
             /*object installGitRequestParams = new InstallGitRequest

@@ -32,8 +32,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string ccleanerX64 = "https://download.ccleaner.com/ccsetup572.exe";
-            string ccleanerX86 = "https://download.ccleaner.com/ccsetup572.exe";
+            string ccleanerX64 = "https://download.ccleaner.com/ccsetup574.exe";
+            string ccleanerX86 = "https://download.ccleaner.com/ccsetup574.exe";
             string ccleanerUrl = ccleanerX86;
 
             if (DeployServer.Is64BitEnv)
@@ -72,8 +72,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string ccleanerX64 = "https://download.ccleaner.com/ccsetup572.exe";
-            string ccleanerX86 = "https://download.ccleaner.com/ccsetup572.exe";
+            string ccleanerX64 = "https://download.ccleaner.com/ccsetup574.exe";
+            string ccleanerX86 = "https://download.ccleaner.com/ccsetup574.exe";
             string ccleanerUrl = ccleanerX86;
 
             if (DeployServer.Is64BitEnv)
