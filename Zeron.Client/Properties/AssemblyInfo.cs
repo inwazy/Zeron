@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Inwazy Technology")]
 [assembly: AssemblyProduct("Zeron.Client")]
-[assembly: AssemblyCopyright("Copyright © 2020")]
+[assembly: AssemblyCopyright("Copyright © 2021")]
 [assembly: AssemblyTrademark("Ji-Feng Tsai")]
 [assembly: AssemblyCulture("")]
 
