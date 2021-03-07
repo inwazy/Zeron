@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Globalization;
 using Zeron.Core;
 using Zeron.Interfaces;
 
@@ -53,7 +54,7 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("ProcessInfo Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ProcessInfo Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);

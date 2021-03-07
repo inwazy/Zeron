@@ -11,13 +11,13 @@ namespace Zeron.Core.Utils
     public static class Encryption
     {
         // Crypt Password hash.
-        private static readonly string m_CryptPasswordHash = "yyFDdat!@";
+        private const string m_CryptPasswordHash = "yyFDdat!@";
 
         // Crypt Salt key.
-        private static readonly string m_CryptSaltKey = "YRjo1*9!";
+        private const string m_CryptSaltKey = "YRjo1*9!";
 
         // Crypt IV key.
-        private static readonly string m_CryptIVKey = "cdTeAV#$^YiuDamK";
+        private const string m_CryptIVKey = "cdTeAV#$^YiuDamK";
 
         /// <summary>
         /// Encrypt
@@ -27,10 +27,10 @@ namespace Zeron.Core.Utils
         /// <returns>Returns string.</returns>
         public static string Encrypt(string plainText, string iv = "")
         {
-            if (plainText == null || plainText == "")
+            if (plainText == null || plainText.Length == 0)
                 return "";
 
-            if (iv == null || iv == "")
+            if (iv == null || iv.Length == 0)
                 iv = m_CryptIVKey;
 
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
@@ -72,10 +72,10 @@ namespace Zeron.Core.Utils
         /// <returns>Returns string.</returns>
         public static string Decrypt(string cipherText, string iv = "")
         {
-            if (cipherText == null || cipherText == "")
+            if (cipherText == null || cipherText.Length == 0)
                 return "";
 
-            if (iv == null || iv == "")
+            if (iv == null || iv.Length == 0)
                 iv = m_CryptIVKey;
 
             byte[] cipherTextBytes = Convert.FromBase64String(cipherText);
@@ -104,6 +104,7 @@ namespace Zeron.Core.Utils
                 memoryStream.Close();
             }
 
+            decryptor.Dispose();
             symmetricKey.Dispose();
 
             return Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount).TrimEnd("\0".ToCharArray());

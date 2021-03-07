@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using Zeron.Core;
@@ -19,6 +20,12 @@ namespace Zeron.Demand.Services
     /// </summary>
     internal class InstallSevenZip : IServices
     {
+        // K-7-Zip x64 url.
+        const string m_ZipX64 = "https://www.7-zip.org/a/7z1900-x64.exe";
+
+        // K-7-Zip x86 url.
+        const string m_ZipX86 = "https://www.7-zip.org/a/7z1900.exe";
+
         /// <summary>
         /// OnRequest
         /// </summary>
@@ -31,8 +38,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string zipX64 = "https://www.7-zip.org/a/7z1900-x64.exe";
-            string zipX86 = "https://www.7-zip.org/a/7z1900.exe";
+            string zipX64 = m_ZipX64;
+            string zipX86 = m_ZipX86;
             string zipUrl = zipX86;
 
             if (DeployServer.Is64BitEnv)
@@ -53,7 +60,7 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallSevenZip Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallSevenZip Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
@@ -71,8 +78,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string zipX64 = "https://www.7-zip.org/a/7z1900-x64.exe";
-            string zipX86 = "https://www.7-zip.org/a/7z1900.exe";
+            string zipX64 = m_ZipX64;
+            string zipX86 = m_ZipX86;
             string zipUrl = zipX86;
 
             if (DeployServer.Is64BitEnv)
@@ -106,7 +113,7 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallSevenZip Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallSevenZip Async Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);

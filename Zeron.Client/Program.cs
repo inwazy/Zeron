@@ -60,6 +60,44 @@ namespace Zeron.Client
                 Console.WriteLine("ProcessInfoRequest : Received '{0}'", message);
             }
 
+            // InstallCCleanerRequest
+            /*object installCCleanerRequestParams = new InstallCCleanerRequest
+            {
+                APIKey = clientRequestKey,
+                Async = true
+            };
+
+            string installCCleanerRequestMessage = JsonConvert.SerializeObject(installCCleanerRequestParams);
+
+            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            {
+                client.SendFrame(installCCleanerRequestMessage);
+
+                string message = client.ReceiveFrameString();
+
+                Console.WriteLine();
+                Console.WriteLine("InstallCCleanerRequest : Received '{0}'", message);
+            }*/
+
+            // InstallDefragglerRequest
+            /*object installDefragglerRequestParams = new InstallDefragglerRequest
+            {
+                APIKey = clientRequestKey,
+                Async = true
+            };
+
+            string installDefragglerRequestMessage = JsonConvert.SerializeObject(installDefragglerRequestParams);
+
+            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            {
+                client.SendFrame(installDefragglerRequestMessage);
+
+                string message = client.ReceiveFrameString();
+
+                Console.WriteLine();
+                Console.WriteLine("InstallDefragglerRequest : Received '{0}'", message);
+            }*/
+
             // InstallGitRequest
             /*object installGitRequestParams = new InstallGitRequest
             {

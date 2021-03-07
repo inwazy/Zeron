@@ -1,4 +1,4 @@
-# Zeron
+# Zeron.Demand
 
 Zeron is an open source scheduled task application based on the ZMQ protocol and can be easily integrated with other systems. The built-in scripting language makes it easy to customize your own tasks or maintain your PC under Windows.
 
@@ -14,14 +14,6 @@ Zeron is an open source scheduled task application based on the ZMQ protocol and
 - [NetMQ](https://github.com/zeromq/netmq)
 - [NLog](https://github.com/NLog/NLog)
 
-## Features
-
-- Remote PC Control (Based on IP address)
-- Scheduled Task
-- Push the event action for all of the Subscribers
-- Support Scripting Language
-- Easy to Customize
-
 ## How to Build
 
 Building requires [Visual Studio 2019 Community](https://visualstudio.microsoft.com/vs/community/) and test under Windows 10.
@@ -31,14 +23,6 @@ Building requires [Visual Studio 2019 Community](https://visualstudio.microsoft.
 Copyright (c) 2017-2021 Ji-Feng Tsai.
 
 Code released under the MIT license.
-
-## TODO
-
-- Scheduled Task
-- Api key and Security
-- Logger System
-- More control actions
-- More examples
 
 ## Donation
 

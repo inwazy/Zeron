@@ -3,6 +3,7 @@ using NetMQ.Sockets;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Reflection;
 using System.Threading;
 using Zeron.Core;
@@ -103,7 +104,7 @@ namespace Zeron.Demand.Servers.Impls
                     if (repAttribute.ZmqApiEnabled == false)
                         continue;
 
-                    if (apiName == null || apiName == "")
+                    if (apiName == null || string.IsNullOrEmpty(apiName))
                         apiName = assemblyType.Name;
 
                     m_SubAPIResponse.TryAdd(apiName, repAttribute);
@@ -131,7 +132,7 @@ namespace Zeron.Demand.Servers.Impls
                     if (repAttribute.ZmqApiEnabled == false)
                         continue;
 
-                    if (apiName == null || apiName == "")
+                    if (apiName == null || string.IsNullOrEmpty(apiName))
                         apiName = assemblyType.Name;
 
                     m_RepAPIResponse.TryAdd(apiName, repAttribute);
@@ -208,12 +209,13 @@ namespace Zeron.Demand.Servers.Impls
                 {
                     m_PublisherSignal.WaitOne();
 
+                    // TODO
                     //m_PublisherSocket.SendMoreFrame("").SendFrame("");
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 
@@ -226,13 +228,13 @@ namespace Zeron.Demand.Servers.Impls
         {
             string message;
 
-            try
+            while (m_EnableSubscriberProc)
             {
-                while (m_EnableSubscriberProc)
+                try
                 {
                     message = m_SubscriberSocket.ReceiveFrameString();
 
-                    if (message == null || message == "")
+                    if (message == null || string.IsNullOrEmpty(message))
                         continue;
 
                     dynamic json = JsonConvert.DeserializeObject<dynamic>(message);
@@ -248,14 +250,14 @@ namespace Zeron.Demand.Servers.Impls
                     if (!m_SubscriberApiKey.Contains(Encryption.Decrypt(apiKey)))
                         continue;
 
-
+                    // TODO
 
                     Thread.Sleep(300);
                 }
-            }
-            catch (Exception e)
-            {
-                ZNLogger.Common.Error(string.Format("ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                catch (Exception e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
             }
         }
 
@@ -268,13 +270,13 @@ namespace Zeron.Demand.Servers.Impls
         {
             string message;
 
-            try
+            while (m_EnableResponseProc)
             {
-                while (m_EnableResponseProc)
+                try
                 {
                     message = m_ResponseSocket.ReceiveFrameString();
 
-                    if (message == null || message == "")
+                    if (message == null || string.IsNullOrEmpty(message))
                     {
                         m_ResponseSocket.SendFrameEmpty();
 
@@ -315,16 +317,16 @@ namespace Zeron.Demand.Servers.Impls
                     {
                         responseMessage = serviceInstance.OnRequest(json);
                     }
-                    
+
                     m_ResponseSocket.SendFrame(responseMessage);
 
                     if (serviceAttribute.ZmqNotifySubscriber)
                         serviceInstance.OnNotifySubscriber(json, responseMessage);
                 }
-            }
-            catch (Exception e)
-            {
-                ZNLogger.Common.Error(string.Format("ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                catch (Exception e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
             }
         }
     }

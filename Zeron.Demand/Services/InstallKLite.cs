@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using Zeron.Core;
@@ -19,6 +20,12 @@ namespace Zeron.Demand.Services
     /// </summary>
     internal class InstallKLite : IServices
     {
+        // K-Lite x64 url.
+        const string m_KliteX64 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1605_Mega.exe";
+
+        // K-Lite x86 url.
+        const string m_KliteX86 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1605_Mega.exe";
+
         /// <summary>
         /// OnRequest
         /// </summary>
@@ -31,29 +38,29 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
-            string gitX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
-            string gitUrl = gitX86;
+            string kliteX64 = m_KliteX64;
+            string kliteX86 = m_KliteX86;
+            string kliteUrl = kliteX86;
 
             if (DeployServer.Is64BitEnv)
-                gitUrl = gitX64;
+                kliteUrl = kliteX64;
 
-            string gitFileName = Path.GetFileName(gitUrl);
-            string gitFileSavePath = Path.Combine(Path.GetTempPath(), gitFileName);
+            string kliteFileName = Path.GetFileName(kliteUrl);
+            string kliteFileSavePath = Path.Combine(Path.GetTempPath(), kliteFileName);
 
             try
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.DownloadFile(new Uri(gitUrl), gitFileSavePath);
+                    webClient.DownloadFile(new Uri(kliteUrl), kliteFileSavePath);
                     webClient.Dispose();
 
-                    response.success = Process.Start(gitFileSavePath, "/verysilent");
+                    response.success = Process.Start(kliteFileSavePath, "/verysilent");
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallKLite Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallKLite Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
@@ -71,15 +78,15 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
-            string gitX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1532_Mega.exe";
-            string gitUrl = gitX86;
+            string kliteX64 = m_KliteX64;
+            string kliteX86 = m_KliteX86;
+            string kliteUrl = kliteX86;
 
             if (DeployServer.Is64BitEnv)
-                gitUrl = gitX64;
+                kliteUrl = kliteX64;
 
-            string gitFileName = Path.GetFileName(gitUrl);
-            string gitFileSavePath = Path.Combine(Path.GetTempPath(), gitFileName);
+            string kliteFileName = Path.GetFileName(kliteUrl);
+            string kliteFileSavePath = Path.Combine(Path.GetTempPath(), kliteFileName);
 
             try
             {
@@ -87,26 +94,26 @@ namespace Zeron.Demand.Services
                 {
                     webClient.DownloadFileCompleted += (s, e) =>
                     {
-                        string installToken = Md5.GenerateBase64(gitFileSavePath);
+                        string installToken = Md5.GenerateBase64(kliteFileSavePath);
 
                         InstallQueuesType queuesType = new InstallQueuesType
                         {
-                            FilePath = gitFileSavePath,
-                            FileName = gitFileName,
+                            FilePath = kliteFileSavePath,
+                            FileName = kliteFileName,
                             Arguments = "/verysilent"
                         };
 
                         InstallServer.AddQueues(installToken, queuesType);
                     };
 
-                    webClient.DownloadFileAsync(new Uri(gitUrl), gitFileSavePath);
+                    webClient.DownloadFileAsync(new Uri(kliteUrl), kliteFileSavePath);
 
                     response.success = true;
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("InstallKLite Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallKLite Async Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);

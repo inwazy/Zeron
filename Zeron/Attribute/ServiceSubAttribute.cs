@@ -5,6 +5,7 @@ namespace Zeron.Core
     /// <summary>
     /// ServicesSubAttribute
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
     public class ServicesSubAttribute : Attribute
     {
         /// <summary>

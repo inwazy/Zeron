@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Topshelf;
 using Zeron.Core;
 using Zeron.Core.Container;
@@ -11,7 +12,7 @@ namespace Zeron.Demand
     /// <summary>
     /// Program
     /// </summary>
-    public class Program
+    public static class Program
     {
         /// <summary>
         /// Main
@@ -56,7 +57,7 @@ namespace Zeron.Demand
                 x.AfterUninstall(() => Hostloader.AfterUninstall());
             });
 
-            int exitCode = (int)Convert.ChangeType(rc, rc.GetTypeCode());
+            int exitCode = (int)Convert.ChangeType(rc, rc.GetTypeCode(), CultureInfo.InvariantCulture);
 
             Environment.ExitCode = exitCode;
         }
@@ -83,7 +84,7 @@ namespace Zeron.Demand
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("Boot Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "Boot Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return true;

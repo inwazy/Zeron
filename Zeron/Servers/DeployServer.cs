@@ -1,5 +1,6 @@
 ﻿using NLog.Internal;
 using System;
+using System.Globalization;
 using Zeron.Core;
 using Zeron.Core.Base;
 using Zeron.Core.Container;
@@ -91,6 +92,11 @@ namespace Zeron.Servers
         /// <returns>Returns void.</returns>
         public override void LoadConfig(ConfigurationManager aConfig)
         {
+            if (aConfig == null)
+            {
+                return;
+            }
+
             try
             {
                 AppTitle = aConfig.AppSettings["deploy_app_title"];
@@ -103,7 +109,7 @@ namespace Zeron.Servers
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("Config Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "Config Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 
@@ -124,7 +130,7 @@ namespace Zeron.Servers
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format("DeployServer Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "DeployServer Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 

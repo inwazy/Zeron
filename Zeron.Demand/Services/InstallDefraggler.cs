@@ -13,18 +13,18 @@ using Zeron.Servers;
 
 namespace Zeron.Demand.Services
 {
-    [ServicesRep(ZmqApiName = "InstallGit", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "InstallDefraggler", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
 
     /// <summary>
-    /// InstallGit
+    /// InstallDefraggler
     /// </summary>
-    internal class InstallGit : IServices
+    internal class InstallDefraggler : IServices
     {
-        // Git x64 url.
-        const string m_Gitx64 = "https://github.com/git-for-windows/git/releases/download/v2.30.1.windows.1/Git-2.30.1-64-bit.exe";
+        // CCleaner x64 url.
+        const string m_DefragglerX64 = "https://download.ccleaner.com/dfsetup222.exe";
 
-        // Git x86 url.
-        const string m_Gitx86 = "https://github.com/git-for-windows/git/releases/download/v2.30.1.windows.1/Git-2.30.1-32-bit.exe";
+        // CCleaner x86 url.
+        const string m_DefragglerX86 = "https://download.ccleaner.com/dfsetup222.exe";
 
         /// <summary>
         /// OnRequest
@@ -38,29 +38,29 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = m_Gitx64;
-            string gitX86 = m_Gitx86;
-            string gitUrl = gitX86;
+            string defragglerX64 = m_DefragglerX64;
+            string defragglerX86 = m_DefragglerX86;
+            string defragglerUrl = defragglerX86;
 
             if (DeployServer.Is64BitEnv)
-                gitUrl = gitX64;
+                defragglerUrl = defragglerX64;
 
-            string gitFileName = Path.GetFileName(gitUrl);
-            string gitFileSavePath = Path.Combine(Path.GetTempPath(), gitFileName);
+            string defragglerFileName = Path.GetFileName(defragglerUrl);
+            string defragglerFileSavePath = Path.Combine(Path.GetTempPath(), defragglerFileName);
 
             try
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.DownloadFile(new Uri(gitUrl), gitFileSavePath);
+                    webClient.DownloadFile(new Uri(defragglerUrl), defragglerFileSavePath);
                     webClient.Dispose();
 
-                    response.success = Process.Start(gitFileSavePath, "/SILENT");
+                    response.success = Process.Start(defragglerFileSavePath, "/S");
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallGit Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallDefraggler Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
@@ -78,15 +78,15 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = m_Gitx64;
-            string gitX86 = m_Gitx86;
-            string gitUrl = gitX86;
+            string defragglerX64 = m_DefragglerX64;
+            string defragglerX86 = m_DefragglerX86;
+            string defragglerUrl = defragglerX86;
 
             if (DeployServer.Is64BitEnv)
-                gitUrl = gitX64;
+                defragglerUrl = defragglerX64;
 
-            string gitFileName = Path.GetFileName(gitUrl);
-            string gitFileSavePath = Path.Combine(Path.GetTempPath(), gitFileName);
+            string defragglerFileName = Path.GetFileName(defragglerUrl);
+            string defragglerFileSavePath = Path.Combine(Path.GetTempPath(), defragglerFileName);
 
             try
             {
@@ -94,26 +94,26 @@ namespace Zeron.Demand.Services
                 {
                     webClient.DownloadFileCompleted += (s, e) =>
                     {
-                        string installToken = Md5.GenerateBase64(gitFileSavePath);
+                        string installToken = Md5.GenerateBase64(defragglerFileSavePath);
 
                         InstallQueuesType queuesType = new InstallQueuesType
                         {
-                            FilePath = gitFileSavePath,
-                            FileName = gitFileName,
-                            Arguments = "/SILENT"
+                            FilePath = defragglerFileSavePath,
+                            FileName = defragglerFileName,
+                            Arguments = "/S"
                         };
 
                         InstallServer.AddQueues(installToken, queuesType);
                     };
 
-                    webClient.DownloadFileAsync(new Uri(gitUrl), gitFileSavePath);
+                    webClient.DownloadFileAsync(new Uri(defragglerUrl), defragglerFileSavePath);
 
                     response.success = true;
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallGit Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallDefraggler Async Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
