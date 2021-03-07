@@ -13,18 +13,18 @@ using Zeron.Servers;
 
 namespace Zeron.Demand.Services
 {
-    [ServicesRep(ZmqApiName = "InstallCCleaner", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "InstallDefraggler", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
 
     /// <summary>
-    /// InstallCCleaner
+    /// InstallDefraggler
     /// </summary>
-    internal class InstallCCleaner : IServices
+    internal class InstallDefraggler : IServices
     {
         // CCleaner x64 url.
-        const string m_CcleanerX64 = "https://download.ccleaner.com/ccsetup577.exe";
+        const string m_DefragglerX64 = "https://download.ccleaner.com/dfsetup222.exe";
 
         // CCleaner x86 url.
-        const string m_CcleanerX86 = "https://download.ccleaner.com/ccsetup577.exe";
+        const string m_DefragglerX86 = "https://download.ccleaner.com/dfsetup222.exe";
 
         /// <summary>
         /// OnRequest
@@ -38,29 +38,29 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string ccleanerX64 = m_CcleanerX64;
-            string ccleanerX86 = m_CcleanerX86;
-            string ccleanerUrl = ccleanerX86;
+            string defragglerX64 = m_DefragglerX64;
+            string defragglerX86 = m_DefragglerX86;
+            string defragglerUrl = defragglerX86;
 
             if (DeployServer.Is64BitEnv)
-                ccleanerUrl = ccleanerX64;
+                defragglerUrl = defragglerX64;
 
-            string ccleanerFileName = Path.GetFileName(ccleanerUrl);
-            string ccleanerFileSavePath = Path.Combine(Path.GetTempPath(), ccleanerFileName);
+            string defragglerFileName = Path.GetFileName(defragglerUrl);
+            string defragglerFileSavePath = Path.Combine(Path.GetTempPath(), defragglerFileName);
 
             try
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.DownloadFile(new Uri(ccleanerUrl), ccleanerFileSavePath);
+                    webClient.DownloadFile(new Uri(defragglerUrl), defragglerFileSavePath);
                     webClient.Dispose();
 
-                    response.success = Process.Start(ccleanerFileSavePath, "/S");
+                    response.success = Process.Start(defragglerFileSavePath, "/S");
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallCCleaner Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallDefraggler Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
@@ -78,15 +78,15 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string ccleanerX64 = m_CcleanerX64;
-            string ccleanerX86 = m_CcleanerX86;
-            string ccleanerUrl = ccleanerX86;
+            string defragglerX64 = m_DefragglerX64;
+            string defragglerX86 = m_DefragglerX86;
+            string defragglerUrl = defragglerX86;
 
             if (DeployServer.Is64BitEnv)
-                ccleanerUrl = ccleanerX64;
+                defragglerUrl = defragglerX64;
 
-            string ccleanerFileName = Path.GetFileName(ccleanerUrl);
-            string ccleanerFileSavePath = Path.Combine(Path.GetTempPath(), ccleanerFileName);
+            string defragglerFileName = Path.GetFileName(defragglerUrl);
+            string defragglerFileSavePath = Path.Combine(Path.GetTempPath(), defragglerFileName);
 
             try
             {
@@ -94,26 +94,26 @@ namespace Zeron.Demand.Services
                 {
                     webClient.DownloadFileCompleted += (s, e) =>
                     {
-                        string installToken = Md5.GenerateBase64(ccleanerFileSavePath);
+                        string installToken = Md5.GenerateBase64(defragglerFileSavePath);
 
                         InstallQueuesType queuesType = new InstallQueuesType
                         {
-                            FilePath = ccleanerFileSavePath,
-                            FileName = ccleanerFileName,
+                            FilePath = defragglerFileSavePath,
+                            FileName = defragglerFileName,
                             Arguments = "/S"
                         };
 
                         InstallServer.AddQueues(installToken, queuesType);
                     };
 
-                    webClient.DownloadFileAsync(new Uri(ccleanerUrl), ccleanerFileSavePath);
+                    webClient.DownloadFileAsync(new Uri(defragglerUrl), defragglerFileSavePath);
 
                     response.success = true;
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallCCleaner Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallDefraggler Async Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);

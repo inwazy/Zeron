@@ -20,6 +20,12 @@ namespace Zeron.Demand.Services
     /// </summary>
     internal class InstallGit : IServices
     {
+        // Git x64 url.
+        const string m_Gitx64 = "https://github.com/git-for-windows/git/releases/download/v2.30.1.windows.1/Git-2.30.1-64-bit.exe";
+
+        // Git x86 url.
+        const string m_Gitx86 = "https://github.com/git-for-windows/git/releases/download/v2.30.1.windows.1/Git-2.30.1-32-bit.exe";
+
         /// <summary>
         /// OnRequest
         /// </summary>
@@ -32,8 +38,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://github.com/git-for-windows/git/releases/download/v2.29.2.windows.2/Git-2.29.2.2-64-bit.exe";
-            string gitX86 = "https://github.com/git-for-windows/git/releases/download/v2.29.2.windows.2/Git-2.29.2.2-32-bit.exe";
+            string gitX64 = m_Gitx64;
+            string gitX86 = m_Gitx86;
             string gitUrl = gitX86;
 
             if (DeployServer.Is64BitEnv)
@@ -72,8 +78,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string gitX64 = "https://github.com/git-for-windows/git/releases/download/v2.29.2.windows.2/Git-2.29.2.2-64-bit.exe";
-            string gitX86 = "https://github.com/git-for-windows/git/releases/download/v2.29.2.windows.2/Git-2.29.2.2-32-bit.exe";
+            string gitX64 = m_Gitx64;
+            string gitX86 = m_Gitx86;
             string gitUrl = gitX86;
 
             if (DeployServer.Is64BitEnv)

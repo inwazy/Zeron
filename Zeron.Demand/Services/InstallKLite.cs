@@ -20,6 +20,12 @@ namespace Zeron.Demand.Services
     /// </summary>
     internal class InstallKLite : IServices
     {
+        // K-Lite x64 url.
+        const string m_KliteX64 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1605_Mega.exe";
+
+        // K-Lite x86 url.
+        const string m_KliteX86 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1605_Mega.exe";
+
         /// <summary>
         /// OnRequest
         /// </summary>
@@ -32,8 +38,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string kliteX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1575_Mega.exe";
-            string kliteX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1575_Mega.exe";
+            string kliteX64 = m_KliteX64;
+            string kliteX86 = m_KliteX86;
             string kliteUrl = kliteX86;
 
             if (DeployServer.Is64BitEnv)
@@ -72,8 +78,8 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string kliteX64 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1570_Mega.exe";
-            string kliteX86 = "https://files3.codecguide.com/K-Lite_Codec_Pack_1570_Mega.exe";
+            string kliteX64 = m_KliteX64;
+            string kliteX86 = m_KliteX86;
             string kliteUrl = kliteX86;
 
             if (DeployServer.Is64BitEnv)

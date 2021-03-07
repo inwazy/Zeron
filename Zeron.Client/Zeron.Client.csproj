@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="Client\Impls\Install7ZipRequest.cs" />
     <Compile Include="Client\Impls\InstallCCleanerRequest.cs" />
+    <Compile Include="Client\Impls\InstallDefragglerRequest.cs" />
     <Compile Include="Client\Impls\InstallGitRequest.cs" />
     <Compile Include="Client\Impls\InstallKLiteRequest.cs" />
     <Compile Include="Client\Impls\ProcessInfoRequest.cs" />
