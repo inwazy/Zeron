@@ -6,9 +6,9 @@ using Zeron.Interfaces;
 namespace Zeron.Client.Client.Impls
 {
     /// <summary>
-    /// ServerInfoRequest
+    /// InstallFirefoxRequest
     /// </summary>
-    public class ServerInfoRequest : IServicesRequest
+    class InstallFirefoxRequest : IServicesRequest
     {
         /// <summary>
         /// APIName
@@ -26,12 +26,12 @@ namespace Zeron.Client.Client.Impls
         public bool Async { get; set; }
 
         /// <summary>
-        /// ServerInfoRequest
+        /// InstallFirefoxRequest
         /// </summary>
         /// <returns>Returns void.</returns>
-        public ServerInfoRequest()
+        public InstallFirefoxRequest()
         {
-            APIName = "ServerInfo";
+            APIName = "InstallFirefox";
             APIKey = "";
             Async = false;
         }

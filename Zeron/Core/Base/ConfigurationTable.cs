@@ -1,4 +1,7 @@
-﻿using NLog.Internal;
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+using NLog.Internal;
 
 namespace Zeron.Core.Base
 {

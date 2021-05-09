@@ -16,18 +16,18 @@ using Zeron.Servers;
 
 namespace Zeron.Demand.Services
 {
-    [ServicesRep(ZmqApiName = "InstallCCleaner", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "InstallFirefox", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
 
     /// <summary>
-    /// InstallCCleaner
+    /// InstallFirefox
     /// </summary>
-    internal class InstallCCleaner : IServices
+    internal class InstallFirefox : IServices
     {
-        // CCleaner x64 url.
-        const string m_CcleanerX64 = "https://download.ccleaner.com/ccsetup579.exe";
+        // Firefox x64 url.
+        const string m_FirefoxX64 = "https://download-installer.cdn.mozilla.net/pub/firefox/releases/88.0.1/win64/en-US/Firefox%20Setup%2088.0.1.msi";
 
-        // CCleaner x86 url.
-        const string m_CcleanerX86 = "https://download.ccleaner.com/ccsetup579.exe";
+        // Firefox x86 url.
+        const string m_FirefoxX86 = "https://download-installer.cdn.mozilla.net/pub/firefox/releases/88.0.1/win32/en-US/Firefox%20Setup%2088.0.1.msi";
 
         /// <summary>
         /// OnRequest
@@ -41,29 +41,29 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string ccleanerX64 = m_CcleanerX64;
-            string ccleanerX86 = m_CcleanerX86;
-            string ccleanerUrl = ccleanerX86;
+            string firefoxX64 = m_FirefoxX64;
+            string firefoxX86 = m_FirefoxX86;
+            string firefoxUrl = firefoxX86;
 
             if (DeployServer.Is64BitEnv)
-                ccleanerUrl = ccleanerX64;
+                firefoxUrl = firefoxX64;
 
-            string ccleanerFileName = Path.GetFileName(ccleanerUrl);
-            string ccleanerFileSavePath = Path.Combine(Path.GetTempPath(), ccleanerFileName);
+            string firefoxFileName = Path.GetFileName(firefoxUrl);
+            string firefoxFileSavePath = Path.Combine(Path.GetTempPath(), firefoxFileName);
 
             try
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.DownloadFile(new Uri(ccleanerUrl), ccleanerFileSavePath);
+                    webClient.DownloadFile(new Uri(firefoxUrl), firefoxFileSavePath);
                     webClient.Dispose();
 
-                    response.success = Process.Start(ccleanerFileSavePath, "/S");
+                    response.success = Process.Start(firefoxFileSavePath, "/qn");
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallCCleaner Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallFirefox Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);
@@ -81,15 +81,15 @@ namespace Zeron.Demand.Services
             response.success = false;
             response.result = null;
 
-            string ccleanerX64 = m_CcleanerX64;
-            string ccleanerX86 = m_CcleanerX86;
-            string ccleanerUrl = ccleanerX86;
+            string firefoxX64 = m_FirefoxX64;
+            string firefoxX86 = m_FirefoxX86;
+            string firefoxUrl = firefoxX86;
 
             if (DeployServer.Is64BitEnv)
-                ccleanerUrl = ccleanerX64;
+                firefoxUrl = firefoxX64;
 
-            string ccleanerFileName = Path.GetFileName(ccleanerUrl);
-            string ccleanerFileSavePath = Path.Combine(Path.GetTempPath(), ccleanerFileName);
+            string firefoxFileName = Path.GetFileName(firefoxUrl);
+            string firefoxFileSavePath = Path.Combine(Path.GetTempPath(), firefoxFileName);
 
             try
             {
@@ -97,26 +97,26 @@ namespace Zeron.Demand.Services
                 {
                     webClient.DownloadFileCompleted += (s, e) =>
                     {
-                        string installToken = Md5.GenerateBase64(ccleanerFileSavePath);
+                        string installToken = Md5.GenerateBase64(firefoxFileSavePath);
 
                         InstallQueuesType queuesType = new InstallQueuesType
                         {
-                            FilePath = ccleanerFileSavePath,
-                            FileName = ccleanerFileName,
-                            Arguments = "/S"
+                            FilePath = firefoxFileSavePath,
+                            FileName = firefoxFileName,
+                            Arguments = "/qn"
                         };
 
                         InstallServer.AddQueues(installToken, queuesType);
                     };
 
-                    webClient.DownloadFileAsync(new Uri(ccleanerUrl), ccleanerFileSavePath);
+                    webClient.DownloadFileAsync(new Uri(firefoxUrl), firefoxFileSavePath);
 
                     response.success = true;
                 }
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallCCleaner Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallFirefox Async Error:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             return JsonConvert.SerializeObject(response);

@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;

@@ -1,4 +1,7 @@
-﻿namespace Zeron.Core.Type
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+namespace Zeron.Core.Type
 {
     /// <summary>
     /// InstallQueuesType

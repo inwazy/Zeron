@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+using Newtonsoft.Json;
 using System;
 using System.Dynamic;
 using System.Globalization;

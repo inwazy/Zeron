@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Dynamic;
@@ -21,10 +24,10 @@ namespace Zeron.Demand.Services
     internal class InstallKLite : IServices
     {
         // K-Lite x64 url.
-        const string m_KliteX64 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1605_Mega.exe";
+        const string m_KliteX64 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1612_Mega.exe";
 
         // K-Lite x86 url.
-        const string m_KliteX86 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1605_Mega.exe";
+        const string m_KliteX86 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1612_Mega.exe";
 
         /// <summary>
         /// OnRequest
