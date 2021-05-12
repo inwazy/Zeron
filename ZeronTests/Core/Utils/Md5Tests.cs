@@ -1,4 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zeron.Core.Utils;
 using System;
 using System.Collections.Generic;

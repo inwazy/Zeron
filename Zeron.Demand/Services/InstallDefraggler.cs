@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Dynamic;
@@ -20,10 +23,10 @@ namespace Zeron.Demand.Services
     /// </summary>
     internal class InstallDefraggler : IServices
     {
-        // CCleaner x64 url.
+        // Defraggler x64 url.
         const string m_DefragglerX64 = "https://download.ccleaner.com/dfsetup222.exe";
 
-        // CCleaner x86 url.
+        // Defraggler x86 url.
         const string m_DefragglerX86 = "https://download.ccleaner.com/dfsetup222.exe";
 
         /// <summary>

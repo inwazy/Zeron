@@ -1,4 +1,7 @@
-﻿using NetMQ;
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+using NetMQ;
 using NetMQ.Sockets;
 using Newtonsoft.Json;
 using System;
@@ -153,6 +156,25 @@ namespace Zeron.Client
 
                 Console.WriteLine();
                 Console.WriteLine("InstallKLiteRequest : Received '{0}'", message);
+            }*/
+
+            // InstallFirefoxRequest
+            /*object installFirefoxRequestParams = new InstallFirefoxRequest
+            {
+                APIKey = clientRequestKey,
+                Async = true
+            };
+
+            string installFirefoxRequestMessage = JsonConvert.SerializeObject(installFirefoxRequestParams);
+
+            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            {
+                client.SendFrame(installFirefoxRequestMessage);
+
+                string message = client.ReceiveFrameString();
+
+                Console.WriteLine();
+                Console.WriteLine("InstallFirefoxRequest : Received '{0}'", message);
             }*/
 
             Console.ReadKey();

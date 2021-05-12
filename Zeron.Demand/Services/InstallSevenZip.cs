@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Dynamic;
@@ -20,10 +23,10 @@ namespace Zeron.Demand.Services
     /// </summary>
     internal class InstallSevenZip : IServices
     {
-        // K-7-Zip x64 url.
+        // 7-Zip x64 url.
         const string m_ZipX64 = "https://www.7-zip.org/a/7z1900-x64.exe";
 
-        // K-7-Zip x86 url.
+        // 7-Zip x86 url.
         const string m_ZipX86 = "https://www.7-zip.org/a/7z1900.exe";
 
         /// <summary>
