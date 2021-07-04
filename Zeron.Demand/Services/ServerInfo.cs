@@ -31,8 +31,10 @@ namespace Zeron.Demand.Services
                 response.success = true;
                 response.machine_name = Environment.MachineName;
                 response.os_version = Environment.OSVersion.ToString();
+                response.os_x64 = Environment.Is64BitOperatingSystem;
                 response.user_name = Environment.UserName;
                 response.user_domain_name = Environment.UserDomainName;
+                response.sys_directory = Environment.SystemDirectory;
             }
             catch (Exception e)
             {
