@@ -34,6 +34,8 @@ namespace Zeron.Servers
         {
             if (aConfig == null)
             {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ApplicationServer Config Empty"));
+
                 return;
             }
 
@@ -43,7 +45,7 @@ namespace Zeron.Servers
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "Config Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ApplicationServer Config Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 

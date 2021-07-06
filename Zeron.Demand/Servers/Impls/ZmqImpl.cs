@@ -243,6 +243,7 @@ namespace Zeron.Demand.Servers.Impls
                     dynamic json = JsonConvert.DeserializeObject<dynamic>(message);
                     string apiName = (string)json["APIName"];
                     string apiKey = (string)json["APIKey"];
+                    bool asyncTask = Convert.ToBoolean(json["Async"]);
 
                     m_SubAPIResponse.TryGetValue(apiName, out ServicesSubAttribute serviceAttribute);
                     m_SubAPITypeResponse.TryGetValue(apiName, out Type serviceType);
@@ -253,13 +254,24 @@ namespace Zeron.Demand.Servers.Impls
                     if (!m_SubscriberApiKey.Contains(Encryption.Decrypt(apiKey)))
                         continue;
 
-                    // TODO
+                    IServices serviceInstance = Activator.CreateInstance(serviceType) as IServices;
+
+                    string responseMessage = "";
+
+                    if (asyncTask)
+                    {
+                        responseMessage = serviceInstance.OnSubscriberAsync(json);
+                    }
+                    else
+                    {
+                        responseMessage = serviceInstance.OnSubscriber(json);
+                    }
 
                     Thread.Sleep(300);
                 }
                 catch (Exception e)
                 {
-                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Subscriber Error:{0}\n{1}", e.Message, e.StackTrace));
                 }
             }
         }
@@ -328,7 +340,7 @@ namespace Zeron.Demand.Servers.Impls
                 }
                 catch (Exception e)
                 {
-                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Response Error:{0}\n{1}", e.Message, e.StackTrace));
                 }
             }
         }

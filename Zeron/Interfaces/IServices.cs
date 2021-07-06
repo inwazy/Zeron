@@ -23,6 +23,20 @@ namespace Zeron.Interfaces
         string OnRequestAsync(dynamic aJson);
 
         /// <summary>
+        /// OnSubscriber
+        /// </summary>
+        /// <param name="aJson"></param>
+        /// <returns>Returns string.</returns>
+        string OnSubscriber(dynamic aJson);
+
+        /// <summary>
+        /// OnSubscriberAsync
+        /// </summary>
+        /// <param name="aJson"></param>
+        /// <returns>Returns string.</returns>
+        string OnSubscriberAsync(dynamic aJson);
+
+        /// <summary>
         /// OnNotifySubscriber
         /// </summary>
         /// <param name="aJson"></param>
