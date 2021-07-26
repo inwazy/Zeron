@@ -34,13 +34,16 @@ namespace Zeron.Servers
         private static readonly Dictionary<string, string> m_MailRecipientsAdministrator = new Dictionary<string, string>();
 
         // Email queue message.
-        private static readonly ConcurrentQueue<Tuple<int, string, string>> m_MailQueueMessages = new ConcurrentQueue<Tuple<int, string, string>>();
+        private static readonly ConcurrentQueue<Tuple<string, string>> m_MailQueueMessages = new ConcurrentQueue<Tuple<string, string>>();
 
         // Email queue enable running trigger.
         private static bool m_MailEnableRunning = true;
 
         // Email queue send signal.
         private static readonly Semaphore m_MailSendSignal = new Semaphore(0, 20000);
+
+        // Email send per milliseconds
+        private static readonly int m_DelayTimeToSend = 10;
 
         /// <summary>
         /// Host
@@ -173,6 +176,21 @@ namespace Zeron.Servers
             {
                 ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "MailerServer FormatException:{0}\n{1}", e.Message, e.StackTrace));
             }
+
+            try
+            {
+                Thread threadQueue = new Thread(QueuesProc)
+                {
+                    IsBackground = true,
+                    Name = "MailerServer"
+                };
+
+                threadQueue.Start();
+            }
+            catch (ArgumentNullException e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "MailerServer ArgumentNullException:{0}\n{1}", e.Message, e.StackTrace));
+            }
         }
 
         /// <summary>
@@ -181,7 +199,74 @@ namespace Zeron.Servers
         /// <returns>Returns void.</returns>
         public void Stop()
         {
+            if (m_MailEnableRunning)
+            {
+
+            }
+
+            m_MailEnableRunning = false;
+
+            try
+            {
+                m_MailMessage.Dispose();
+                m_SmtpClient.Dispose();
+            }
+            catch (Exception e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "MailerServer Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
+
             ServerIntegrate.FinishSingleStop();
+        }
+
+        /// <summary>
+        /// QueuesProc
+        /// </summary>
+        /// <param name="aArg"></param>
+        /// <returns>Returns void.</returns>
+        private static void QueuesProc(object aArg)
+        {
+            string emailSubject;
+            string emailMessage;
+
+            while (m_MailEnableRunning)
+            {
+                try
+                {
+                    m_MailSendSignal.WaitOne();
+                    m_MailQueueMessages.TryDequeue(out Tuple<string, string> item);
+
+                    if (item == null)
+                    {
+                        continue;
+                    }
+
+                    emailSubject = item.Item1;
+                    emailMessage = item.Item2;
+
+                    if (string.IsNullOrEmpty(emailSubject)
+                        || string.IsNullOrEmpty(emailMessage))
+                    {
+                        continue;
+                    }
+
+
+
+                    Thread.Sleep(m_DelayTimeToSend);
+                }
+                catch (ObjectDisposedException e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "MailerServer ObjectDisposedException:{0}\n{1}", e.Message, e.StackTrace));
+                }
+                catch (AbandonedMutexException e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "MailerServer AbandonedMutexException:{0}\n{1}", e.Message, e.StackTrace));
+                }
+                catch (InvalidOperationException e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "MailerServer InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
+                }
+            }
         }
     }
 }

@@ -134,7 +134,9 @@ namespace Zeron.Demand.Servers
             try
             {
                 if (PubSocketEnabled)
+                {
                     m_ZmqImpl.PreparePubSocket(PubSocketAddr);
+                }
 
                 if (SubSocketEnabled)
                 {

@@ -9,6 +9,7 @@ using System.Dynamic;
 using System.Globalization;
 using Zeron.Core;
 using Zeron.Interfaces;
+using Zeron.Servers;
 
 namespace Zeron.Demand.Services
 {
@@ -57,7 +58,10 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ProcessInfo Error:{0}\n{1}", e.Message, e.StackTrace));
+                if (DeployServer.AppDebug)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ProcessInfo Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
             }
 
             return JsonConvert.SerializeObject(response);

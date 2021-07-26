@@ -63,7 +63,10 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallKLite Error:{0}\n{1}", e.Message, e.StackTrace));
+                if (DeployServer.AppDebug)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallKLite Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
             }
 
             return JsonConvert.SerializeObject(response);
@@ -116,7 +119,10 @@ namespace Zeron.Demand.Services
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallKLite Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                if (DeployServer.AppDebug)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallKLite Async Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
             }
 
             return JsonConvert.SerializeObject(response);
