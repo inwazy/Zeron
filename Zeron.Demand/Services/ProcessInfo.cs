@@ -35,7 +35,6 @@ namespace Zeron.Demand.Services
             try
             {
                 List<dynamic> processLists = new List<dynamic>();
-
                 Process[] processes = Process.GetProcesses();
 
                 foreach (Process process in processes)

@@ -46,7 +46,9 @@ namespace Zeron.Demand.Services
             string gitUrl = gitX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 gitUrl = gitX64;
+            }
 
             string gitFileName = Path.GetFileName(gitUrl);
             string gitFileSavePath = Path.Combine(Path.GetTempPath(), gitFileName);
@@ -89,7 +91,9 @@ namespace Zeron.Demand.Services
             string gitUrl = gitX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 gitUrl = gitX64;
+            }
 
             string gitFileName = Path.GetFileName(gitUrl);
             string gitFileSavePath = Path.Combine(Path.GetTempPath(), gitFileName);

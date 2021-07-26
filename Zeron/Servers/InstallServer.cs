@@ -99,13 +99,17 @@ namespace Zeron.Servers
                 m_InstallQueues.TryDequeue(out Tuple<string, InstallQueuesType> item);
 
                 if (item == null)
+                {
                     continue;
+                }
 
                 installToken = item.Item1;
                 queuesType = item.Item2;
 
                 if (installToken == null || installToken.Length == 0)
+                {
                     continue;
+                }
 
                 if (!File.Exists(queuesType.FilePath))
                     continue;
@@ -140,7 +144,9 @@ namespace Zeron.Servers
         public static void AddQueues(string token, InstallQueuesType queuesType)
         {
             if (token == null || token.Length == 0)
+            {
                 return;
+            }
 
             m_InstallQueues.Enqueue(new Tuple<string, InstallQueuesType>(token, queuesType));
             m_QueuesSignal.Release();

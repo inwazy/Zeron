@@ -105,10 +105,14 @@ namespace Zeron.Demand.Servers.Impls
                     string apiName = repAttribute.ZmqApiName;
 
                     if (repAttribute.ZmqApiEnabled == false)
+                    {
                         continue;
+                    }
 
                     if (apiName == null || string.IsNullOrEmpty(apiName))
+                    {
                         apiName = assemblyType.Name;
+                    }
 
                     m_SubAPIResponse.TryAdd(apiName, repAttribute);
                     m_SubAPITypeResponse.TryAdd(apiName, assemblyType);
@@ -133,10 +137,14 @@ namespace Zeron.Demand.Servers.Impls
                     string apiName = repAttribute.ZmqApiName;
 
                     if (repAttribute.ZmqApiEnabled == false)
+                    {
                         continue;
+                    }
 
                     if (apiName == null || string.IsNullOrEmpty(apiName))
+                    {
                         apiName = assemblyType.Name;
+                    }
 
                     m_RepAPIResponse.TryAdd(apiName, repAttribute);
                     m_RepAPITypeResponse.TryAdd(apiName, assemblyType);
@@ -154,7 +162,9 @@ namespace Zeron.Demand.Servers.Impls
         public void PreparePubSocket(string addr)
         {
             if (addr.Length == 0)
+            {
                 return;
+            }
 
             m_PublisherSocket.Options.TcpKeepalive = true;
             m_PublisherSocket.Options.SendHighWatermark = 1000;
@@ -172,7 +182,9 @@ namespace Zeron.Demand.Servers.Impls
         public void PrepareSubSocket(string addr)
         {
             if (addr.Length == 0)
+            {
                 return;
+            }
 
             m_SubscriberSocket.Options.TcpKeepalive = true;
             m_SubscriberSocket.Options.ReceiveHighWatermark = 1000;
@@ -191,7 +203,9 @@ namespace Zeron.Demand.Servers.Impls
         public void PrepareRepSocket(string addr)
         {
             if (addr.Length == 0)
+            {
                 return;
+            }
 
             m_ResponseSocket.Bind(addr);
 
@@ -238,7 +252,9 @@ namespace Zeron.Demand.Servers.Impls
                     message = m_SubscriberSocket.ReceiveFrameString();
 
                     if (message == null || string.IsNullOrEmpty(message))
+                    {
                         continue;
+                    }
 
                     dynamic json = JsonConvert.DeserializeObject<dynamic>(message);
                     string apiName = (string)json["APIName"];
@@ -249,10 +265,14 @@ namespace Zeron.Demand.Servers.Impls
                     m_SubAPITypeResponse.TryGetValue(apiName, out Type serviceType);
 
                     if (serviceAttribute == null || serviceType == null)
+                    {
                         continue;
+                    }
 
                     if (!m_SubscriberApiKey.Contains(Encryption.Decrypt(apiKey)))
+                    {
                         continue;
+                    }
 
                     IServices serviceInstance = Activator.CreateInstance(serviceType) as IServices;
 
@@ -336,7 +356,9 @@ namespace Zeron.Demand.Servers.Impls
                     m_ResponseSocket.SendFrame(responseMessage);
 
                     if (serviceAttribute.ZmqNotifySubscriber)
+                    {
                         serviceInstance.OnNotifySubscriber(json, responseMessage);
+                    }
                 }
                 catch (Exception e)
                 {

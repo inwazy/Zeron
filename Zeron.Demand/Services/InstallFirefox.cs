@@ -46,7 +46,9 @@ namespace Zeron.Demand.Services
             string firefoxUrl = firefoxX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 firefoxUrl = firefoxX64;
+            }
 
             string firefoxFileName = Path.GetFileName(firefoxUrl);
             string firefoxFileSavePath = Path.Combine(Path.GetTempPath(), firefoxFileName);
@@ -89,7 +91,9 @@ namespace Zeron.Demand.Services
             string firefoxUrl = firefoxX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 firefoxUrl = firefoxX64;
+            }
 
             string firefoxFileName = Path.GetFileName(firefoxUrl);
             string firefoxFileSavePath = Path.Combine(Path.GetTempPath(), firefoxFileName);

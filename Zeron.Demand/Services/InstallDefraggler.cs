@@ -46,7 +46,9 @@ namespace Zeron.Demand.Services
             string defragglerUrl = defragglerX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 defragglerUrl = defragglerX64;
+            }
 
             string defragglerFileName = Path.GetFileName(defragglerUrl);
             string defragglerFileSavePath = Path.Combine(Path.GetTempPath(), defragglerFileName);
@@ -89,7 +91,9 @@ namespace Zeron.Demand.Services
             string defragglerUrl = defragglerX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 defragglerUrl = defragglerX64;
+            }
 
             string defragglerFileName = Path.GetFileName(defragglerUrl);
             string defragglerFileSavePath = Path.Combine(Path.GetTempPath(), defragglerFileName);

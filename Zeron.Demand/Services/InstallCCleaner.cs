@@ -46,7 +46,9 @@ namespace Zeron.Demand.Services
             string ccleanerUrl = ccleanerX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 ccleanerUrl = ccleanerX64;
+            }
 
             string ccleanerFileName = Path.GetFileName(ccleanerUrl);
             string ccleanerFileSavePath = Path.Combine(Path.GetTempPath(), ccleanerFileName);
@@ -89,7 +91,9 @@ namespace Zeron.Demand.Services
             string ccleanerUrl = ccleanerX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 ccleanerUrl = ccleanerX64;
+            }
 
             string ccleanerFileName = Path.GetFileName(ccleanerUrl);
             string ccleanerFileSavePath = Path.Combine(Path.GetTempPath(), ccleanerFileName);

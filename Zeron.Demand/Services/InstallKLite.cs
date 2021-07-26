@@ -46,7 +46,9 @@ namespace Zeron.Demand.Services
             string kliteUrl = kliteX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 kliteUrl = kliteX64;
+            }
 
             string kliteFileName = Path.GetFileName(kliteUrl);
             string kliteFileSavePath = Path.Combine(Path.GetTempPath(), kliteFileName);
@@ -89,7 +91,9 @@ namespace Zeron.Demand.Services
             string kliteUrl = kliteX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 kliteUrl = kliteX64;
+            }
 
             string kliteFileName = Path.GetFileName(kliteUrl);
             string kliteFileSavePath = Path.Combine(Path.GetTempPath(), kliteFileName);

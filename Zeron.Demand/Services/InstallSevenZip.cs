@@ -46,7 +46,9 @@ namespace Zeron.Demand.Services
             string zipUrl = zipX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 zipUrl = zipX64;
+            }
 
             string zipFileName = Path.GetFileName(zipUrl);
             string zipFileSavePath = Path.Combine(Path.GetTempPath(), zipFileName);
@@ -89,7 +91,9 @@ namespace Zeron.Demand.Services
             string zipUrl = zipX86;
 
             if (DeployServer.Is64BitEnv)
+            {
                 zipUrl = zipX64;
+            }
 
             string zipFileName = Path.GetFileName(zipUrl);
             string zipFileSavePath = Path.Combine(Path.GetTempPath(), zipFileName);
