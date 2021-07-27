@@ -112,7 +112,9 @@ namespace Zeron.Servers
                 }
 
                 if (!File.Exists(queuesType.FilePath))
+                {
                     continue;
+                }
 
                 try
                 {

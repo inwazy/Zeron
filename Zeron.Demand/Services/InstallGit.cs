@@ -24,10 +24,10 @@ namespace Zeron.Demand.Services
     internal class InstallGit : IServices
     {
         // Git x64 url.
-        const string m_Gitx64 = "https://github.com/git-for-windows/git/releases/download/v2.31.1.windows.1/Git-2.31.1-64-bit.exe";
+        const string m_Gitx64 = "https://github.com/git-for-windows/git/releases/download/v2.32.0.windows.2/Git-2.32.0.2-64-bit.exe";
 
         // Git x86 url.
-        const string m_Gitx86 = "https://github.com/git-for-windows/git/releases/download/v2.31.1.windows.1/Git-2.31.1-32-bit.exe";
+        const string m_Gitx86 = "https://github.com/git-for-windows/git/releases/download/v2.32.0.windows.2/Git-2.32.0.2-32-bit.exe";
 
         /// <summary>
         /// OnRequest

@@ -5,7 +5,6 @@ using NLog.Internal;
 using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using Zeron.Core;
 using Zeron.Core.Base;
@@ -33,23 +32,41 @@ namespace Zeron.Servers.Impls
         /// <returns>Returns void.</returns>
         public void PrepareObjects()
         {
-            ConfigurationManager config = new ConfigurationManager();
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-            foreach (Assembly assembly in assemblies)
+            try
             {
-                if (!assembly.FullName.StartsWith("Zeron", StringComparison.InvariantCulture))
-                    continue;
+                ConfigurationManager config = new ConfigurationManager();
+                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-                foreach (Type assemblyType in assembly.GetTypes())
+                foreach (Assembly assembly in assemblies)
                 {
-                    if (assemblyType.GetCustomAttribute<ConfigAttribute>() == null || assemblyType.IsAbstract)
+                    if (!assembly.FullName.StartsWith("Zeron", StringComparison.InvariantCulture))
+                    {
                         continue;
+                    }
 
-                    ConfigurationTable item = Activator.CreateInstance(assemblyType) as ConfigurationTable;
+                    foreach (Type assemblyType in assembly.GetTypes())
+                    {
+                        if (assemblyType.GetCustomAttribute<ConfigAttribute>() == null || assemblyType.IsAbstract)
+                        {
+                            continue;
+                        }
 
-                    item.LoadConfig(config);
+                        try
+                        {
+                            ConfigurationTable item = Activator.CreateInstance(assemblyType) as ConfigurationTable;
+
+                            item.LoadConfig(config);
+                        }
+                        catch (Exception e)
+                        {
+                            ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "PrepareObjects CreateInstance Error:{0}\n{1}", e.Message, e.StackTrace));
+                        }
+                    }
                 }
+            }
+            catch (AppDomainUnloadedException e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ConfigImpl PrepareObjects Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 
@@ -69,7 +86,7 @@ namespace Zeron.Servers.Impls
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ConfigImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ConfigImpl OnChanged Error:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
     }

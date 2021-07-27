@@ -24,10 +24,10 @@ namespace Zeron.Demand.Services
     internal class InstallKLite : IServices
     {
         // K-Lite x64 url.
-        const string m_KliteX64 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1612_Mega.exe";
+        const string m_KliteX64 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1635_Mega.exe";
 
         // K-Lite x86 url.
-        const string m_KliteX86 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1612_Mega.exe";
+        const string m_KliteX86 = "https://files2.codecguide.com/K-Lite_Codec_Pack_1635_Mega.exe";
 
         /// <summary>
         /// OnRequest

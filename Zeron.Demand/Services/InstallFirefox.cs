@@ -24,10 +24,10 @@ namespace Zeron.Demand.Services
     internal class InstallFirefox : IServices
     {
         // Firefox x64 url.
-        const string m_FirefoxX64 = "https://download-installer.cdn.mozilla.net/pub/firefox/releases/88.0.1/win64/en-US/Firefox%20Setup%2088.0.1.msi";
+        const string m_FirefoxX64 = "https://download-installer.cdn.mozilla.net/pub/firefox/releases/91.0b7/win32/en-US/Firefox%20Setup%2091.0b7.msi";
 
         // Firefox x86 url.
-        const string m_FirefoxX86 = "https://download-installer.cdn.mozilla.net/pub/firefox/releases/88.0.1/win32/en-US/Firefox%20Setup%2088.0.1.msi";
+        const string m_FirefoxX86 = "https://download-installer.cdn.mozilla.net/pub/firefox/releases/91.0b7/win64/en-US/Firefox%20Setup%2091.0b7.msi";
 
         /// <summary>
         /// OnRequest
