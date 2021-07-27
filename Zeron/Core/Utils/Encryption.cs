@@ -31,10 +31,14 @@ namespace Zeron.Core.Utils
         public static string Encrypt(string plainText, string iv = "")
         {
             if (plainText == null || plainText.Length == 0)
+            {
                 return "";
+            }
 
             if (iv == null || iv.Length == 0)
+            {
                 iv = m_CryptIVKey;
+            }
 
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
             byte[] keyBytes = new Rfc2898DeriveBytes(m_CryptPasswordHash, Encoding.ASCII.GetBytes(m_CryptSaltKey)).GetBytes(256 / 8);
@@ -76,10 +80,14 @@ namespace Zeron.Core.Utils
         public static string Decrypt(string cipherText, string iv = "")
         {
             if (cipherText == null || cipherText.Length == 0)
+            {
                 return "";
+            }
 
             if (iv == null || iv.Length == 0)
+            {
                 iv = m_CryptIVKey;
+            }
 
             byte[] cipherTextBytes = Convert.FromBase64String(cipherText);
             byte[] keyBytes = new Rfc2898DeriveBytes(m_CryptPasswordHash, Encoding.ASCII.GetBytes(m_CryptSaltKey)).GetBytes(256 / 8);

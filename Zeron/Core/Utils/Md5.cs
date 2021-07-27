@@ -26,7 +26,9 @@ namespace Zeron.Core.Utils
             string result = "";
 
             if (plainText == null || plainText.Length == 0)
+            {
                 return result;
+            }
 
             try
             {
