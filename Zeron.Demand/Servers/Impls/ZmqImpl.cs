@@ -8,6 +8,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Zeron.Core;
 using Zeron.Core.Utils;
@@ -40,6 +41,9 @@ namespace Zeron.Demand.Servers.Impls
 
         // Signal Publisher
         private static readonly Semaphore m_PublisherSignal = new Semaphore(0, 20000);
+
+        // Queue Publisher Message
+        private static readonly ConcurrentQueue<Tuple<string, byte[]>> m_PubAPIQueueMessages = new ConcurrentQueue<Tuple<string, byte[]>>();
 
         // ConcurrentDictionary Subscriber APIs
         private static readonly ConcurrentDictionary<string, ServicesSubAttribute> m_SubAPIResponse = new ConcurrentDictionary<string, ServicesSubAttribute>();
@@ -214,25 +218,55 @@ namespace Zeron.Demand.Servers.Impls
         }
 
         /// <summary>
+        /// PublishMessage
+        /// </summary>
+        /// <param name="aTopic"></param>
+        /// <param name="aMessage"></param>
+        /// <returns>Returns void.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void PublishMessage(string aTopic, byte[] aMessage)
+        {
+            if (m_EnablePublisherProc)
+            {
+                if (m_PublisherSocket != null)
+                {
+                    m_PubAPIQueueMessages.Enqueue(new Tuple<string, byte[]>(aTopic, aMessage));
+                    m_PublisherSignal.Release();
+                }
+            }
+        }
+
+        /// <summary>
         /// PublisherSocketProc
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
         private static void PublisherSocketProc(object aArg)
         {
-            try
+            while (m_EnablePublisherProc)
             {
-                while (m_EnablePublisherProc)
+                try
                 {
                     m_PublisherSignal.WaitOne();
+                    m_PubAPIQueueMessages.TryDequeue(out Tuple<string, byte[]> item);
 
-                    // TODO
-                    //m_PublisherSocket.SendMoreFrame("").SendFrame("");
+                    if (item == null)
+                    {
+                        continue;
+                    }
+
+                    string topic = item.Item1;
+                    byte[] message = item.Item2;
+
+                    if (m_PublisherSocket != null)
+                    {
+                        m_PublisherSocket.SendMoreFrame("").SendFrame(message);
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Error:{0}\n{1}", e.Message, e.StackTrace));
+                catch (Exception e)
+                {
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Publisher Error:{0}\n{1}", e.Message, e.StackTrace));
+                }
             }
         }
 
@@ -257,8 +291,8 @@ namespace Zeron.Demand.Servers.Impls
                     }
 
                     dynamic json = JsonConvert.DeserializeObject<dynamic>(message);
-                    string apiName = (string)json["APIName"];
-                    string apiKey = (string)json["APIKey"];
+                    string apiName = Convert.ToString(json["APIName"]);
+                    string apiKey = Convert.ToString(json["APIKey"]);
                     bool asyncTask = Convert.ToBoolean(json["Async"]);
 
                     m_SubAPIResponse.TryGetValue(apiName, out ServicesSubAttribute serviceAttribute);
