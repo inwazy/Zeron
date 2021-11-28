@@ -2,10 +2,7 @@ language: csharp
 solution: Zeron.sln
 
 before_install:
-  - cp ./Zeron/app.sample.config ./Zeron/app.config
-  - cp ./ZeronTests/app.sample.config ./ZeronTests/app.config
   - cp ./Zeron.Demand/App.Sample.config ./Zeron.Demand/App.config
-  - cp ./Zeron.Client/App.Sample.config ./Zeron.Client/App.config
 
 script:
   - msbuild /p:Configuration=Debug Zeron.sln
