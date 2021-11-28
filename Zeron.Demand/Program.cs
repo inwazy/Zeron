@@ -1,14 +1,13 @@
 ﻿// Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-using System;
 using System.Globalization;
 using Topshelf;
-using Zeron.Core;
-using Zeron.Core.Container;
-using Zeron.Demand.Core;
-using Zeron.Demand.Servers;
-using Zeron.Servers;
+using Zeron.Demand.ZCore;
+using Zeron.Demand.ZServers;
+using Zeron.ZCore;
+using Zeron.ZCore.Container;
+using Zeron.ZServers;
 
 namespace Zeron.Demand
 {
@@ -31,7 +30,7 @@ namespace Zeron.Demand
                 return;
             }
 
-            SCHostLoader Hostloader = new SCHostLoader();
+            SCHostLoader Hostloader = new();
 
             TopshelfExitCode rc = HostFactory.Run(x =>
             {
@@ -84,6 +83,7 @@ namespace Zeron.Demand
 
                 // Local Servers
                 ServerIntegrate.Fork<ZmqServer>();
+                ServerIntegrate.Fork<ManagedPackageServer>();
             }
             catch (Exception e)
             {

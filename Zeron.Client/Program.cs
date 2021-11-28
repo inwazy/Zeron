@@ -4,8 +4,8 @@
 using NetMQ;
 using NetMQ.Sockets;
 using Newtonsoft.Json;
-using System;
-using Zeron.Client.Client.Impls;
+using Zeron.Client.ZAttribute;
+using Zeron.ZServers.RequestImpls;
 
 namespace Zeron.Client
 {
@@ -14,6 +14,12 @@ namespace Zeron.Client
     /// </summary>
     public class Program
     {
+        // Api key for client
+        private static readonly string m_ClientRequestKey = "UmMg1m+spDw6BGBeFwsW9A==";
+
+        // Options
+        private static readonly List<OptionAttribute> m_Options = new();
+
         /// <summary>
         /// Main
         /// </summary>
@@ -21,21 +27,66 @@ namespace Zeron.Client
         /// <returns>Returns void.</returns>
         public static void Main(string[] args)
         {
-            // Core.Utils.Encryption.Encrypt("zeron.testkey");
-            string clientRequestKey = "8TAoVPkmYaphto4LFTCtKw==";
+            WriteOptionsMenu();
 
-            // Test Key
-            Console.WriteLine(Core.Utils.Encryption.Decrypt(clientRequestKey) );
+            m_Options.Add(new OptionAttribute("Run ServerInfoRequest", () => RunServerInfoRequest()));
+            m_Options.Add(new OptionAttribute("Run ProcessInfoRequest", () => RunProcessInfoRequest()));
+            m_Options.Add(new OptionAttribute("Run ManagedPackageRequest", () => RunManagedPackageRequest()));
 
-            // ServerInfoRequest
-            object serverInfoRequestParams = new ServerInfoRequest
+            ConsoleKeyInfo consoleKeyinfo;
+
+            do
             {
-                APIKey = clientRequestKey
+                consoleKeyinfo = Console.ReadKey();
+
+                if (consoleKeyinfo.Key == ConsoleKey.D1 || consoleKeyinfo.Key == ConsoleKey.D2 || consoleKeyinfo.Key == ConsoleKey.D3)
+                {
+                    if (int.TryParse(consoleKeyinfo.KeyChar.ToString(), out int consoleKeyindex))
+                    {
+                        OptionAttribute? consoleOption = m_Options.ElementAt(consoleKeyindex - 1);
+                        Action? consoleOptionAction = consoleOption.OptSelected;
+
+                        if (consoleOptionAction != null)
+                            consoleOptionAction.Invoke();
+                    }
+                }
+            }
+            while (consoleKeyinfo.Key != ConsoleKey.X);
+
+            Console.ReadKey();
+        }
+
+        /// <summary>
+        /// WriteOptionsMenu
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private static void WriteOptionsMenu()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Select options?");
+            Console.WriteLine("[1] ServerInfoRequest");
+            Console.WriteLine("[2] ProcessInfoRequest");
+            Console.WriteLine("[3] ManagedPackageRequest");
+            Console.WriteLine("[x] Exit");
+        }
+
+        /// <summary>
+        /// RunServerInfoRequest
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private static void RunServerInfoRequest()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Run API ServerInfoRequest");
+
+            object serverInfoRequestParams = new ServerInfoImpl
+            {
+                APIKey = m_ClientRequestKey
             };
 
             string serverInfoRequestMessage = JsonConvert.SerializeObject(serverInfoRequestParams);
 
-            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            using (RequestSocket client = new("tcp://localhost:5589"))
             {
                 client.SendFrame(serverInfoRequestMessage);
 
@@ -45,15 +96,26 @@ namespace Zeron.Client
                 Console.WriteLine("ServerInfoRequest : Received '{0}'", message);
             }
 
-            // ProcessInfoRequest
-            object processInfoRequestParams = new ProcessInfoRequest
+            WriteOptionsMenu();
+        }
+
+        /// <summary>
+        /// ProcessInfoRequest
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private static void RunProcessInfoRequest()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Run API ProcessInfoRequest");
+
+            object processInfoRequestParams = new ProcessInfoImpl
             {
-                APIKey = clientRequestKey
+                APIKey = m_ClientRequestKey
             };
 
             string processInfoRequestMessage = JsonConvert.SerializeObject(processInfoRequestParams);
 
-            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            using (RequestSocket client = new("tcp://localhost:5589"))
             {
                 client.SendFrame(processInfoRequestMessage);
 
@@ -63,121 +125,40 @@ namespace Zeron.Client
                 Console.WriteLine("ProcessInfoRequest : Received '{0}'", message);
             }
 
-            // InstallCCleanerRequest
-            /*object installCCleanerRequestParams = new InstallCCleanerRequest
+            WriteOptionsMenu();
+        }
+
+        /// <summary>
+        /// RunManagedPackageRequest
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private static void RunManagedPackageRequest()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Run API ManagedPackage");
+            Console.WriteLine("Enter Api Commands?");
+
+            string? apiCommand = Console.ReadLine();
+
+            object managedPackageRequestParams = new ManagedPackageImpl
             {
-                APIKey = clientRequestKey,
-                Async = true
+                APIKey = m_ClientRequestKey,
+                Command = apiCommand ?? ""
             };
 
-            string installCCleanerRequestMessage = JsonConvert.SerializeObject(installCCleanerRequestParams);
+            string managedPackageRequestMessage = JsonConvert.SerializeObject(managedPackageRequestParams);
 
-            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
+            using (RequestSocket client = new("tcp://localhost:5589"))
             {
-                client.SendFrame(installCCleanerRequestMessage);
+                client.SendFrame(managedPackageRequestMessage);
 
                 string message = client.ReceiveFrameString();
 
                 Console.WriteLine();
-                Console.WriteLine("InstallCCleanerRequest : Received '{0}'", message);
-            }*/
+                Console.WriteLine("ManagedPackageRequest : Received '{0}'", message);
+            }
 
-            // InstallDefragglerRequest
-            /*object installDefragglerRequestParams = new InstallDefragglerRequest
-            {
-                APIKey = clientRequestKey,
-                Async = true
-            };
-
-            string installDefragglerRequestMessage = JsonConvert.SerializeObject(installDefragglerRequestParams);
-
-            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
-            {
-                client.SendFrame(installDefragglerRequestMessage);
-
-                string message = client.ReceiveFrameString();
-
-                Console.WriteLine();
-                Console.WriteLine("InstallDefragglerRequest : Received '{0}'", message);
-            }*/
-
-            // InstallGitRequest
-            /*object installGitRequestParams = new InstallGitRequest
-            {
-                APIKey = clientRequestKey,
-                Async = true
-            };
-
-            string installGitRequestMessage = JsonConvert.SerializeObject(installGitRequestParams);
-
-            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
-            {
-                client.SendFrame(installGitRequestMessage);
-
-                string message = client.ReceiveFrameString();
-
-                Console.WriteLine();
-                Console.WriteLine("InstallGitRequest : Received '{0}'", message);
-            }*/
-
-            // Install7ZipRequest
-            /*object install7ZipRequestParams = new Install7ZipRequest
-            {
-                APIKey = clientRequestKey,
-                Async = true
-            };
-
-            string install7ZipRequestMessage = JsonConvert.SerializeObject(install7ZipRequestParams);
-
-            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
-            {
-                client.SendFrame(install7ZipRequestMessage);
-
-                string message = client.ReceiveFrameString();
-
-                Console.WriteLine();
-                Console.WriteLine("Install7ZipRequest : Received '{0}'", message);
-            }*/
-
-            // InstallKLiteRequest
-            /*object installKLiteRequestParams = new InstallKLiteRequest
-            {
-                APIKey = clientRequestKey,
-                Async = true
-            };
-
-            string installKLiteRequestMessage = JsonConvert.SerializeObject(installKLiteRequestParams);
-
-            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
-            {
-                client.SendFrame(installKLiteRequestMessage);
-
-                string message = client.ReceiveFrameString();
-
-                Console.WriteLine();
-                Console.WriteLine("InstallKLiteRequest : Received '{0}'", message);
-            }*/
-
-            // InstallFirefoxRequest
-            /*object installFirefoxRequestParams = new InstallFirefoxRequest
-            {
-                APIKey = clientRequestKey,
-                Async = true
-            };
-
-            string installFirefoxRequestMessage = JsonConvert.SerializeObject(installFirefoxRequestParams);
-
-            using (RequestSocket client = new RequestSocket("tcp://localhost:5589"))
-            {
-                client.SendFrame(installFirefoxRequestMessage);
-
-                string message = client.ReceiveFrameString();
-
-                Console.WriteLine();
-                Console.WriteLine("InstallFirefoxRequest : Received '{0}'", message);
-            }*/
-
-            Console.ReadKey();
+            WriteOptionsMenu();
         }
     }
 }

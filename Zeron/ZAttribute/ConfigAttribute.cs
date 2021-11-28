@@ -1,12 +1,14 @@
 ﻿// Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-namespace Zeron
+namespace Zeron.ZAttribute
 {
     /// <summary>
-    /// Zeron
+    /// ConfigAttribute
     /// </summary>
-    internal class Zeron
+    [AttributeUsage(AttributeTargets.Class)]
+    public class ConfigAttribute : Attribute
     {
+
     }
 }
