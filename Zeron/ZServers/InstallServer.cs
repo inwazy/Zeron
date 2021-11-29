@@ -34,7 +34,7 @@ namespace Zeron.ZServers
         private static readonly System.Timers.Timer m_TimerQueues = new();
 
         // Timer Install Queues Trigger Interval
-        private static readonly int m_TimerQueuesTriggerInterval = 60000;
+        private static readonly int m_TimerQueuesTriggerInterval = 50000;
 
         // Enable Queues trigger
         private static bool m_EnableQueuesProc = true;
@@ -225,7 +225,9 @@ namespace Zeron.ZServers
 
                     if (procStart != null)
                     {
+                        procStart.EnableRaisingEvents = true;
                         procStart.WaitForExit();
+                        procStart.Close();
 
                         result = true;
                     }
@@ -233,15 +235,15 @@ namespace Zeron.ZServers
             }
             catch (InvalidOperationException e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer ExecuteQueues QueuesProc InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer ExecuteInstallQueues QueuesProc InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
             }
             catch (Win32Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer ExecuteQueues Win32Exception:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer ExecuteInstallQueues Win32Exception:{0}\n{1}", e.Message, e.StackTrace));
             }
             catch (FileNotFoundException e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer ExecuteQueues FileNotFoundException:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer ExecuteInstallQueues FileNotFoundException:{0}\n{1}", e.Message, e.StackTrace));
             }
 
             m_EnableInstallQueue = false;
@@ -306,26 +308,53 @@ namespace Zeron.ZServers
 
                         if (httpResponse.IsCompletedSuccessfully)
                         {
-                            using (FileStream? fileStream = File.Create(queuesType.FilePath))
+                            try
                             {
-                                httpResponse.Result.Content.CopyToAsync(fileStream).Wait();
+                                using (FileStream? fileStream = File.Create(queuesType.FilePath))
+                                {
+                                    httpResponse.Result.Content.CopyToAsync(fileStream).Wait();
 
-                                result = true;
+                                    result = true;
+                                }
+                            }
+                            catch (UnauthorizedAccessException e)
+                            {
+                                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl UnauthorizedAccessException:{0}\n{1}", e.Message, e.StackTrace));
+                            }
+                            catch (ArgumentException e)
+                            {
+                                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl ArgumentException:{0}\n{1}", e.Message, e.StackTrace));
+                            }
+                            catch (PathTooLongException e)
+                            {
+                                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl PathTooLongException:{0}\n{1}", e.Message, e.StackTrace));
+                            }
+                            catch (DirectoryNotFoundException e)
+                            {
+                                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl DirectoryNotFoundException:{0}\n{1}", e.Message, e.StackTrace));
+                            }
+                            catch (IOException e)
+                            {
+                                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl IOException:{0}\n{1}", e.Message, e.StackTrace));
+                            }
+                            catch (NotSupportedException e)
+                            {
+                                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl NotSupportedException:{0}\n{1}", e.Message, e.StackTrace));
                             }
                         }
                     }
                 }
                 catch (InvalidOperationException e)
                 {
-                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetFileFromUrl InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
                 }
                 catch (HttpRequestException e)
                 {
-                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetFileFromUrl HttpRequestException:{0}\n{1}", e.Message, e.StackTrace));
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl HttpRequestException:{0}\n{1}", e.Message, e.StackTrace));
                 }
                 catch (TaskCanceledException e)
                 {
-                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetFileFromUrl TaskCanceledException:{0}\n{1}", e.Message, e.StackTrace));
+                    ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl TaskCanceledException:{0}\n{1}", e.Message, e.StackTrace));
                 }
             }
 

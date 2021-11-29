@@ -47,7 +47,8 @@ namespace Zeron.Demand.ZServices
 
                 string? repoTempPath = ManagedPackageServer.RepoTempPath;
 
-                if (repo != null && repo.Name != null)
+                if (repo != null 
+                    && repo.Name != null && !string.IsNullOrEmpty(repo.Name))
                 {
                     string? repoUrl = repo.Urlx86;
                     string? repoArgs = repo.CmdInstallx86;

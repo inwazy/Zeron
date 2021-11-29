@@ -40,10 +40,29 @@ namespace Zeron.Demand.ZServices
                 {
                     dynamic proc = new ExpandoObject();
 
-                    proc.id = process.Id;
-                    proc.process_name = process.ProcessName;
-                    proc.machine_name = process.MachineName;
-                    proc.main_window_title = process.MainWindowTitle;
+                    try
+                    {
+                        proc.id = process.Id;
+                        proc.process_name = process.ProcessName;
+                        proc.machine_name = process.MachineName;
+                        proc.responding = process.Responding;
+                        proc.main_window_title = process.MainWindowTitle;
+                        proc.base_priority = process.BasePriority;
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        if (DeployServer.AppDebug)
+                        {
+                            ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ProcessInfo Error:{0}\n{1}", e.Message, e.StackTrace));
+                        }
+                    }
+                    catch (NotSupportedException e)
+                    {
+                        if (DeployServer.AppDebug)
+                        {
+                            ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ProcessInfo Error:{0}\n{1}", e.Message, e.StackTrace));
+                        }
+                    }
 
                     processLists.Add(proc);
                 }
