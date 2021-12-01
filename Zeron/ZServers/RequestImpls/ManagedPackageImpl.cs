@@ -31,6 +31,11 @@ namespace Zeron.ZServers.RequestImpls
         public bool Async { get; set; }
 
         /// <summary>
+        /// NotifySubscriber
+        /// </summary>
+        public bool NotifySubscriber { get; set; }
+
+        /// <summary>
         /// Dispose
         /// </summary>
         /// <returns>Returns void.</returns>

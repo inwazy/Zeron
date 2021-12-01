@@ -423,7 +423,7 @@ namespace Zeron.Demand.ZServers.Impls
 
                     m_ResponseSocket.SendFrame(responseMessage);
 
-                    if (serviceAttribute.ZmqNotifySubscriber)
+                    if (serviceAttribute.ZmqNotifySubscriber || Convert.ToBoolean(json["NotifySubscriber"]))
                     {
                         if (serviceInstance != null)
                         {
