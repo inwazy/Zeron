@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net7.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Company>Inwazy Technology</Company>
@@ -34,10 +34,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="5.0.1" />
-    <PackageReference Include="NLog.Config" Version="4.7.15" />
-    <PackageReference Include="NLog.Schema" Version="5.0.1" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+    <PackageReference Include="NLog" Version="5.0.5" />
+    <PackageReference Include="NLog.Schema" Version="5.0.5" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
   </ItemGroup>
 
 </Project>
