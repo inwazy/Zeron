@@ -20,7 +20,7 @@ namespace Zeron.Demand.ZServers
     internal class ManagedPackageServer : ConfigurationTable, IServer
     {
         // ManagedPackageImpl instance.
-        private readonly ManagedPackageImpl m_ManagedPackageImpl = new();
+        private readonly ManagedPackageDbImpl m_ManagedPackageImpl = new();
 
         /// <summary>
         /// DbSourceFile
@@ -118,7 +118,7 @@ namespace Zeron.Demand.ZServers
             if (commands.PackageName != null 
                 && !string.IsNullOrEmpty(commands.PackageName))
             {
-                ManagedPackageRepoType? repoResult = ManagedPackageImpl.GetSingleByName(commands.PackageName);
+                ManagedPackageRepoType? repoResult = ManagedPackageDbImpl.GetSingleByName(commands.PackageName);
 
                 if (repoResult != null)
                 {

@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace Zeron.ZCore.Utils
@@ -40,11 +41,17 @@ namespace Zeron.ZCore.Utils
 
             byte[] cipherTextBytes;
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-            byte[] keyBytes = new Rfc2898DeriveBytes(m_CryptPasswordHash, Encoding.ASCII.GetBytes(m_CryptSaltKey)).GetBytes(256 / 8);
+            byte[] keyBytes = Encoding.UTF8.GetByteCount(m_CryptSaltKey) == 32 
+                ? Encoding.UTF8.GetBytes(m_CryptSaltKey) 
+                : SHA256.HashData(Encoding.UTF8.GetBytes(m_CryptSaltKey));
 
             using (Aes aesProvider = Aes.Create())
             {
-                ICryptoTransform encryptor = aesProvider.CreateEncryptor(keyBytes, Encoding.ASCII.GetBytes(iv));
+                aesProvider.Mode = CipherMode.CBC;
+                aesProvider.Key = keyBytes;
+                aesProvider.IV = Encoding.ASCII.GetBytes(iv);
+                
+                ICryptoTransform encryptor = aesProvider.CreateEncryptor(aesProvider.Key, aesProvider.IV);
 
                 using (MemoryStream memoryStream = new())
                 {
@@ -80,11 +87,17 @@ namespace Zeron.ZCore.Utils
 
             string plainText;
             byte[] cipherTextBytes = Convert.FromBase64String(cipherText);
-            byte[] keyBytes = new Rfc2898DeriveBytes(m_CryptPasswordHash, Encoding.ASCII.GetBytes(m_CryptSaltKey)).GetBytes(256 / 8);
+            byte[] keyBytes = Encoding.UTF8.GetByteCount(m_CryptSaltKey) == 32
+                ? Encoding.UTF8.GetBytes(m_CryptSaltKey)
+                : SHA256.HashData(Encoding.UTF8.GetBytes(m_CryptSaltKey));
 
             using (Aes aesProvider = Aes.Create())
             {
-                ICryptoTransform decryptor = aesProvider.CreateDecryptor(keyBytes, Encoding.ASCII.GetBytes(iv));
+                aesProvider.Mode = CipherMode.CBC;
+                aesProvider.Key = keyBytes;
+                aesProvider.IV = Encoding.ASCII.GetBytes(iv);
+
+                ICryptoTransform decryptor = aesProvider.CreateDecryptor(aesProvider.Key, aesProvider.IV);
                 
                 using (MemoryStream memoryStream = new(cipherTextBytes))
                 {

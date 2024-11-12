@@ -22,7 +22,7 @@ Building requires [Visual Studio 2022 Community](https://visualstudio.microsoft.
 
 ## License
 
-Copyright (c) 2017-2021 Ji-Feng Tsai.  
+Copyright (c) 2017-2024 Ji-Feng Tsai.  
 Code released under the MIT license.  
 
 ## Donation

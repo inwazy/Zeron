@@ -39,7 +39,7 @@ namespace Zeron.ZServers
         // Email queue send signal.
         private static readonly Semaphore m_MailSendSignal = new(0, 20000);
 
-        // Email send per milliseconds
+        // Email send per milliseconds.
         private static readonly int m_DelayTimeToSend = 10;
 
         /// <summary>

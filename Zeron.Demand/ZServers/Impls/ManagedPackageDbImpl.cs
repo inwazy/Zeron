@@ -12,9 +12,9 @@ using Zeron.ZServers;
 namespace Zeron.Demand.ZServers.Impls
 {
     /// <summary>
-    /// ManagedPackageImpl
+    /// ManagedPackageDbImpl
     /// </summary>
-    internal class ManagedPackageImpl : IImpl
+    internal class ManagedPackageDbImpl : IImpl
     {
         // SQLite Connect instance
         private static SqliteConnection? m_DbConnection;
