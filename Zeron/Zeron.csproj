@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Company>Inwazy Technology</Company>
@@ -17,7 +17,7 @@
     <Version>1.0.0</Version>
     <Company>Inwazy Technology</Company>
     <Product>Zeron</Product>
-    <Copyright>Copyright (c) 2017-2022 Ji-Feng Tsai</Copyright>
+    <Copyright>Copyright (c) 2017-2024 Ji-Feng Tsai</Copyright>
     <ApplicationIcon>App.ico</ApplicationIcon>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
   </PropertyGroup>
@@ -34,9 +34,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="5.2.4" />
-    <PackageReference Include="NLog.Schema" Version="5.2.4" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+    <PackageReference Include="NLog" Version="5.3.4" />
+    <PackageReference Include="NLog.Schema" Version="5.3.4" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
   </ItemGroup>
 
 </Project>

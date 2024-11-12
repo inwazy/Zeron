@@ -5,6 +5,7 @@ using NetMQ;
 using NetMQ.Sockets;
 using Newtonsoft.Json;
 using Zeron.Client.ZAttribute;
+using Zeron.ZCore.Utils;
 using Zeron.ZServers.RequestImpls;
 
 namespace Zeron.Client
@@ -15,7 +16,7 @@ namespace Zeron.Client
     public class Program
     {
         // Api key for client
-        private static readonly string m_ClientRequestKey = "UmMg1m+spDw6BGBeFwsW9A==";
+        private static readonly string m_ClientRequestKey = "/iohPDeOUwtm0QwAcfXjdQ==";
 
         // Options
         private static readonly List<OptionAttribute> m_Options = new();
@@ -34,7 +35,7 @@ namespace Zeron.Client
             m_Options.Add(new OptionAttribute("Run ManagedPackageRequest", () => RunManagedPackageRequest()));
 
             ConsoleKeyInfo consoleKeyinfo;
-
+            
             do
             {
                 consoleKeyinfo = Console.ReadKey();

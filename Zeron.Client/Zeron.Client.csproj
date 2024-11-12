@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <StartupObject>Zeron.Client.Program</StartupObject>
-    <Copyright>Copyright ©  2022</Copyright>
+    <Copyright>Copyright ©  2024</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

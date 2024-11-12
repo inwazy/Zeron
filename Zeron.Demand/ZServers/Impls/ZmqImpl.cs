@@ -387,7 +387,7 @@ namespace Zeron.Demand.ZServers.Impls
                     string apiName = Convert.ToString(json["APIName"]);
                     string apiKey = Convert.ToString(json["APIKey"]);
                     bool asyncTask = Convert.ToBoolean(json["Async"]);
-
+                    
                     m_RepAPIResponse.TryGetValue(apiName, out ServicesRepAttribute? serviceAttribute);
                     m_RepAPITypeResponse.TryGetValue(apiName, out Type? serviceType);
 
@@ -433,6 +433,8 @@ namespace Zeron.Demand.ZServers.Impls
                 }
                 catch (Exception e)
                 {
+                    m_ResponseSocket.SendFrameEmpty();
+                    
                     if (DeployServer.AppDebug)
                     {
                         ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Response Error:{0}\n{1}", e.Message, e.StackTrace));
