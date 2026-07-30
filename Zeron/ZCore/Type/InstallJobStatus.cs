@@ -1,99 +1,92 @@
-﻿// Zeron - Scheduled Task Application for Windows OS
+// Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// InstallQueuesType
+    /// InstallJobStatus
     /// </summary>
-    public class InstallQueuesType
+    public class InstallJobStatus
     {
         /// <summary>
-        /// RepoUrl
+        /// QueueCount
         /// </summary>
-        public string? RepoUrl
+        public int QueueCount
         {
             get;
             set;
         }
 
         /// <summary>
-        /// FileName
+        /// IsRunning
         /// </summary>
-        public string? FileName
+        public bool IsRunning
         {
             get;
             set;
         }
 
         /// <summary>
-        /// FilePath
+        /// CurrentPackage
         /// </summary>
-        public string? FilePath
+        public string? CurrentPackage
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Arguments
+        /// CurrentOperation
         /// </summary>
-        public string? Arguments
+        public string? CurrentOperation
         {
             get;
             set;
         }
 
         /// <summary>
-        /// PackageName
+        /// LastPackage
         /// </summary>
-        public string? PackageName
+        public string? LastPackage
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Operation
+        /// LastOperation
         /// </summary>
-        public string? Operation
+        public string? LastOperation
         {
             get;
             set;
         }
 
         /// <summary>
-        /// ScriptBefore
+        /// LastSuccess
         /// </summary>
-        public string? ScriptBefore
+        public bool? LastSuccess
         {
             get;
             set;
         }
 
         /// <summary>
-        /// ScriptAfter
+        /// LastExitCode
         /// </summary>
-        public string? ScriptAfter
+        public int? LastExitCode
         {
             get;
             set;
         }
 
         /// <summary>
-        /// InstallQueuesType
+        /// LastCompletedAt
         /// </summary>
-        /// <returns>Returns void.</returns>
-        public InstallQueuesType()
+        public string? LastCompletedAt
         {
-            RepoUrl = "";
-            FileName = "";
-            FilePath = "";
-            Arguments = "";
-            PackageName = "";
-            Operation = "";
-            ScriptBefore = "";
-            ScriptAfter = "";
+            get;
+            set;
         }
     }
 }

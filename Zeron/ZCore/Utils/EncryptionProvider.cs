@@ -11,9 +11,6 @@ namespace Zeron.ZCore.Utils
     /// </summary>
     public static class EncryptionProvider
     {
-        // Crypt Password hash.
-        private const string m_CryptPasswordHash = "yyFDdat!@";
-
         // Crypt Salt key.
         private const string m_CryptSaltKey = "YRjo1*9!";
 
@@ -33,34 +30,25 @@ namespace Zeron.ZCore.Utils
                 return "";
             }
 
-            if (iv == null || iv.Length == 0)
-            {
-                iv = m_CryptIVKey;
-            }
-
-            byte[] cipherTextBytes;
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-            byte[] keyBytes = Encoding.UTF8.GetByteCount(m_CryptSaltKey) == 32 
-                ? Encoding.UTF8.GetBytes(m_CryptSaltKey) 
-                : SHA256.HashData(Encoding.UTF8.GetBytes(m_CryptSaltKey));
+            byte[] keyBytes = DeriveKeyBytes(m_CryptSaltKey);
+            byte[] ivBytes = DeriveIvBytes(string.IsNullOrEmpty(iv) ? m_CryptIVKey : iv);
 
-            using (Aes aesProvider = Aes.Create())
+            using Aes aesProvider = Aes.Create();
+            aesProvider.Mode = CipherMode.CBC;
+            aesProvider.Padding = PaddingMode.PKCS7;
+            aesProvider.Key = keyBytes;
+            aesProvider.IV = ivBytes;
+
+            using ICryptoTransform encryptor = aesProvider.CreateEncryptor();
+            using MemoryStream memoryStream = new();
+            using (CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write))
             {
-                aesProvider.Mode = CipherMode.CBC;
-                aesProvider.Key = keyBytes;
-                aesProvider.IV = Encoding.ASCII.GetBytes(iv);
-                
-                ICryptoTransform encryptor = aesProvider.CreateEncryptor(aesProvider.Key, aesProvider.IV);
-
-                using MemoryStream memoryStream = new();
-                using CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write);
-
                 cryptoStream.Write(plainTextBytes, 0, plainTextBytes.Length);
                 cryptoStream.FlushFinalBlock();
-                cipherTextBytes = memoryStream.ToArray();
             }
 
-            return Convert.ToBase64String(cipherTextBytes);
+            return Convert.ToBase64String(memoryStream.ToArray());
         }
 
         /// <summary>
@@ -71,38 +59,94 @@ namespace Zeron.ZCore.Utils
         /// <returns>Returns string.</returns>
         public static string Decrypt(string? cipherText, string? iv = "")
         {
+            if (!TryDecrypt(cipherText, out string? plainText, iv))
+            {
+                throw new CryptographicException("Unable to decrypt the provided ciphertext.");
+            }
+
+            return plainText ?? "";
+        }
+
+        /// <summary>
+        /// TryDecrypt
+        /// </summary>
+        /// <param name="cipherText"></param>
+        /// <param name="plainText"></param>
+        /// <param name="iv"></param>
+        /// <returns>Returns bool.</returns>
+        public static bool TryDecrypt(string? cipherText, out string? plainText, string? iv = "")
+        {
+            plainText = null;
+
             if (cipherText == null || cipherText.Length == 0)
             {
-                return "";
+                return false;
             }
 
-            if (iv == null || iv.Length == 0)
+            try
             {
-                iv = m_CryptIVKey;
-            }
+                byte[] cipherTextBytes = Convert.FromBase64String(cipherText);
+                byte[] keyBytes = DeriveKeyBytes(m_CryptSaltKey);
+                byte[] ivBytes = DeriveIvBytes(string.IsNullOrEmpty(iv) ? m_CryptIVKey : iv);
 
-            string plainText;
-            byte[] cipherTextBytes = Convert.FromBase64String(cipherText);
-            byte[] keyBytes = Encoding.UTF8.GetByteCount(m_CryptSaltKey) == 32
-                ? Encoding.UTF8.GetBytes(m_CryptSaltKey)
-                : SHA256.HashData(Encoding.UTF8.GetBytes(m_CryptSaltKey));
-
-            using (Aes aesProvider = Aes.Create())
-            {
+                using Aes aesProvider = Aes.Create();
                 aesProvider.Mode = CipherMode.CBC;
+                aesProvider.Padding = PaddingMode.PKCS7;
                 aesProvider.Key = keyBytes;
-                aesProvider.IV = Encoding.ASCII.GetBytes(iv);
+                aesProvider.IV = ivBytes;
 
-                ICryptoTransform decryptor = aesProvider.CreateDecryptor(aesProvider.Key, aesProvider.IV);
-
+                using ICryptoTransform decryptor = aesProvider.CreateDecryptor();
                 using MemoryStream memoryStream = new(cipherTextBytes);
                 using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
                 using StreamReader streamReader = new(cryptoStream);
 
                 plainText = streamReader.ReadToEnd();
+
+                return true;
+            }
+            catch (CryptographicException)
+            {
+                return false;
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// DeriveKeyBytes
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>Returns byte array.</returns>
+        private static byte[] DeriveKeyBytes(string source)
+        {
+            byte[] sourceBytes = Encoding.UTF8.GetBytes(source);
+
+            return sourceBytes.Length == 32
+                ? sourceBytes
+                : SHA256.HashData(sourceBytes);
+        }
+
+        /// <summary>
+        /// DeriveIvBytes - AES requires a 16-byte IV.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>Returns byte array.</returns>
+        private static byte[] DeriveIvBytes(string source)
+        {
+            byte[] sourceBytes = Encoding.UTF8.GetBytes(source);
+
+            if (sourceBytes.Length == 16)
+            {
+                return sourceBytes;
             }
 
-            return plainText;
+            byte[] hash = SHA256.HashData(sourceBytes);
+            byte[] iv = new byte[16];
+            Array.Copy(hash, iv, 16);
+
+            return iv;
         }
     }
 }

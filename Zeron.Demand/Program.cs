@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using System.Globalization;
+using NLog;
 using Topshelf;
 using Zeron.Demand.ZCore;
 using Zeron.Demand.ZServers;
@@ -23,6 +24,8 @@ namespace Zeron.Demand
         /// <returns>Returns void.</returns>
         public static void Main(string[] args)
         {
+            LogManager.Setup().LoadConfigurationFromFile("NLog.config");
+
             bool result = BootLoader();
 
             if (!result)

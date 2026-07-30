@@ -78,6 +78,18 @@ namespace Zeron.Demand.ZServers.Impls
         /// <returns>Returns void.</returns>
         public void Dispose()
         {
+            m_EnablePublisherProc = false;
+            m_EnableSubscriberProc = false;
+            m_EnableResponseProc = false;
+
+            try
+            {
+                m_PublisherSignal.Release();
+            }
+            catch (SemaphoreFullException)
+            {
+            }
+
             m_PublisherSocket.Dispose();
             m_SubscriberSocket.Dispose();
             m_ResponseSocket.Dispose();
@@ -268,7 +280,7 @@ namespace Zeron.Demand.ZServers.Impls
 
                     if (m_PublisherSocket != null)
                     {
-                        m_PublisherSocket.SendMoreFrame("").SendFrame(message);
+                        m_PublisherSocket.SendMoreFrame(topic).SendFrame(message);
                     }
                 }
                 catch (Exception e)
@@ -320,7 +332,7 @@ namespace Zeron.Demand.ZServers.Impls
                         continue;
                     }
 
-                    if (!m_SubscriberApiKey.Contains(EncryptionProvider.Decrypt(apiKey)))
+                    if (!ApiKeyValidator.Validate(m_SubscriberApiKey, apiKey))
                     {
                         continue;
                     }
@@ -398,12 +410,15 @@ namespace Zeron.Demand.ZServers.Impls
                         continue;
                     }
 
-                    if (!m_ResponsetApiKey.Contains(EncryptionProvider.Decrypt(apiKey)))
+                    if (!ApiKeyValidator.Validate(m_ResponsetApiKey, apiKey))
                     {
+                        ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture, "ZmqImpl rejected API request: {0}", apiName));
                         m_ResponseSocket.SendFrameEmpty();
 
                         continue;
                     }
+
+                    ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture, "ZmqImpl API request: {0}", apiName));
 
                     IServices? serviceInstance = Activator.CreateInstance(serviceType) as IServices;
 

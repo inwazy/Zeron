@@ -3,6 +3,7 @@
 
 using System.Collections.Specialized;
 using System.Globalization;
+using System.Text;
 using Zeron.Demand.ZServers.Impls;
 using Zeron.ZCore;
 using Zeron.ZCore.Container;
@@ -135,6 +136,8 @@ namespace Zeron.Demand.ZServers
                 if (PubSocketEnabled)
                 {
                     m_ZmqImpl.PreparePubSocket(PubSocketAddr);
+                    InstallEventPublisher.PublishHandler = (topic, message) =>
+                        ZmqImpl.PublishMessage(topic, Encoding.UTF8.GetBytes(message));
                 }
 
                 if (SubSocketEnabled)
@@ -163,6 +166,7 @@ namespace Zeron.Demand.ZServers
         {
             try
             {
+                InstallEventPublisher.PublishHandler = null;
                 m_ZmqImpl.Dispose();
             }
             catch (Exception e)

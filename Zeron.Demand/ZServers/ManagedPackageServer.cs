@@ -131,7 +131,7 @@ namespace Zeron.Demand.ZServers
                     result.CmdUnInstallx64 = repoResult.CmdUnInstallx64;
                     result.ScriptInstallBefore = repoResult.ScriptInstallBefore;
                     result.ScriptInstallAfter = repoResult.ScriptInstallAfter;
-                    result.ScriptUnInstallBefore = repoResult.ScriptInstallBefore;
+                    result.ScriptUnInstallBefore = repoResult.ScriptUnInstallBefore;
                     result.ScriptUnInstallAfter = repoResult.ScriptUnInstallAfter;
                 }
             }

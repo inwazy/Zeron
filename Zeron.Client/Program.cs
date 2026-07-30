@@ -15,8 +15,9 @@ namespace Zeron.Client
     /// </summary>
     public class Program
     {
-        // Api key for client
-        private static readonly string m_ClientRequestKey = "/iohPDeOUwtm0QwAcfXjdQ==";
+        // Api key for client - encrypt at runtime from env or default config value
+        private static readonly string m_ClientRequestKey = EncryptionProvider.Encrypt(
+            Environment.GetEnvironmentVariable("ZERON_API_KEY") ?? "zeron.testkey");
 
         // Options
         private static readonly List<OptionAttribute> m_Options = new();
