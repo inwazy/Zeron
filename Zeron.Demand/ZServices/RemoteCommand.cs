@@ -45,11 +45,14 @@ namespace Zeron.Demand.ZServices
                     return ServiceResponse.SerializeFailure("TargetApi is required.");
                 }
 
+                string? assignmentId = Convert.ToString(aJson["AssignmentId"]);
                 string response = InternalServiceInvoker.Invoke(targetApi, command);
                 bool success = response.Contains("\"success\":true", StringComparison.OrdinalIgnoreCase)
                     || response.Contains("\"success\": true", StringComparison.OrdinalIgnoreCase);
 
                 AuditServer.Log(targetApi, command, success, success ? "Remote command executed" : response, "sub");
+
+                ReporterServer.ReportTaskResult(assignmentId, success, response, success ? null : response);
 
                 InstallEventPublisher.PublishObject("remotecommand.executed", new
                 {
