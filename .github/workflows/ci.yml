@@ -29,5 +29,8 @@ jobs:
       - name: Build
         run: dotnet build Zeron.sln -c Release --no-restore
 
+      - name: Build Demand
+        run: dotnet build Zeron.Demand/Zeron.Demand.csproj -c Release --no-restore
+
       - name: Test
         run: dotnet test Zeron.sln -c Release --no-build --verbosity normal

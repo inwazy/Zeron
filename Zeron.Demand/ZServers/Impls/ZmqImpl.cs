@@ -8,7 +8,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Zeron.ZAttribute;
+using Zeron.Demand.ZCore;
 using Zeron.ZCore;
 using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
@@ -21,56 +21,50 @@ namespace Zeron.Demand.ZServers.Impls
     /// </summary>
     internal class ZmqImpl : IImpl
     {
-        // Publisher background threading.
+        // Publisher thread.
         private static readonly Thread m_PublisherThread = new(PublisherSocketProc);
 
-        // Subscriber background threading.
+        // Subscriber thread.
         private static readonly Thread m_SubscriberThread = new(SubscriberSocketProc);
 
-        // Response background threading.
+        // Response thread.
         private static readonly Thread m_ResponseThread = new(ResponseSocketProc);
 
-        // NetNQ PublisherSocket instance.
+        // Publisher socket.
         private static readonly PublisherSocket m_PublisherSocket = new();
 
-        // NetNQ SubscriberSocket instance.
+        // Subscriber socket.
         private static readonly SubscriberSocket m_SubscriberSocket = new();
 
-        // NetNQ ResponseSocket instance.
+        // Response socket.
         private static readonly ResponseSocket m_ResponseSocket = new();
 
-        // Signal Publisher
+        // Publisher signal.
         private static readonly Semaphore m_PublisherSignal = new(0, 20000);
 
-        // Queue Publisher Message
+        // Publisher API queue messages.
         private static readonly ConcurrentQueue<Tuple<string, byte[]>> m_PubAPIQueueMessages = new();
 
-        // ConcurrentDictionary Subscriber APIs
-        private static readonly ConcurrentDictionary<string, ServicesSubAttribute> m_SubAPIResponse = new();
-
-        // ConcurrentDictionary Subscriber APIs Type
-        private static readonly ConcurrentDictionary<string, Type> m_SubAPITypeResponse = new();
-
-        // ConcurrentDictionary Response APIs
-        private static readonly ConcurrentDictionary<string, ServicesRepAttribute> m_RepAPIResponse = new();
-
-        // ConcurrentDictionary Response APIs Type
-        private static readonly ConcurrentDictionary<string, Type> m_RepAPITypeResponse = new();
-
-        // Enable Publisher trigger.
+        // Enable publisher process.
         private static bool m_EnablePublisherProc = true;
 
-        // Enable Subscriber trigger.
+        // Enable subscriber process.
         private static bool m_EnableSubscriberProc = true;
 
-        // Enable Response trigger.
+        // Enable response process.
         private static bool m_EnableResponseProc = true;
 
-        // Client Subscriber Api key.
+        // Subscriber API key.
         private static string m_SubscriberApiKey = "";
 
-        // Client Response Api key.
+        // Response API key.
         private static string m_ResponsetApiKey = "";
+
+        // Response API scopes.
+        private static string m_RepApiScopes = "*";
+
+        // Subscriber API scopes.
+        private static string m_SubApiScopes = "*";
 
         /// <summary>
         /// Dispose
@@ -93,89 +87,41 @@ namespace Zeron.Demand.ZServers.Impls
             m_PublisherSocket.Dispose();
             m_SubscriberSocket.Dispose();
             m_ResponseSocket.Dispose();
-
             m_PublisherSignal.Dispose();
+        }
 
-            m_SubAPIResponse.Clear();
-            m_SubAPITypeResponse.Clear();
-            m_RepAPIResponse.Clear();
-            m_RepAPITypeResponse.Clear();
+        /// <summary>
+        /// PrepareServices
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <returns>Returns void.</returns>
+        public static void PrepareServices(Assembly assembly)
+        {
+            ServiceRegistry.RegisterFromAssembly(assembly);
         }
 
         /// <summary>
         /// PrepareSubAPI
         /// </summary>
         /// <param name="apiKey"></param>
+        /// <param name="apiScopes"></param>
         /// <returns>Returns void.</returns>
-        public void PrepareSubAPI(string? apiKey)
+        public void PrepareSubAPI(string? apiKey, string? apiScopes)
         {
-            foreach (Type assemblyType in Assembly.GetExecutingAssembly().GetTypes())
-            {
-                if (assemblyType.GetCustomAttributes(typeof(ServicesSubAttribute), true).Length > 0)
-                {
-                    ServicesSubAttribute? repAttribute = assemblyType.GetCustomAttribute(typeof(ServicesSubAttribute)) as ServicesSubAttribute;
-
-                    if (repAttribute == null)
-                    {
-                        continue;
-                    }
-
-                    string? apiName = repAttribute.ZmqApiName;
-
-                    if (repAttribute.ZmqApiEnabled == false)
-                    {
-                        continue;
-                    }
-
-                    if (apiName == null || string.IsNullOrEmpty(apiName))
-                    {
-                        apiName = assemblyType.Name;
-                    }
-
-                    m_SubAPIResponse.TryAdd(apiName, repAttribute);
-                    m_SubAPITypeResponse.TryAdd(apiName, assemblyType);
-                }
-            }
-
             m_SubscriberApiKey = apiKey ?? "";
+            m_SubApiScopes = string.IsNullOrWhiteSpace(apiScopes) ? "*" : apiScopes;
         }
 
         /// <summary>
         /// PrepareRepAPI
         /// </summary>
         /// <param name="apiKey"></param>
+        /// <param name="apiScopes"></param>
         /// <returns>Returns void.</returns>
-        public void PrepareRepAPI(string? apiKey)
+        public void PrepareRepAPI(string? apiKey, string? apiScopes)
         {
-            foreach (Type assemblyType in Assembly.GetExecutingAssembly().GetTypes())
-            {
-                if (assemblyType.GetCustomAttributes(typeof(ServicesRepAttribute), true).Length > 0)
-                {
-                    ServicesRepAttribute? repAttribute = assemblyType.GetCustomAttribute(typeof(ServicesRepAttribute)) as ServicesRepAttribute;
-                    
-                    if (repAttribute == null)
-                    {
-                        continue;
-                    }
-
-                    string? apiName = repAttribute.ZmqApiName;
-
-                    if (repAttribute.ZmqApiEnabled == false)
-                    {
-                        continue;
-                    }
-
-                    if (apiName == null || string.IsNullOrEmpty(apiName))
-                    {
-                        apiName = assemblyType.Name;
-                    }
-
-                    m_RepAPIResponse.TryAdd(apiName, repAttribute);
-                    m_RepAPITypeResponse.TryAdd(apiName, assemblyType);
-                }
-            }
-
             m_ResponsetApiKey = apiKey ?? "";
+            m_RepApiScopes = string.IsNullOrWhiteSpace(apiScopes) ? "*" : apiScopes;
         }
 
         /// <summary>
@@ -246,14 +192,13 @@ namespace Zeron.Demand.ZServers.Impls
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void PublishMessage(string aTopic, byte[] aMessage)
         {
-            if (m_EnablePublisherProc)
+            if (!m_EnablePublisherProc || m_PublisherSocket == null)
             {
-                if (m_PublisherSocket != null)
-                {
-                    m_PubAPIQueueMessages.Enqueue(new Tuple<string, byte[]>(aTopic, aMessage));
-                    m_PublisherSignal.Release();
-                }
+                return;
             }
+
+            m_PubAPIQueueMessages.Enqueue(new Tuple<string, byte[]>(aTopic, aMessage));
+            m_PublisherSignal.Release();
         }
 
         /// <summary>
@@ -275,13 +220,7 @@ namespace Zeron.Demand.ZServers.Impls
                         continue;
                     }
 
-                    string topic = item.Item1;
-                    byte[] message = item.Item2;
-
-                    if (m_PublisherSocket != null)
-                    {
-                        m_PublisherSocket.SendMoreFrame(topic).SendFrame(message);
-                    }
+                    m_PublisherSocket.SendMoreFrame(item.Item1).SendFrame(item.Item2);
                 }
                 catch (Exception e)
                 {
@@ -300,15 +239,13 @@ namespace Zeron.Demand.ZServers.Impls
         /// <returns>Returns void.</returns>
         private static void SubscriberSocketProc(object? aArg)
         {
-            string message;
-
             while (m_EnableSubscriberProc)
             {
                 try
                 {
-                    message = m_SubscriberSocket.ReceiveFrameString();
+                    string message = m_SubscriberSocket.ReceiveFrameString();
 
-                    if (message == null || string.IsNullOrEmpty(message))
+                    if (string.IsNullOrEmpty(message))
                     {
                         continue;
                     }
@@ -324,36 +261,31 @@ namespace Zeron.Demand.ZServers.Impls
                     string apiKey = Convert.ToString(json["APIKey"]);
                     bool asyncTask = Convert.ToBoolean(json["Async"]);
 
-                    m_SubAPIResponse.TryGetValue(apiName, out ServicesSubAttribute? serviceAttribute);
-                    m_SubAPITypeResponse.TryGetValue(apiName, out Type? serviceType);
-
-                    if (serviceAttribute == null || serviceType == null)
+                    if (!ServiceRegistry.TryGetSubEntry(apiName, out ServiceRegistry.SubEntry? entry) || entry == null)
                     {
                         continue;
                     }
 
                     if (!ApiKeyValidator.Validate(m_SubscriberApiKey, apiKey))
                     {
+                        AuditServer.Log(apiName, Convert.ToString(json["Command"]), false, "Invalid API key", "sub");
                         continue;
                     }
 
-                    IServices? serviceInstance = Activator.CreateInstance(serviceType) as IServices;
-
-                    string responseMessage = "";
-
-                    if (serviceInstance != null)
+                    if (!ApiScopeValidator.IsAllowed(m_SubApiScopes, apiName, "*"))
                     {
-                        if (asyncTask)
-                        {
-                            responseMessage = serviceInstance.OnSubscriberAsync(json);
-                        }
-                        else
-                        {
-                            responseMessage = serviceInstance.OnSubscriber(json);
-                        }
+                        AuditServer.Log(apiName, Convert.ToString(json["Command"]), false, "Scope denied", "sub");
+                        continue;
                     }
 
-                    Thread.Sleep(300);
+                    string responseMessage = ServiceRegistry.InvokeSub(apiName, json, asyncTask);
+
+                    AuditServer.Log(apiName, Convert.ToString(json["Command"]), true, "SUB handled", "sub");
+
+                    if (DeployServer.AppDebug)
+                    {
+                        ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture, "ZmqImpl SUB handled: {0} -> {1}", apiName, responseMessage));
+                    }
                 }
                 catch (Exception e)
                 {
@@ -372,18 +304,15 @@ namespace Zeron.Demand.ZServers.Impls
         /// <returns>Returns void.</returns>
         private static void ResponseSocketProc(object? aArg)
         {
-            string message;
-
             while (m_EnableResponseProc)
             {
                 try
                 {
-                    message = m_ResponseSocket.ReceiveFrameString();
+                    string message = m_ResponseSocket.ReceiveFrameString();
 
-                    if (message == null || string.IsNullOrEmpty(message))
+                    if (string.IsNullOrEmpty(message))
                     {
                         m_ResponseSocket.SendFrameEmpty();
-
                         continue;
                     }
 
@@ -392,64 +321,56 @@ namespace Zeron.Demand.ZServers.Impls
                     if (json == null)
                     {
                         m_ResponseSocket.SendFrameEmpty();
-
                         continue;
                     }
 
                     string apiName = Convert.ToString(json["APIName"]);
                     string apiKey = Convert.ToString(json["APIKey"]);
+                    string command = Convert.ToString(json["Command"]);
                     bool asyncTask = Convert.ToBoolean(json["Async"]);
-                    
-                    m_RepAPIResponse.TryGetValue(apiName, out ServicesRepAttribute? serviceAttribute);
-                    m_RepAPITypeResponse.TryGetValue(apiName, out Type? serviceType);
 
-                    if (serviceAttribute == null || serviceType == null)
+                    if (!ServiceRegistry.TryGetRepEntry(apiName, out ServiceRegistry.RepEntry? entry) || entry == null)
                     {
                         m_ResponseSocket.SendFrameEmpty();
-
                         continue;
                     }
 
                     if (!ApiKeyValidator.Validate(m_ResponsetApiKey, apiKey))
                     {
-                        ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture, "ZmqImpl rejected API request: {0}", apiName));
+                        ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture, "ZmqImpl rejected API request (key): {0}", apiName));
+                        AuditServer.Log(apiName, command, false, "Invalid API key", "rep");
                         m_ResponseSocket.SendFrameEmpty();
+                        continue;
+                    }
 
+                    if (!ApiScopeValidator.IsAllowed(m_RepApiScopes, apiName, entry.Attribute.ApiScope))
+                    {
+                        ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture, "ZmqImpl rejected API request (scope): {0}", apiName));
+                        AuditServer.Log(apiName, command, false, "Scope denied", "rep");
+                        m_ResponseSocket.SendFrameEmpty();
                         continue;
                     }
 
                     ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture, "ZmqImpl API request: {0}", apiName));
 
-                    IServices? serviceInstance = Activator.CreateInstance(serviceType) as IServices;
+                    string responseMessage = ServiceRegistry.InvokeRep(apiName, json, asyncTask);
+                    bool success = responseMessage.Contains("\"success\":true", StringComparison.OrdinalIgnoreCase)
+                        || responseMessage.Contains("\"success\": true", StringComparison.OrdinalIgnoreCase);
 
-                    string responseMessage = "";
-
-                    if (serviceInstance != null)
-                    {
-                        if (asyncTask)
-                        {
-                            responseMessage = serviceInstance.OnRequestAsync(json);
-                        }
-                        else
-                        {
-                            responseMessage = serviceInstance.OnRequest(json);
-                        }
-                    }
+                    AuditServer.Log(apiName, command, success, success ? "OK" : responseMessage, "rep");
 
                     m_ResponseSocket.SendFrame(responseMessage);
 
-                    if (serviceAttribute.ZmqNotifySubscriber || Convert.ToBoolean(json["NotifySubscriber"]))
+                    if (entry.Attribute.ZmqNotifySubscriber || Convert.ToBoolean(json["NotifySubscriber"]))
                     {
-                        if (serviceInstance != null)
-                        {
-                            serviceInstance.OnNotifySubscriber(json, responseMessage);
-                        }
+                        IServices? serviceInstance = Activator.CreateInstance(entry.ServiceType) as IServices;
+                        serviceInstance?.OnNotifySubscriber(json, responseMessage);
                     }
                 }
                 catch (Exception e)
                 {
                     m_ResponseSocket.SendFrameEmpty();
-                    
+
                     if (DeployServer.AppDebug)
                     {
                         ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "ZmqImpl Response Error:{0}\n{1}", e.Message, e.StackTrace));

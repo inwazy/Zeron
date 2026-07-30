@@ -3,6 +3,7 @@
 
 using System.Collections.Specialized;
 using System.Globalization;
+using System.Reflection;
 using System.Text;
 using Zeron.Demand.ZServers.Impls;
 using Zeron.ZCore;
@@ -93,6 +94,24 @@ namespace Zeron.Demand.ZServers
         }
 
         /// <summary>
+        /// RepApiScopes
+        /// </summary>
+        public static string? RepApiScopes
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// SubApiScopes
+        /// </summary>
+        public static string? SubApiScopes
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// LoadConfig
         /// </summary>
         /// <param name="aConfig"></param>
@@ -118,6 +137,8 @@ namespace Zeron.Demand.ZServers
                 RepSocketEnabled = bool.Parse(aConfig["zmq_rep_enabled"] ?? "false");
                 RepSocketAddr = aConfig["zmq_rep_addr"];
                 RepApiKey = aConfig["zmq_rep_api_key"];
+                RepApiScopes = aConfig["zmq_rep_api_scopes"] ?? "*";
+                SubApiScopes = aConfig["zmq_sub_api_scopes"] ?? "*";
             }
             catch (Exception e)
             {
@@ -133,6 +154,8 @@ namespace Zeron.Demand.ZServers
         {
             try
             {
+                ZmqImpl.PrepareServices(Assembly.GetExecutingAssembly());
+
                 if (PubSocketEnabled)
                 {
                     m_ZmqImpl.PreparePubSocket(PubSocketAddr);
@@ -142,13 +165,13 @@ namespace Zeron.Demand.ZServers
 
                 if (SubSocketEnabled)
                 {
-                    m_ZmqImpl.PrepareSubAPI(SubApiKey);
+                    m_ZmqImpl.PrepareSubAPI(SubApiKey, SubApiScopes);
                     m_ZmqImpl.PrepareSubSocket(SubSocketAddr);
                 }
 
                 if (RepSocketEnabled)
                 {
-                    m_ZmqImpl.PrepareRepAPI(RepApiKey);
+                    m_ZmqImpl.PrepareRepAPI(RepApiKey, RepApiScopes);
                     m_ZmqImpl.PrepareRepSocket(RepSocketAddr);
                 }
             }

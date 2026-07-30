@@ -28,6 +28,7 @@ namespace Zeron.Client
         /// <returns>Returns void.</returns>
         public static void Main(string[] args)
         {
+            m_Options.Add(new OptionAttribute("Run HealthCheckRequest", () => RunCommandRequest(new HealthCheckImpl(), null)));
             m_Options.Add(new OptionAttribute("Run ServerInfoRequest", () => RunCommandRequest(new ServerInfoImpl(), null)));
             m_Options.Add(new OptionAttribute("Run ProcessInfoRequest", () => RunCommandRequest(new ProcessInfoImpl(), null)));
             m_Options.Add(new OptionAttribute("Run ManagedPackageRequest", () => RunCommandRequest(new ManagedPackageImpl(), "Enter command (e.g. install ccleaner /s | status | uninstall ccleaner):")));

@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using Zeron.Demand.ZCore;
+using Zeron.Demand.ZCore.Type;
 using Zeron.ZAttribute;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
@@ -11,7 +12,7 @@ using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServices
 {
-    [ServicesRep(ZmqApiName = "TaskPipeline", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "TaskPipeline", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "admin")]
 
     /// <summary>
     /// TaskPipeline - run JSON-defined task pipelines on demand.
@@ -65,7 +66,7 @@ namespace Zeron.Demand.ZServices
                 return ServiceResponse.SerializeFailure($"Task not found: {taskName}");
             }
 
-            TaskPipelineResult result = TaskPipelineExecutor.ExecuteTask(task);
+            TaskPipelineResultType result = TaskPipelineExecutor.ExecuteTask(task);
 
             return result.Success
                 ? ServiceResponse.SerializeSuccess(result)

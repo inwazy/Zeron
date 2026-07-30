@@ -2,21 +2,21 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using System.Globalization;
-using System.Text.Json;
 using Zeron.Demand.ZCore;
 using Zeron.ZAttribute;
 using Zeron.ZCore;
-using Zeron.ZCore.Utils;
+using Zeron.ZCore.Type;
 using Zeron.ZInterfaces;
+using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServices
 {
-    [ServicesRep(ZmqApiName = "PowerShell", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "write")]
+    [ServicesRep(ZmqApiName = "HealthCheck", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "read")]
 
     /// <summary>
-    /// PowerShellService
+    /// HealthCheck
     /// </summary>
-    internal class PowerShellService : IServices
+    internal class HealthCheck : IServices
     {
         /// <summary>
         /// OnRequest
@@ -27,29 +27,25 @@ namespace Zeron.Demand.ZServices
         {
             try
             {
-                string? command = Convert.ToString(aJson["Command"]);
+                InstallJobStatus installStatus = InstallJobTracker.GetStatus();
 
-                if (string.IsNullOrWhiteSpace(command))
+                var result = new
                 {
-                    return ServiceResponse.SerializeFailure("PowerShell script/command is required.");
-                }
+                    agentId = AgentServer.AgentId,
+                    machineName = Environment.MachineName,
+                    uptimeSeconds = AgentServer.UptimeSeconds,
+                    startedAt = AgentServer.StartedAtUtc.ToString("o", CultureInfo.InvariantCulture),
+                    version = typeof(HealthCheck).Assembly.GetName().Version?.ToString(),
+                    installQueueCount = installStatus.QueueCount,
+                    installRunning = installStatus.IsRunning,
+                    schedulerTaskCount = SchedulerServer.GetTasks().Count
+                };
 
-                bool success = ScriptExecutor.Execute(command);
-
-                InstallEventPublisher.Publish(success ? "powershell.completed" : "powershell.failed",
-                    JsonSerializer.Serialize(new
-                    {
-                        success,
-                        timestamp = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)
-                    }));
-
-                return success
-                    ? ServiceResponse.SerializeSuccess(new { executed = true })
-                    : ServiceResponse.SerializeFailure("PowerShell execution failed.");
+                return ServiceResponse.SerializeSuccess(result);
             }
             catch (Exception e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "PowerShell Error:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "HealthCheck Error:{0}\n{1}", e.Message, e.StackTrace));
 
                 return ServiceResponse.SerializeFailure(e.Message);
             }

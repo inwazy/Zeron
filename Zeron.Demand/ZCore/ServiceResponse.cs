@@ -3,6 +3,8 @@
 
 using Newtonsoft.Json;
 using System.Dynamic;
+using System.Globalization;
+using Zeron.ZServers;
 
 namespace Zeron.Demand.ZCore
 {
@@ -21,6 +23,8 @@ namespace Zeron.Demand.ZCore
             dynamic response = new ExpandoObject();
             response.success = true;
             response.result = result;
+            response.agentId = AgentServer.AgentId;
+            response.timestamp = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
 
             return JsonConvert.SerializeObject(response);
         }
@@ -37,6 +41,8 @@ namespace Zeron.Demand.ZCore
             response.success = false;
             response.message = message;
             response.result = result;
+            response.agentId = AgentServer.AgentId;
+            response.timestamp = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
 
             return JsonConvert.SerializeObject(response);
         }

@@ -3,11 +3,10 @@
 
 using System.Globalization;
 using System.Text.Json;
+using Zeron.Demand.ZCore.Type;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
 using Zeron.ZCore.Utils;
-using Zeron.ZInterfaces;
-using Zeron.ZServers;
 
 namespace Zeron.Demand.ZCore
 {
@@ -21,9 +20,9 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="task"></param>
         /// <returns>Returns execution result.</returns>
-        public static TaskPipelineResult ExecuteTask(SchedulerTaskDefinition task)
+        public static TaskPipelineResultType ExecuteTask(SchedulerTaskDefinition task)
         {
-            TaskPipelineResult result = new()
+            TaskPipelineResultType result = new()
             {
                 TaskName = task.Name,
                 Success = true,
@@ -46,7 +45,7 @@ namespace Zeron.Demand.ZCore
 
             foreach (TaskStepDefinition step in task.Steps)
             {
-                TaskStepResult stepResult = ExecuteStep(step);
+                TaskStepResultType stepResult = ExecuteStep(step);
                 result.Steps.Add(stepResult);
 
                 if (!stepResult.Success)
@@ -77,7 +76,7 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="step"></param>
         /// <returns>Returns step result.</returns>
-        public static TaskStepResult ExecuteStep(TaskStepDefinition step)
+        public static TaskStepResultType ExecuteStep(TaskStepDefinition step)
         {
             string stepType = step.Type?.Trim().ToLowerInvariant() ?? "";
 
@@ -87,7 +86,7 @@ namespace Zeron.Demand.ZCore
                 "managedpackage" => ExecuteApiStep("ManagedPackage", step.Command),
                 "wait" => ExecuteWaitStep(step),
                 "api" => ExecuteApiStep(step.ApiName, step.Command),
-                _ => new TaskStepResult
+                _ => new TaskStepResultType
                 {
                     Type = stepType,
                     Success = false,
@@ -101,11 +100,11 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="step"></param>
         /// <returns>Returns step result.</returns>
-        private static TaskStepResult ExecutePowerShellStep(TaskStepDefinition step)
+        private static TaskStepResultType ExecutePowerShellStep(TaskStepDefinition step)
         {
             bool success = ScriptExecutor.Execute(step.Script);
 
-            return new TaskStepResult
+            return new TaskStepResultType
             {
                 Type = "powershell",
                 Success = success,
@@ -118,12 +117,12 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="step"></param>
         /// <returns>Returns step result.</returns>
-        private static TaskStepResult ExecuteWaitStep(TaskStepDefinition step)
+        private static TaskStepResultType ExecuteWaitStep(TaskStepDefinition step)
         {
             int seconds = step.Seconds > 0 ? step.Seconds : 1;
             Thread.Sleep(TimeSpan.FromSeconds(seconds));
 
-            return new TaskStepResult
+            return new TaskStepResultType
             {
                 Type = "wait",
                 Success = true,
@@ -137,111 +136,19 @@ namespace Zeron.Demand.ZCore
         /// <param name="apiName"></param>
         /// <param name="command"></param>
         /// <returns>Returns step result.</returns>
-        private static TaskStepResult ExecuteApiStep(string? apiName, string? command)
+        private static TaskStepResultType ExecuteApiStep(string? apiName, string? command)
         {
             string responseJson = InternalServiceInvoker.Invoke(apiName, command);
             bool success = responseJson.Contains("\"success\":true", StringComparison.OrdinalIgnoreCase)
                 || responseJson.Contains("\"success\": true", StringComparison.OrdinalIgnoreCase);
 
-            return new TaskStepResult
+            return new TaskStepResultType
             {
                 Type = "api",
                 Success = success,
                 Message = success ? null : responseJson,
                 Response = responseJson
             };
-        }
-    }
-
-    /// <summary>
-    /// TaskPipelineResult
-    /// </summary>
-    internal class TaskPipelineResult
-    {
-        /// <summary>
-        /// TaskName
-        /// </summary>
-        /// <returns>Returns string.</returns>
-        public string? TaskName
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Success
-        /// </summary>
-        /// <returns>Returns bool.</returns>
-        public bool Success
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Message
-        /// </summary>
-        /// <returns>Returns string.</returns>
-        public string? Message
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Steps
-        /// </summary>
-        /// <returns>Returns list of TaskStepResult.</returns>
-        public List<TaskStepResult> Steps
-        {
-            get;
-            set;
-        } = [];
-    }
-
-    /// <summary>
-    /// TaskStepResult
-    /// </summary>
-    internal class TaskStepResult
-    {
-        /// <summary>
-        /// Type
-        /// </summary>
-        /// <returns>Returns string.</returns>
-        public string? Type
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Success
-        /// </summary>
-        /// <returns>Returns bool.</returns>
-        public bool Success
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Message
-        /// </summary>
-        /// <returns>Returns string.</returns>
-        public string? Message
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Response
-        /// </summary>
-        /// <returns>Returns string.</returns>
-        public string? Response
-        {
-            get;
-            set;
         }
     }
 }

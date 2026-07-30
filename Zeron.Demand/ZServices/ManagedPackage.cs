@@ -14,7 +14,7 @@ using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServices
 {
-    [ServicesRep(ZmqApiName = "ManagedPackage", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "ManagedPackage", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "install")]
 
     /// <summary>
     /// ManagedPackage

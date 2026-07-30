@@ -7,12 +7,11 @@ using Zeron.Demand.ZCore;
 using Zeron.ZAttribute;
 using Zeron.ZCore;
 using Zeron.ZInterfaces;
-using Zeron.ZServers;
 using Win32Registry = Microsoft.Win32.Registry;
 
 namespace Zeron.Demand.ZServices
 {
-    [ServicesRep(ZmqApiName = "Registry", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "Registry", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "write")]
 
     /// <summary>
     /// RegistryService

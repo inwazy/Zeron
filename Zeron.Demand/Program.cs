@@ -81,6 +81,7 @@ namespace Zeron.Demand
 
                 // Shared Servers
                 ServerIntegrate.Fork<ConfigServer>();
+                ServerIntegrate.Fork<AgentServer>();
                 ServerIntegrate.Fork<ApplicationServer>();
                 ServerIntegrate.Fork<DeployServer>();
                 ServerIntegrate.Fork<InstallServer>();
@@ -90,6 +91,7 @@ namespace Zeron.Demand
                 // Local Servers
                 ServerIntegrate.Fork<ZmqServer>();
                 ServerIntegrate.Fork<ManagedPackageServer>();
+                ServerIntegrate.Fork<AuditServer>();
             }
             catch (Exception e)
             {

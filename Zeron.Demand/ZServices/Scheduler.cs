@@ -10,7 +10,7 @@ using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServices
 {
-    [ServicesRep(ZmqApiName = "Scheduler", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "Scheduler", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "admin")]
 
     /// <summary>
     /// Scheduler - manage scheduled tasks.

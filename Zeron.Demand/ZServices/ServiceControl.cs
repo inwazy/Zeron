@@ -8,11 +8,10 @@ using Zeron.Demand.ZCore;
 using Zeron.ZAttribute;
 using Zeron.ZCore;
 using Zeron.ZInterfaces;
-using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServices
 {
-    [ServicesRep(ZmqApiName = "ServiceControl", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "ServiceControl", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "write")]
 
     /// <summary>
     /// ServiceControl
