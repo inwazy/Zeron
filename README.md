@@ -35,9 +35,8 @@ Code released under the MIT license.
 
 ## TODO
 
-- Scheduled Task  
-- Api key and Security  
 - Logger System  
+- AI Agent  
 - More control actions  
 - More examples  
 

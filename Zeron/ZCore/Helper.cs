@@ -41,5 +41,28 @@ namespace Zeron.ZCore
 
             return result;
         }
+
+        /// <summary>
+        /// SplitCommand - splits "verb remainder" from a command string.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns>Returns verb and arguments.</returns>
+        public static (string? Verb, string? Arguments) SplitCommand(string? command)
+        {
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                return (null, null);
+            }
+
+            command = command.Trim();
+            int spaceIndex = command.IndexOf(' ');
+
+            if (spaceIndex < 0)
+            {
+                return (command, null);
+            }
+
+            return (command[..spaceIndex].Trim(), command[(spaceIndex + 1)..].Trim());
+        }
     }
 }

@@ -35,5 +35,19 @@ namespace Zeron.ZCore.Tests
             Assert.AreEqual(buildCommands2.PackageName, buildCommandsResult2.PackageName);
             Assert.AreEqual(buildCommands2.Args, buildCommandsResult2.Args);
         }
+
+        [TestMethod()]
+        public void SplitCommandTest()
+        {
+            (string? verb, string? args) = Helper.SplitCommand("list C:\\Logs");
+
+            Assert.AreEqual("list", verb);
+            Assert.AreEqual("C:\\Logs", args);
+
+            (string? verbOnly, string? noArgs) = Helper.SplitCommand("status");
+
+            Assert.AreEqual("status", verbOnly);
+            Assert.IsNull(noArgs);
+        }
     }
 }
