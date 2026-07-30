@@ -1,0 +1,55 @@
+@page "/tasks"
+@rendermode InteractiveServer
+@using Zeron.Server.Data.Entities
+@using Zeron.Server.ZServers
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject TaskDispatcherServer TaskDispatcher
+
+<div class="page-header">
+    <div>
+        <h1>Tasks</h1>
+        <p>Remote commands dispatched to agents.</p>
+    </div>
+    <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+        <Authorized>
+            <a class="btn" href="/tasks/create">Create Task</a>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+<div class="panel">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Target API</th>
+                <th>Status</th>
+                <th>Assignments</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (TaskEntity task in m_Tasks)
+            {
+                <tr>
+                    <td>@task.Name</td>
+                    <td>@task.TargetApi</td>
+                    <td><span class="status @task.Status">@task.Status</span></td>
+                    <td>@task.Assignments.Count</td>
+                    <td>@task.CreatedAt.ToLocalTime()</td>
+                    <td><a href="@($"/tasks/{task.Id}")">Details</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<TaskEntity> m_Tasks = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        m_Tasks = await TaskDispatcher.GetTasksAsync();
+    }
+}

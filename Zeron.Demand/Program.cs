@@ -89,6 +89,7 @@ namespace Zeron.Demand
                 ServerIntegrate.Fork<SchedulerServer>();
 
                 // Local Servers
+                ServerIntegrate.Fork<ReporterServer>();
                 ServerIntegrate.Fork<ZmqServer>();
                 ServerIntegrate.Fork<ManagedPackageServer>();
                 ServerIntegrate.Fork<AuditServer>();

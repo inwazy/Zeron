@@ -1,0 +1,80 @@
+@page "/agents/{AgentKey}"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Zeron.Server.Data.Entities
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject AgentManagerServer AgentManager
+@inject EventIngestorServer EventIngestor
+
+<div class="page-header">
+    <div>
+        <h1>@AgentKey</h1>
+        <p>Agent details and recent events.</p>
+    </div>
+    <AuthorizeView Roles="@ServerRoles.Admin">
+        <Authorized>
+            <div class="actions">
+                @if (m_Agent?.Status != "disabled")
+                {
+                    <button class="btn btn-danger" @onclick="DisableAgentAsync">Disable Agent</button>
+                }
+                else
+                {
+                    <button class="btn btn-secondary" @onclick="EnableAgentAsync">Enable Agent</button>
+                }
+            </div>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@if (m_Agent == null)
+{
+    <p class="error">Agent not found.</p>
+}
+else
+{
+    <div class="cards">
+        <div class="card"><span>Status</span><strong><span class="status @m_Agent.Status">@m_Agent.Status</span></strong></div>
+        <div class="card"><span>Machine</span><strong>@m_Agent.MachineName</strong></div>
+        <div class="card"><span>IP</span><strong>@m_Agent.IpAddress</strong></div>
+        <div class="card"><span>Version</span><strong>@m_Agent.Version</strong></div>
+    </div>
+
+    <div class="panel">
+        <h2>Recent Events</h2>
+        @foreach (EventEntity evt in m_Events)
+        {
+            <div class="timeline-item">
+                <strong>@evt.Topic</strong>
+                <small>@evt.ReceivedAt.ToLocalTime()</small>
+                <div>@evt.Payload</div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string AgentKey { get; set; } = "";
+
+    private AgentEntity? m_Agent;
+    private List<EventEntity> m_Events = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        m_Agent = await AgentManager.GetAgentByKeyAsync(AgentKey);
+        m_Events = await EventIngestor.GetEventsAsync(AgentKey, null, 20);
+    }
+
+    private async Task DisableAgentAsync()
+    {
+        m_Agent = await AgentManager.UpdateAgentAsync(AgentKey, new AgentUpdateRequestType { Status = "disabled" });
+    }
+
+    private async Task EnableAgentAsync()
+    {
+        m_Agent = await AgentManager.UpdateAgentAsync(AgentKey, new AgentUpdateRequestType { Status = "online" });
+    }
+}

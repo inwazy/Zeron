@@ -1,0 +1,80 @@
+@page "/tasks/{TaskId:guid}"
+@rendermode InteractiveServer
+@using Zeron.Server.Data.Entities
+@using Zeron.Server.ZServers
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject TaskDispatcherServer TaskDispatcher
+
+<div class="page-header">
+    <div>
+        <h1>@(m_Task?.Name ?? "Task")</h1>
+        <p>Assignment progress and results.</p>
+    </div>
+    <AuthorizeView Roles="@ServerRoles.Admin">
+        <Authorized>
+            @if (m_Task != null && m_Task.Status is not "completed" and not "failed" and not "cancelled")
+            {
+                <button class="btn btn-danger" @onclick="CancelTaskAsync">Cancel Task</button>
+            }
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@if (m_Task == null)
+{
+    <p class="error">Task not found.</p>
+}
+else
+{
+    <div class="cards">
+        <div class="card"><span>Status</span><strong><span class="status @m_Task.Status">@m_Task.Status</span></strong></div>
+        <div class="card"><span>Target API</span><strong>@m_Task.TargetApi</strong></div>
+        <div class="card"><span>Command</span><strong>@m_Task.Command</strong></div>
+        <div class="card"><span>Assignments</span><strong>@m_Task.Assignments.Count</strong></div>
+    </div>
+
+    <div class="panel">
+        <h2>Assignments</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Assignment Id</th>
+                    <th>Status</th>
+                    <th>Assigned</th>
+                    <th>Completed</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (TaskAssignmentEntity assignment in m_Task.Assignments)
+                {
+                    <tr>
+                        <td>@assignment.Id</td>
+                        <td><span class="status @assignment.Status">@assignment.Status</span></td>
+                        <td>@assignment.AssignedAt.ToLocalTime()</td>
+                        <td>@(assignment.CompletedAt?.ToLocalTime().ToString() ?? "-")</td>
+                        <td>@(assignment.Result?.Success == true ? "Success" : assignment.Result?.ErrorMessage ?? "-")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid TaskId { get; set; }
+
+    private TaskEntity? m_Task;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        m_Task = await TaskDispatcher.GetTaskAsync(TaskId);
+    }
+
+    private async Task CancelTaskAsync()
+    {
+        await TaskDispatcher.CancelTaskAsync(TaskId);
+        m_Task = await TaskDispatcher.GetTaskAsync(TaskId);
+    }
+}

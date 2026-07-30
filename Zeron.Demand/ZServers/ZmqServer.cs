@@ -160,7 +160,14 @@ namespace Zeron.Demand.ZServers
                 {
                     m_ZmqImpl.PreparePubSocket(PubSocketAddr);
                     InstallEventPublisher.PublishHandler = (topic, message) =>
+                    {
                         ZmqImpl.PublishMessage(topic, Encoding.UTF8.GetBytes(message));
+                        ReporterServer.ForwardEvent(topic, message);
+                    };
+                }
+                else if (ReporterServer.Enabled)
+                {
+                    InstallEventPublisher.PublishHandler = ReporterServer.ForwardEvent;
                 }
 
                 if (SubSocketEnabled)

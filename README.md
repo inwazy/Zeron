@@ -5,9 +5,11 @@ A lightweight Windows Agent Platform Suitable for SMB/internal network IT/develo
 Zeron is an open source Windows remote automation platform based on NetMQ (ZeroMQ). It runs as a Windows Service agent (`Zeron.Demand`) and exposes JSON RPC APIs for software deployment, system control, scheduling, and task pipelines.
 
 ![GitHub](https://img.shields.io/github/license/inwazy/Zeron)
-![.NET](https://img.shields.io/badge/.NET-10.0-windows-blue)
+![.NET](https://img.shields.io/badge/.NET-10.0-windows)
 ![Travis (.com)](https://img.shields.io/travis/com/jiowcl/Zeron)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/6bf8bdd0b9634cf3b8c50079e6bbbbfd)](https://www.codacy.com/gh/jiowcl/Zeron/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jiowcl/Zeron&amp;utm_campaign=Badge_Grade)
+
+![Screenshot](https://github.com/inwazy/Zeron/Zeron.Server/Screenshot/Dashboard.png)
 
 ## Projects
 
@@ -16,6 +18,7 @@ Zeron is an open source Windows remote automation platform based on NetMQ (ZeroM
 | `Zeron` | Shared library (servers, attributes, utilities) |
 | `Zeron.Demand` | Windows Service agent |
 | `Zeron.Client` | Interactive test console |
+| `Zeron.Server` | Central management server |
 | `ZeronTests` | Unit and integration tests |
 
 ## Features
@@ -29,6 +32,8 @@ Zeron is an open source Windows remote automation platform based on NetMQ (ZeroM
 - **Agent Identity** — Persistent `AgentId` + `HealthCheck` API
 - **API Scopes** — RBAC via `zmq_rep_api_scopes` config
 - **Audit Log** — SQLite audit trail at `Resource/audit.db`
+- **Zeron.Server** — Central HTTP API + NetMQ command PUB for multi-agent management
+- **Dashboard** — Blazor Server UI with JWT/Cookie auth and role-based access
 
 ## How to Build
 
