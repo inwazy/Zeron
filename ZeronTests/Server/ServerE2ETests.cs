@@ -1,0 +1,166 @@
+// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+using Microsoft.AspNetCore.Mvc.Testing;
+using System.Net;
+using System.Net.Http.Json;
+using Zeron.Server.Data.Entities;
+using Zeron.ZCore.Type;
+
+namespace Zeron.Server.Tests
+{
+    [TestClass()]
+    public class ServerE2ETests
+    {
+        private static ZeronServerWebApplicationFactory? s_Factory;
+        private const string AgentApiKey = "zeron.testkey";
+        private const string TestAgentId = "e2e-agent-001";
+
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext context)
+        {
+            s_Factory = new ZeronServerWebApplicationFactory();
+        }
+
+        [ClassCleanup]
+        public static void ClassCleanup()
+        {
+            s_Factory?.Dispose();
+        }
+
+        /// <summary>
+        /// Heartbeat without API key returns 401.
+        /// </summary>
+        [TestMethod()]
+        public async Task HeartbeatWithoutApiKeyReturnsUnauthorizedTest()
+        {
+            using HttpClient client = s_Factory!.CreateClient();
+            HttpResponseMessage response = await client.PostAsJsonAsync("/api/agents/heartbeat", CreateHeartbeatRequest());
+
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        /// <summary>
+        /// Full E2E flow: heartbeat, task create, pending task, result report.
+        /// </summary>
+        [TestMethod()]
+        public async Task AgentHeartbeatTaskDispatchFlowTest()
+        {
+            using HttpClient agentClient = s_Factory!.CreateClient();
+            using HttpClient dashboardClient = s_Factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            agentClient.DefaultRequestHeaders.Add("X-Zeron-Agent-Key", AgentApiKey);
+
+            AgentHeartbeatResponseType heartbeat = await PostHeartbeatAsync(agentClient);
+
+            Assert.IsTrue(heartbeat.Success);
+
+            await LoginAsync(dashboardClient);
+
+            List<AgentEntity>? agents = await dashboardClient.GetFromJsonAsync<List<AgentEntity>>("/api/agents");
+
+            Assert.IsNotNull(agents);
+            Assert.IsTrue(agents!.Any(agent => agent.AgentKey == TestAgentId && agent.Status == "online"));
+
+            TaskCreateRequestType taskRequest = new()
+            {
+                Name = "e2e-health-check",
+                TargetApi = "HealthCheck",
+                Command = "",
+                TargetType = "agent",
+                AgentIds = [TestAgentId]
+            };
+
+            HttpResponseMessage createResponse = await dashboardClient.PostAsJsonAsync("/api/tasks", taskRequest);
+
+            Assert.AreEqual(HttpStatusCode.Created, createResponse.StatusCode);
+
+            AgentHeartbeatResponseType secondHeartbeat = await PostHeartbeatAsync(agentClient);
+
+            Assert.IsNotNull(secondHeartbeat.PendingTasks);
+            Assert.IsTrue(secondHeartbeat.PendingTasks!.Count > 0);
+
+            PendingTaskType pendingTask = secondHeartbeat.PendingTasks[0];
+
+            TaskResultReportType resultReport = new()
+            {
+                AssignmentId = pendingTask.AssignmentId,
+                AgentId = TestAgentId,
+                Success = true,
+                ResponseJson = "{\"success\":true}"
+            };
+
+            HttpResponseMessage resultResponse = await agentClient.PostAsJsonAsync("/api/tasks/results", resultReport);
+
+            Assert.AreEqual(HttpStatusCode.OK, resultResponse.StatusCode);
+        }
+
+        /// <summary>
+        /// Diagnostics endpoint returns healthy agent after heartbeat.
+        /// </summary>
+        [TestMethod()]
+        public async Task AgentDiagnosticsReturnsHealthyStateTest()
+        {
+            using HttpClient agentClient = s_Factory!.CreateClient();
+            using HttpClient dashboardClient = s_Factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            agentClient.DefaultRequestHeaders.Add("X-Zeron-Agent-Key", AgentApiKey);
+            await PostHeartbeatAsync(agentClient);
+            await LoginAsync(dashboardClient);
+
+            List<AgentDiagnosticType>? diagnostics = await dashboardClient
+                .GetFromJsonAsync<List<AgentDiagnosticType>>("/api/agents/diagnostics");
+
+            Assert.IsNotNull(diagnostics);
+
+            AgentDiagnosticType? diagnostic = diagnostics!.FirstOrDefault(item => item.AgentKey == TestAgentId);
+
+            Assert.IsNotNull(diagnostic);
+            Assert.AreEqual("healthy", diagnostic!.ConnectionState);
+        }
+
+        private static async Task<AgentHeartbeatResponseType> PostHeartbeatAsync(HttpClient client)
+        {
+            HttpResponseMessage response = await client.PostAsJsonAsync("/api/agents/heartbeat", CreateHeartbeatRequest());
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+            AgentHeartbeatResponseType? heartbeat = await response.Content.ReadFromJsonAsync<AgentHeartbeatResponseType>();
+
+            Assert.IsNotNull(heartbeat);
+
+            return heartbeat!;
+        }
+
+        private static AgentHeartbeatRequestType CreateHeartbeatRequest()
+        {
+            return new AgentHeartbeatRequestType
+            {
+                AgentId = TestAgentId,
+                MachineName = "E2E-HOST",
+                UptimeSeconds = 60,
+                Version = "1.0.0",
+                InstallQueueCount = 0,
+                InstallRunning = false,
+                SchedulerTaskCount = 0
+            };
+        }
+
+        private static async Task LoginAsync(HttpClient client)
+        {
+            HttpResponseMessage response = await client.PostAsJsonAsync("/api/auth/login", new LoginRequestType
+            {
+                Username = "admin",
+                Password = "admin"
+            });
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+    }
+}

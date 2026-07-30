@@ -2,10 +2,8 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zeron.Server.Data;
 using Zeron.Server.ZCore;
-using Zeron.Server.ZServers;
 
 namespace Zeron.Server.ZServers.Tests
 {

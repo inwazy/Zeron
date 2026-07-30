@@ -1,9 +1,12 @@
 @page "/agents"
 @rendermode InteractiveServer
 @using Zeron.Server.Data.Entities
+@using Zeron.Server.ZCore
 @using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
 @attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
 @inject AgentManagerServer AgentManager
+@inject AgentDiagnosticServer AgentDiagnosticServer
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor HttpContextAccessor
 @implements IAsyncDisposable
@@ -11,15 +14,15 @@
 <div class="page-header">
     <div>
         <h1>Agents</h1>
-        <p>Registered Windows agents and heartbeat status.</p>
+        <p>Registered Windows agents, connection diagnostics, and heartbeat status.</p>
     </div>
-    <button class="btn btn-secondary" @onclick="ReloadAgentsAsync">Refresh</button>
+    <button class="btn btn-secondary" @onclick="ReloadAsync">Refresh</button>
 </div>
 
 <div class="panel">
     @if (m_Agents.Count == 0)
     {
-        <p class="error">No agents registered yet. Start <code>Zeron.Demand</code> and ensure <code>server_enabled=true</code>.</p>
+        <p class="error">No agents registered yet. Start <code>Zeron.Demand</code> and ensure <code>server_enabled=true</code>. See Docs/agent-connection.md for troubleshooting.</p>
     }
     else
     {
@@ -28,23 +31,30 @@
                 <tr>
                     <th>Agent Key</th>
                     <th>Machine</th>
-                    <th>IP</th>
-                    <th>Version</th>
                     <th>Status</th>
+                    <th>Connection</th>
                     <th>Last Heartbeat</th>
+                    <th>Diagnostic</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (AgentEntity agent in m_Agents)
                 {
+                    AgentDiagnosticType? diagnostic = m_Diagnostics.FirstOrDefault(item => item.AgentKey == agent.AgentKey);
+
                     <tr>
                         <td>@agent.AgentKey</td>
                         <td>@agent.MachineName</td>
-                        <td>@agent.IpAddress</td>
-                        <td>@agent.Version</td>
                         <td><span class="status @agent.Status">@agent.Status</span></td>
+                        <td>
+                            @if (diagnostic != null)
+                            {
+                                <span class="status @diagnostic.ConnectionState">@diagnostic.ConnectionState</span>
+                            }
+                        </td>
                         <td>@FormatHeartbeat(agent.LastHeartbeatAt)</td>
+                        <td><small>@(diagnostic?.DiagnosticMessage ?? "-")</small></td>
                         <td><a href="@($"/agents/{agent.AgentKey}")">Details</a></td>
                     </tr>
                 }
@@ -53,22 +63,40 @@
     }
 </div>
 
+@if (m_Diagnostics.Any(item => item.ConnectionState is "offline" or "stale" or "never_seen"))
+{
+    <div class="panel">
+        <h2>Connection Troubleshooting</h2>
+        @foreach (AgentDiagnosticType diagnostic in m_Diagnostics.Where(item => item.ConnectionState is not "healthy" and not "disabled"))
+        {
+            <div class="timeline-item">
+                <strong>@diagnostic.AgentKey</strong>
+                <small>@diagnostic.ConnectionState</small>
+                <div>@diagnostic.DiagnosticMessage</div>
+                <div><em>@diagnostic.RecommendedAction</em></div>
+            </div>
+        }
+    </div>
+}
+
 @code {
     private List<AgentEntity> m_Agents = [];
+    private List<AgentDiagnosticType> m_Diagnostics = [];
     private HubConnection? m_HubConnection;
     private PeriodicTimer? m_RefreshTimer;
     private CancellationTokenSource? m_RefreshCts;
 
     protected override async Task OnInitializedAsync()
     {
-        await ReloadAgentsAsync();
+        await ReloadAsync();
         await ConnectHubAsync();
         StartRefreshTimer();
     }
 
-    private async Task ReloadAgentsAsync()
+    private async Task ReloadAsync()
     {
         m_Agents = await AgentManager.GetAgentsAsync();
+        m_Diagnostics = await AgentDiagnosticServer.GetDiagnosticsAsync();
     }
 
     private void StartRefreshTimer()
@@ -85,7 +113,7 @@
         {
             while (await m_RefreshTimer!.WaitForNextTickAsync(cancellationToken))
             {
-                await ReloadAgentsAsync();
+                await ReloadAsync();
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -100,7 +128,7 @@
 
         m_HubConnection.On<string, string, string, DateTime>("AgentStatusChanged", async (_, __, ___, ____) =>
         {
-            await ReloadAgentsAsync();
+            await ReloadAsync();
             await InvokeAsync(StateHasChanged);
         });
 

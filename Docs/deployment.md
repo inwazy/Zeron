@@ -1,0 +1,101 @@
+# Deployment Guide
+
+This guide covers deploying **Zeron.Server** (central management) and **Zeron.Demand** (Windows agents) in a production environment.
+
+## Prerequisites
+
+- Windows Server or Windows 11 for agents
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) (build) and runtime on target machines
+- Network access between agents and the server (HTTP + optional NetMQ PUB port)
+
+## 1. Build
+
+From the repository root:
+
+```powershell
+dotnet build Zeron.sln -c Release
+dotnet test Zeron.sln -c Release
+dotnet publish Zeron.Server/Zeron.Server.csproj -c Release -o ./publish/server
+dotnet publish Zeron.Demand/Zeron.Demand.csproj -c Release -o ./publish/agent
+```
+
+## 2. Configure Zeron.Server
+
+1. Copy `appsettings.Production.template.json` to `appsettings.Production.json` in the publish folder (or set values via environment variables).
+2. Set required secrets before first run:
+
+| Setting | Description |
+|---------|-------------|
+| `Zeron:AgentApiKey` | Shared secret for agent HTTP API (`X-Zeron-Agent-Key` header) |
+| `Zeron:JwtSecret` | JWT signing key (minimum 32 characters) |
+| `Zeron:DefaultAdminPassword` | Initial dashboard admin password (change after first login) |
+
+Example environment variables (PowerShell):
+
+```powershell
+$env:Zeron__AgentApiKey = "your-secure-agent-key"
+$env:Zeron__JwtSecret = "your-secure-jwt-secret-min-32-chars"
+$env:Zeron__DefaultAdminPassword = "ChangeMeNow!"
+$env:ASPNETCORE_ENVIRONMENT = "Production"
+```
+
+3. Ensure the database directory exists. Default path: `Data/zeron-server.db` (relative to the server working directory).
+
+### Database Migrations
+
+On startup, `Zeron.Server` applies EF Core migrations automatically via `DatabaseMigrationServer`. For manual migration during deployment:
+
+```powershell
+cd Zeron.Server
+dotnet ef database update --project Zeron.Server.csproj
+```
+
+Design-time factory: `ZeronServerDbContextFactory` reads `Zeron:DatabasePath` from configuration.
+
+## 3. Run Zeron.Server
+
+```powershell
+cd publish/server
+dotnet Zeron.Server.dll --urls "http://0.0.0.0:5000"
+```
+
+For production, run behind IIS, Windows Service wrapper, or a process manager. Open firewall ports:
+
+| Port | Purpose |
+|------|---------|
+| 5000 (configurable) | HTTP — Dashboard, REST API, agent heartbeat |
+| 6000 (default) | NetMQ PUB — push commands to agents |
+
+## 4. Configure Zeron.Demand (Agent)
+
+Edit `App.config` in the agent publish folder:
+
+```xml
+<add key="server_enabled" value="true" />
+<add key="server_url" value="http://your-server:5000" />
+<add key="server_api_key" value="your-secure-agent-key" />
+```
+
+Install and start the Windows Service:
+
+```powershell
+sc create ZeronDemand binPath= "C:\path\to\publish\agent\Zeron.Demand.exe"
+sc start ZeronDemand
+```
+
+## 5. Verify Deployment
+
+1. Open the Dashboard at `http://your-server:5000` and sign in with the default admin account.
+2. Confirm the agent appears on **Agents** with connection state **healthy**.
+3. Create a test task (e.g. `HealthCheck`) targeting the agent.
+4. Check **Events** and **Alerts** for operational data.
+
+See [Agent Connection Guide](./agent-connection.md) if agents stay offline or stale.
+
+## 6. Security Checklist
+
+- Change default admin password immediately after first login
+- Use strong, unique `AgentApiKey` and `JwtSecret`
+- Prefer HTTPS reverse proxy (IIS, nginx, Caddy) in production
+- Restrict NetMQ PUB port to agent subnet only
+- Enable alert email (`Zeron:AlertEmailEnabled`) for offline notifications

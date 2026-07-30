@@ -2,10 +2,12 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
 @using Zeron.Server.Data.Entities
+@using Zeron.Server.ZCore
 @using Zeron.Server.ZServers
 @using Zeron.ZCore.Type
 @attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
 @inject AgentManagerServer AgentManager
+@inject AgentDiagnosticServer AgentDiagnosticServer
 @inject EventIngestorServer EventIngestor
 
 <div class="page-header">
@@ -37,10 +39,24 @@ else
 {
     <div class="cards">
         <div class="card"><span>Status</span><strong><span class="status @m_Agent.Status">@m_Agent.Status</span></strong></div>
+        <div class="card"><span>Connection</span><strong><span class="status @m_Diagnostic?.ConnectionState">@(m_Diagnostic?.ConnectionState ?? "-")</span></strong></div>
         <div class="card"><span>Machine</span><strong>@m_Agent.MachineName</strong></div>
         <div class="card"><span>IP</span><strong>@m_Agent.IpAddress</strong></div>
         <div class="card"><span>Last Heartbeat</span><strong>@m_Agent.LastHeartbeatAt.ToLocalTime()</strong></div>
     </div>
+
+    @if (m_Diagnostic != null)
+    {
+        <div class="panel">
+            <h2>Connection Diagnostic</h2>
+            <p>@m_Diagnostic.DiagnosticMessage</p>
+            <p><em>@m_Diagnostic.RecommendedAction</em></p>
+            @if (m_Diagnostic.HasOpenOfflineAlert)
+            {
+                <p class="error">An open offline alert exists for this agent.</p>
+            }
+        </div>
+    }
 
     <div class="panel">
         <h2>Heartbeat History</h2>
@@ -94,12 +110,14 @@ else
     public string AgentKey { get; set; } = "";
 
     private AgentEntity? m_Agent;
+    private AgentDiagnosticType? m_Diagnostic;
     private List<EventEntity> m_Events = [];
     private List<AgentHeartbeatEntity> m_Heartbeats = [];
 
     protected override async Task OnParametersSetAsync()
     {
         m_Agent = await AgentManager.GetAgentByKeyAsync(AgentKey);
+        m_Diagnostic = await AgentDiagnosticServer.GetDiagnosticAsync(AgentKey);
         m_Events = await EventIngestor.GetEventsAsync(AgentKey, null, 20);
         m_Heartbeats = await AgentManager.GetAgentHeartbeatsAsync(AgentKey, 30);
     }

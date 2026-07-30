@@ -1,4 +1,7 @@
-﻿namespace Zeron.ZCore.Utils.Tests
+﻿// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
+
+namespace Zeron.ZCore.Utils.Tests
 {
     [TestClass()]
     public class Md5ProviderTests

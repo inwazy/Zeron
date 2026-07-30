@@ -57,6 +57,25 @@ Run the test client:
 dotnet run --project Zeron.Client
 ```
 
+Run the central server:
+
+```powershell
+dotnet run --project Zeron.Server
+```
+
+Default Dashboard: `http://localhost:5000` (admin / admin123 in Development).
+
+## Documentation
+
+Detailed guides are in the [`Docs/`](./Docs/) directory:
+
+- [Deployment Guide](./Docs/deployment.md) — production setup for server and agents
+- [Configuration Reference](./Docs/configuration.md) — server and agent settings
+- [Agent Connection Guide](./Docs/agent-connection.md) — heartbeat, diagnostics, troubleshooting
+- [Testing Guide](./Docs/testing.md) — unit tests, E2E tests, EF migrations
+
+Production settings: copy `Zeron.Server/appsettings.Production.template.json` to `appsettings.Production.json` and set secrets before deploy.
+
 ## Task Pipeline Example
 
 `Resource/scheduler-tasks.json`:
