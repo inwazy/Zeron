@@ -2,7 +2,6 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace Zeron.ZCore.Utils
@@ -53,15 +52,12 @@ namespace Zeron.ZCore.Utils
                 
                 ICryptoTransform encryptor = aesProvider.CreateEncryptor(aesProvider.Key, aesProvider.IV);
 
-                using (MemoryStream memoryStream = new())
-                {
-                    using (CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write))
-                    {
-                        cryptoStream.Write(plainTextBytes, 0, plainTextBytes.Length);
-                        cryptoStream.FlushFinalBlock();
-                        cipherTextBytes = memoryStream.ToArray();
-                    }
-                }
+                using MemoryStream memoryStream = new();
+                using CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write);
+
+                cryptoStream.Write(plainTextBytes, 0, plainTextBytes.Length);
+                cryptoStream.FlushFinalBlock();
+                cipherTextBytes = memoryStream.ToArray();
             }
 
             return Convert.ToBase64String(cipherTextBytes);
@@ -98,17 +94,12 @@ namespace Zeron.ZCore.Utils
                 aesProvider.IV = Encoding.ASCII.GetBytes(iv);
 
                 ICryptoTransform decryptor = aesProvider.CreateDecryptor(aesProvider.Key, aesProvider.IV);
-                
-                using (MemoryStream memoryStream = new(cipherTextBytes))
-                {
-                    using (CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read))
-                    {
-                        using (StreamReader streamReader = new(cryptoStream))
-                        {
-                            plainText = streamReader.ReadToEnd();
-                        }
-                    }
-                }
+
+                using MemoryStream memoryStream = new(cipherTextBytes);
+                using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
+                using StreamReader streamReader = new(cryptoStream);
+
+                plainText = streamReader.ReadToEnd();
             }
 
             return plainText;
