@@ -9,7 +9,7 @@ Zeron is an open source Windows remote automation platform based on NetMQ (ZeroM
 ![Travis (.com)](https://img.shields.io/travis/com/jiowcl/Zeron)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/6bf8bdd0b9634cf3b8c50079e6bbbbfd)](https://www.codacy.com/gh/jiowcl/Zeron/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jiowcl/Zeron&amp;utm_campaign=Badge_Grade)
 
-![Screenshot](https://github.com/inwazy/Zeron/Zeron.Server/Screenshot/Dashboard.png)
+![Screenshot](./Zeron.Server/Screenshot/Dashboard.png?raw=true)
 
 ## Projects
 
