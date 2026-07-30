@@ -30,6 +30,24 @@ namespace Zeron.Server.ZServers
                     CreatedAt TEXT NOT NULL
                 );
                 CREATE UNIQUE INDEX IF NOT EXISTS IX_Users_Username ON Users (Username);
+
+                CREATE TABLE IF NOT EXISTS Alerts (
+                    Id TEXT NOT NULL CONSTRAINT PK_Alerts PRIMARY KEY,
+                    RuleType TEXT NOT NULL,
+                    AgentKey TEXT NULL,
+                    AgentId TEXT NULL,
+                    Title TEXT NOT NULL,
+                    Message TEXT NOT NULL,
+                    Severity TEXT NOT NULL,
+                    Status TEXT NOT NULL,
+                    CreatedAt TEXT NOT NULL,
+                    ResolvedAt TEXT NULL,
+                    NotifiedAt TEXT NULL
+                );
+                CREATE INDEX IF NOT EXISTS IX_Alerts_Status ON Alerts (Status);
+                CREATE INDEX IF NOT EXISTS IX_Alerts_RuleType ON Alerts (RuleType);
+                CREATE INDEX IF NOT EXISTS IX_Alerts_AgentKey ON Alerts (AgentKey);
+                CREATE INDEX IF NOT EXISTS IX_Alerts_CreatedAt ON Alerts (CreatedAt);
             ");
         }
     }

@@ -57,6 +57,11 @@ namespace Zeron.Server.Data
         public DbSet<UserEntity> Users => Set<UserEntity>();
 
         /// <summary>
+        /// Alerts
+        /// </summary>
+        public DbSet<AlertEntity> Alerts => Set<AlertEntity>();
+
+        /// <summary>
         /// OnModelCreating
         /// </summary>
         /// <param name="modelBuilder"></param>
@@ -86,6 +91,14 @@ namespace Zeron.Server.Data
             modelBuilder.Entity<UserEntity>(entity =>
             {
                 entity.HasIndex(user => user.Username).IsUnique();
+            });
+
+            modelBuilder.Entity<AlertEntity>(entity =>
+            {
+                entity.HasIndex(alert => alert.Status);
+                entity.HasIndex(alert => alert.RuleType);
+                entity.HasIndex(alert => alert.AgentKey);
+                entity.HasIndex(alert => alert.CreatedAt);
             });
         }
     }

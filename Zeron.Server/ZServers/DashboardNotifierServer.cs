@@ -58,5 +58,25 @@ namespace Zeron.Server.ZServers
                 agent.LastHeartbeatAt
             });
         }
+
+        /// <summary>
+        /// NotifyAlertAsync
+        /// </summary>
+        /// <param name="alert"></param>
+        /// <returns>Returns void.</returns>
+        public async Task NotifyAlertAsync(AlertEntity alert)
+        {
+            await m_HubContext.Clients.All.SendAsync("AlertReceived", new
+            {
+                alert.Id,
+                alert.RuleType,
+                alert.AgentKey,
+                alert.Title,
+                alert.Message,
+                alert.Severity,
+                alert.Status,
+                alert.CreatedAt
+            });
+        }
     }
 }

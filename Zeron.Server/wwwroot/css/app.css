@@ -170,6 +170,11 @@ th {
 .status.pending, .status.dispatched, .status.running { background: rgba(59, 130, 246, 0.15); color: var(--accent); }
 .status.completed { background: rgba(34, 197, 94, 0.15); color: var(--success); }
 .status.failed, .status.cancelled { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+.status.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.status.critical { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+.status.open { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.status.acknowledged { background: rgba(59, 130, 246, 0.15); color: var(--accent); }
+.status.resolved { background: rgba(34, 197, 94, 0.15); color: var(--success); }
 
 .btn, button.btn {
     background: var(--accent);

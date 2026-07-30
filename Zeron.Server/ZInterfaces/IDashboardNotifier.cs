@@ -23,5 +23,12 @@ namespace Zeron.Server.ZInterfaces
         /// <param name="agent"></param>
         /// <returns>Returns void.</returns>
         Task NotifyAgentStatusAsync(AgentEntity agent);
+
+        /// <summary>
+        /// NotifyAlertAsync
+        /// </summary>
+        /// <param name="alert"></param>
+        /// <returns>Returns void.</returns>
+        Task NotifyAlertAsync(AlertEntity alert);
     }
 }

@@ -64,14 +64,14 @@ namespace Zeron.Demand.ZServices
                 return ServiceResponse.SerializeFailure("Usage: read Hive\\SubKey\\ValueName");
             }
 
-            using Microsoft.Win32.RegistryKey? key = hive.OpenSubKey(subKeyPath);
+            using Microsoft.Win32.RegistryKey? key = hive.OpenSubKey(subKeyPath ?? string.Empty);
 
             if (key == null)
             {
                 return ServiceResponse.SerializeFailure("Registry key not found.", arguments);
             }
 
-            object? value = key.GetValue(valueName);
+            object? value = key.GetValue(valueName ?? string.Empty);
 
             PublishEvent("registry.read", arguments);
 
@@ -110,14 +110,14 @@ namespace Zeron.Demand.ZServices
                 return ServiceResponse.SerializeFailure("Invalid registry path.");
             }
 
-            using Microsoft.Win32.RegistryKey? key = hive.CreateSubKey(subKeyPath, true);
+            using Microsoft.Win32.RegistryKey? key = hive.CreateSubKey(subKeyPath ?? string.Empty, true);
 
             if (key == null)
             {
                 return ServiceResponse.SerializeFailure("Unable to open registry key.", registryPath);
             }
 
-            key.SetValue(valueName, value, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue(valueName ?? string.Empty, value, Microsoft.Win32.RegistryValueKind.String);
 
             PublishEvent("registry.write", registryPath);
 
@@ -136,14 +136,14 @@ namespace Zeron.Demand.ZServices
                 return ServiceResponse.SerializeFailure("Usage: delete Hive\\SubKey\\ValueName");
             }
 
-            using Microsoft.Win32.RegistryKey? key = hive.OpenSubKey(subKeyPath, true);
+            using Microsoft.Win32.RegistryKey? key = hive.OpenSubKey(subKeyPath ?? string.Empty, true);
 
             if (key == null)
             {
                 return ServiceResponse.SerializeFailure("Registry key not found.", arguments);
             }
 
-            key.DeleteValue(valueName, false);
+            key.DeleteValue(valueName ?? string.Empty, false);
 
             PublishEvent("registry.delete", arguments);
 

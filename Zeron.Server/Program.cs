@@ -59,6 +59,8 @@ namespace Zeron.Server
             builder.Services.AddScoped<AgentManagerServer>();
             builder.Services.AddScoped<TaskDispatcherServer>();
             builder.Services.AddScoped<EventIngestorServer>();
+            builder.Services.AddScoped<AlertNotifierServer>();
+            builder.Services.AddScoped<AlertRuleServer>();
             builder.Services.AddSingleton<CommandPublisherServer>();
             builder.Services.AddSingleton<IDashboardNotifier, DashboardNotifierServer>();
             builder.Services.AddHostedService<HeartbeatMonitorWorker>();
@@ -144,6 +146,7 @@ namespace Zeron.Server
             app.MapAgentEndpoints();
             app.MapTaskEndpoints();
             app.MapEventEndpoints();
+            app.MapAlertEndpoints();
             app.MapHub<DashboardHub>("/hubs/dashboard");
 
             app.MapRazorComponents<App>()
