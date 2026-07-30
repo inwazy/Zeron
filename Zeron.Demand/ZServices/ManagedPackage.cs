@@ -14,7 +14,7 @@ using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServices
 {
-    [ServicesRep(ZmqApiName = "ManagedPackage", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "ManagedPackage", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "install")]
 
     /// <summary>
     /// ManagedPackage
@@ -43,38 +43,88 @@ namespace Zeron.Demand.ZServices
                 }
 
                 ServicesSubCommandType? commands = Helper.BuildCommands(command);
-                ManagedPackageRepoType? repo = ManagedPackageServer.GetRepoByName(commands);
 
+                if (commands?.Option == null || string.IsNullOrEmpty(commands.Option))
+                {
+                    return JsonConvert.SerializeObject(response);
+                }
+
+                if (commands.Option.Equals("status", StringComparison.OrdinalIgnoreCase))
+                {
+                    response.success = true;
+                    response.result = InstallJobTracker.GetStatus();
+
+                    return JsonConvert.SerializeObject(response);
+                }
+
+                ManagedPackageRepoType? repo = ManagedPackageServer.GetRepoByName(commands);
                 string? repoTempPath = ManagedPackageServer.RepoTempPath;
 
-                if (repo != null 
-                    && repo.Name != null && !string.IsNullOrEmpty(repo.Name))
+                if (repo == null || repo.Name == null || string.IsNullOrEmpty(repo.Name))
                 {
-                    string? repoUrl = repo.Urlx86;
-                    string? repoArgs = repo.CmdInstallx86;
+                    return JsonConvert.SerializeObject(response);
+                }
 
-                    if (DeployServer.Is64BitEnv)
+                bool isUninstall = commands.Option.Equals("uninstall", StringComparison.OrdinalIgnoreCase);
+                bool isInstall = commands.Option.Equals("install", StringComparison.OrdinalIgnoreCase);
+
+                if (!isInstall && !isUninstall)
+                {
+                    return JsonConvert.SerializeObject(response);
+                }
+
+                string? repoUrl = repo.Urlx86;
+                string? repoArgs = isUninstall ? repo.CmdUnInstallx86 : repo.CmdInstallx86;
+                string? scriptBefore = isUninstall ? repo.ScriptUnInstallBefore : repo.ScriptInstallBefore;
+                string? scriptAfter = isUninstall ? repo.ScriptUnInstallAfter : repo.ScriptInstallAfter;
+
+                if (DeployServer.Is64BitEnv)
+                {
+                    repoUrl = !string.IsNullOrEmpty(repo.Urlx64) ? repo.Urlx64 : repoUrl;
+
+                    if (isUninstall)
                     {
-                        repoUrl = !string.IsNullOrEmpty(repo.Urlx64) ? repo.Urlx64 : repoUrl;
+                        repoArgs = !string.IsNullOrEmpty(repo.CmdUnInstallx64) ? repo.CmdUnInstallx64 : repoArgs;
+                    }
+                    else
+                    {
                         repoArgs = !string.IsNullOrEmpty(repo.CmdInstallx64) ? repo.CmdInstallx64 : repoArgs;
                     }
+                }
 
-                    string? repoBinaryFileName = Path.GetFileName(repoUrl);
-                    string? repoBinaryTempFilePath = !string.IsNullOrEmpty(repoTempPath) ? repoTempPath : Path.GetTempPath();
-                    string? repoBinaryFileLocalPath = Path.Combine(repoBinaryTempFilePath, repoBinaryFileName ?? "");
+                if (!string.IsNullOrEmpty(commands.Args))
+                {
+                    repoArgs = string.IsNullOrEmpty(repoArgs)
+                        ? commands.Args
+                        : repoArgs + " " + commands.Args;
+                }
 
-                    InstallQueuesType installQueuesTypeRepo = new()
+                string? repoBinaryFileName = Path.GetFileName(repoUrl);
+                string? repoBinaryTempFilePath = !string.IsNullOrEmpty(repoTempPath) ? repoTempPath : Path.GetTempPath();
+                string? repoBinaryFileLocalPath = Path.Combine(repoBinaryTempFilePath, repoBinaryFileName ?? "");
+
+                InstallQueuesType installQueuesTypeRepo = new()
+                {
+                    RepoUrl = repoUrl,
+                    FileName = repoBinaryFileName,
+                    FilePath = repoBinaryFileLocalPath,
+                    Arguments = repoArgs,
+                    PackageName = repo.Name,
+                    Operation = commands.Option,
+                    ScriptBefore = scriptBefore,
+                    ScriptAfter = scriptAfter
+                };
+
+                if (InstallServer.AddQueues(commands.Option, installQueuesTypeRepo) > 0)
+                {
+                    response.success = true;
+                    response.result = new
                     {
-                        RepoUrl = repoUrl,
-                        FileName = repoBinaryFileName,
-                        FilePath = repoBinaryFileLocalPath,
-                        Arguments = repoArgs
+                        queued = true,
+                        package = repo.Name,
+                        operation = commands.Option,
+                        queueCount = InstallServer.GetQueueCount()
                     };
-
-                    if (InstallServer.AddQueues(commands.Option, installQueuesTypeRepo) > 0)
-                    {
-                        response.success = true;
-                    }
                 }
             }
             catch (Exception e)

@@ -11,7 +11,7 @@ using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServices
 {
-    [ServicesRep(ZmqApiName = "ServerInfo", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "ServerInfo", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "read")]
 
     /// <summary>
     /// ServerInfo

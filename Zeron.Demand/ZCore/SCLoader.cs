@@ -1,6 +1,9 @@
 ﻿// Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
+using Zeron.ZCore;
+using Zeron.ZCore.Container;
+
 namespace Zeron.Demand.ZCore
 {
     /// <summary>
@@ -14,7 +17,7 @@ namespace Zeron.Demand.ZCore
         /// <returns>Returns void.</returns>
         public void WhenStart()
         {
-            Console.WriteLine("WhenStart");
+            ZNLogger.Common.Info("Zeron.Demand service started.");
         }
 
         /// <summary>
@@ -23,7 +26,9 @@ namespace Zeron.Demand.ZCore
         /// <returns>Returns void.</returns>
         public void WhenStop()
         {
-            Console.WriteLine("WhenStop");
+            ZNLogger.Common.Info("Zeron.Demand service stopping...");
+            ServerIntegrate.StopAll();
+            ZNLogger.Common.Info("Zeron.Demand service stopped.");
         }
 
         /// <summary>
@@ -32,7 +37,7 @@ namespace Zeron.Demand.ZCore
         /// <returns>Returns void.</returns>
         public void WhenPause()
         {
-            Console.WriteLine("WhenPause");
+            ZNLogger.Common.Info("Zeron.Demand service paused.");
         }
 
         /// <summary>
@@ -41,7 +46,7 @@ namespace Zeron.Demand.ZCore
         /// <returns>Returns void.</returns>
         public void WhenContinue()
         {
-            Console.WriteLine("WhenContinue");
+            ZNLogger.Common.Info("Zeron.Demand service continued.");
         }
 
         /// <summary>
@@ -50,7 +55,9 @@ namespace Zeron.Demand.ZCore
         /// <returns>Returns void.</returns>
         public void WhenShutdown()
         {
-            Console.WriteLine("WhenShutdown");
+            ZNLogger.Common.Info("Zeron.Demand service shutting down...");
+            ServerIntegrate.StopAll();
+            ZNLogger.Common.Info("Zeron.Demand service shutdown complete.");
         }
     }
 }

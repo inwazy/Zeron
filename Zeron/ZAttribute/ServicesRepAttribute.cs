@@ -37,6 +37,15 @@ namespace Zeron.ZAttribute
         }
 
         /// <summary>
+        /// ApiScope - permission action for RBAC (e.g. read, write, *).
+        /// </summary>
+        public string ApiScope
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// ServicesRepAttribute
         /// </summary>
         /// <returns>Returns void.</returns>
@@ -45,6 +54,7 @@ namespace Zeron.ZAttribute
             ZmqApiName = "";
             ZmqApiEnabled = true;
             ZmqNotifySubscriber = false;
+            ApiScope = "*";
         }
     }
 }

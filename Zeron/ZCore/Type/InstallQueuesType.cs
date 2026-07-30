@@ -45,6 +45,42 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
+        /// PackageName
+        /// </summary>
+        public string? PackageName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Operation
+        /// </summary>
+        public string? Operation
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// ScriptBefore
+        /// </summary>
+        public string? ScriptBefore
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// ScriptAfter
+        /// </summary>
+        public string? ScriptAfter
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// InstallQueuesType
         /// </summary>
         /// <returns>Returns void.</returns>
@@ -54,6 +90,10 @@ namespace Zeron.ZCore.Type
             FileName = "";
             FilePath = "";
             Arguments = "";
+            PackageName = "";
+            Operation = "";
+            ScriptBefore = "";
+            ScriptAfter = "";
         }
     }
 }

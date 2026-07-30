@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using System.Globalization;
+using NLog;
 using Topshelf;
 using Zeron.Demand.ZCore;
 using Zeron.Demand.ZServers;
@@ -23,6 +24,8 @@ namespace Zeron.Demand
         /// <returns>Returns void.</returns>
         public static void Main(string[] args)
         {
+            LogManager.Setup().LoadConfigurationFromFile("NLog.config");
+
             bool result = BootLoader();
 
             if (!result)
@@ -74,16 +77,21 @@ namespace Zeron.Demand
 
             try
             {
+                SchedulerServer.OnTaskDue = task => TaskPipelineExecutor.ExecuteTask(task);
+
                 // Shared Servers
                 ServerIntegrate.Fork<ConfigServer>();
+                ServerIntegrate.Fork<AgentServer>();
                 ServerIntegrate.Fork<ApplicationServer>();
                 ServerIntegrate.Fork<DeployServer>();
                 ServerIntegrate.Fork<InstallServer>();
                 ServerIntegrate.Fork<MailerServer>();
+                ServerIntegrate.Fork<SchedulerServer>();
 
                 // Local Servers
                 ServerIntegrate.Fork<ZmqServer>();
                 ServerIntegrate.Fork<ManagedPackageServer>();
+                ServerIntegrate.Fork<AuditServer>();
             }
             catch (Exception e)
             {

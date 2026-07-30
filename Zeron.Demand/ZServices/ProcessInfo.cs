@@ -12,7 +12,7 @@ using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServices
 {
-    [ServicesRep(ZmqApiName = "ProcessInfo", ZmqApiEnabled = true, ZmqNotifySubscriber = false)]
+    [ServicesRep(ZmqApiName = "ProcessInfo", ZmqApiEnabled = true, ZmqNotifySubscriber = false, ApiScope = "read")]
 
     /// <summary>
     /// ProcessInfo

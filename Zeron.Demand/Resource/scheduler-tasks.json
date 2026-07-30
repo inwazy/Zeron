@@ -1,0 +1,36 @@
+{
+  "tasks": [
+    {
+      "name": "daily-serverinfo",
+      "cron": "0 8 * * *",
+      "enabled": true,
+      "steps": [
+        {
+          "type": "api",
+          "apiName": "ServerInfo",
+          "command": ""
+        }
+      ]
+    },
+    {
+      "name": "weekly-temp-cleanup",
+      "cron": "0 3 * * 0",
+      "enabled": false,
+      "steps": [
+        {
+          "type": "powershell",
+          "script": "Get-ChildItem $env:TEMP -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-7) } | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue"
+        },
+        {
+          "type": "wait",
+          "seconds": 5
+        },
+        {
+          "type": "api",
+          "apiName": "FileSystem",
+          "command": "list C:\\Windows\\Temp"
+        }
+      ]
+    }
+  ]
+}
