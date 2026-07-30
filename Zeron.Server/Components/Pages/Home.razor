@@ -1,0 +1,94 @@
+@page "/"
+@rendermode InteractiveServer
+@using Zeron.Server.Data.Entities
+@using Zeron.Server.ZServers
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject AgentManagerServer AgentManager
+@inject TaskDispatcherServer TaskDispatcher
+@inject EventIngestorServer EventIngestor
+
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Overview of agents, tasks, and recent events.</p>
+    </div>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <span>Agents Online</span>
+        <strong>@m_OnlineCount</strong>
+    </div>
+    <div class="card">
+        <span>Total Agents</span>
+        <strong>@m_Agents.Count</strong>
+    </div>
+    <div class="card">
+        <span>Active Tasks</span>
+        <strong>@m_ActiveTaskCount</strong>
+    </div>
+    <div class="card">
+        <span>Recent Events</span>
+        <strong>@m_RecentEvents.Count</strong>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Recent Agents</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Agent</th>
+                <th>Host</th>
+                <th>Status</th>
+                <th>Last Heartbeat</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (AgentEntity agent in m_Agents.Take(5))
+            {
+                <tr>
+                    <td><a href="@($"/agents/{agent.AgentKey}")">@agent.AgentKey</a></td>
+                    <td>@agent.MachineName</td>
+                    <td><span class="status @agent.Status">@agent.Status</span></td>
+                    <td>@agent.LastHeartbeatAt.ToLocalTime()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="panel">
+    <h2>Recent Events</h2>
+    @foreach (EventEntity evt in m_RecentEvents)
+    {
+        <div class="timeline-item">
+            <strong>@evt.Topic</strong>
+            <small>@evt.Agent?.AgentKey · @evt.ReceivedAt.ToLocalTime()</small>
+            <div>@Truncate(evt.Payload, 120)</div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<AgentEntity> m_Agents = [];
+    private List<EventEntity> m_RecentEvents = [];
+    private int m_OnlineCount;
+    private int m_ActiveTaskCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        m_Agents = await AgentManager.GetAgentsAsync();
+        m_OnlineCount = m_Agents.Count(agent => agent.Status == "online");
+
+        List<TaskEntity> tasks = await TaskDispatcher.GetTasksAsync();
+        m_ActiveTaskCount = tasks.Count(task => task.Status is "pending" or "running");
+
+        m_RecentEvents = await EventIngestor.GetEventsAsync(null, null, 8);
+    }
+
+    private static string Truncate(string text, int maxLength)
+    {
+        return text.Length <= maxLength ? text : text[..maxLength] + "...";
+    }
+}

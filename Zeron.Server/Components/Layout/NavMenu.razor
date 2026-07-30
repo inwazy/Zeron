@@ -1,0 +1,36 @@
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+
+<nav class="nav-menu">
+    <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
+    <NavLink href="/agents">Agents</NavLink>
+    <NavLink href="/tasks">Tasks</NavLink>
+    <NavLink href="/events">Events</NavLink>
+</nav>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="nav-user">
+            <span>@context.User.Identity?.Name</span>
+            <button class="btn-link" @onclick="LogoutAsync">Logout</button>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Inject]
+    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
+
+    private async Task LogoutAsync()
+    {
+        HttpContext? httpContext = HttpContextAccessor.HttpContext;
+
+        if (httpContext != null)
+        {
+            await httpContext.SignOutAsync();
+        }
+
+        Navigation.NavigateTo("/login", true);
+    }
+}

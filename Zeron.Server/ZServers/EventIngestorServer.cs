@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZInterfaces;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
 
@@ -15,16 +16,22 @@ namespace Zeron.Server.ZServers
     /// </summary>
     public class EventIngestorServer
     {
+        // DbContext
         private readonly ZeronServerDbContext m_DbContext;
+
+        // DashboardNotifier
+        private readonly IDashboardNotifier? m_DashboardNotifier;
 
         /// <summary>
         /// EventIngestorServer
         /// </summary>
         /// <param name="dbContext"></param>
+        /// <param name="dashboardNotifier"></param>
         /// <returns>Returns void.</returns>
-        public EventIngestorServer(ZeronServerDbContext dbContext)
+        public EventIngestorServer(ZeronServerDbContext dbContext, IDashboardNotifier? dashboardNotifier = null)
         {
             m_DbContext = dbContext;
+            m_DashboardNotifier = dashboardNotifier;
         }
 
         /// <summary>
@@ -59,6 +66,19 @@ namespace Zeron.Server.ZServers
             agent.LastSeenAt = DateTime.UtcNow;
 
             await m_DbContext.SaveChangesAsync(cancellationToken);
+
+            if (m_DashboardNotifier != null)
+            {
+                EventEntity? savedEvent = await m_DbContext.Events
+                    .Include(evt => evt.Agent)
+                    .OrderByDescending(evt => evt.Id)
+                    .FirstOrDefaultAsync(evt => evt.AgentId == agent.Id && evt.Topic == report.Topic, cancellationToken);
+
+                if (savedEvent != null)
+                {
+                    await m_DashboardNotifier.NotifyEventAsync(savedEvent);
+                }
+            }
 
             return true;
         }

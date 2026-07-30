@@ -52,6 +52,11 @@ namespace Zeron.Server.Data
         public DbSet<EventEntity> Events => Set<EventEntity>();
 
         /// <summary>
+        /// Users
+        /// </summary>
+        public DbSet<UserEntity> Users => Set<UserEntity>();
+
+        /// <summary>
         /// OnModelCreating
         /// </summary>
         /// <param name="modelBuilder"></param>
@@ -76,6 +81,11 @@ namespace Zeron.Server.Data
             {
                 entity.HasIndex(evt => evt.Topic);
                 entity.HasIndex(evt => evt.ReceivedAt);
+            });
+
+            modelBuilder.Entity<UserEntity>(entity =>
+            {
+                entity.HasIndex(user => user.Username).IsUnique();
             });
         }
     }

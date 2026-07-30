@@ -57,5 +57,50 @@ namespace Zeron.Server.ZCore
             get;
             set;
         } = 5000;
+
+        /// <summary>
+        /// JwtSecret
+        /// </summary>
+        public string JwtSecret
+        {
+            get;
+            set;
+        } = "zeron-dev-secret-change-in-production";
+
+        /// <summary>
+        /// JwtIssuer
+        /// </summary>
+        public string JwtIssuer
+        {
+            get;
+            set;
+        } = "Zeron.Server";
+
+        /// <summary>
+        /// JwtExpireMinutes
+        /// </summary>
+        public int JwtExpireMinutes
+        {
+            get;
+            set;
+        } = 480;
+
+        /// <summary>
+        /// DefaultAdminUsername
+        /// </summary>
+        public string DefaultAdminUsername
+        {
+            get;
+            set;
+        } = "admin";
+
+        /// <summary>
+        /// DefaultAdminPassword
+        /// </summary>
+        public string DefaultAdminPassword
+        {
+            get;
+            set;
+        } = "admin";
     }
 }

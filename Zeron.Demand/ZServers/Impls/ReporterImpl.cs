@@ -19,6 +19,9 @@ namespace Zeron.Demand.ZServers.Impls
         // Server URL.
         private static string? s_ServerUrl;
 
+        // Server API key.
+        private static string? s_ServerApiKey;
+
         /// <summary>
         /// ServerUrl
         /// </summary>
@@ -29,11 +32,45 @@ namespace Zeron.Demand.ZServers.Impls
         }
 
         /// <summary>
+        /// ServerApiKey
+        /// </summary>
+        public static string? ServerApiKey
+        {
+            get => s_ServerApiKey;
+            set => s_ServerApiKey = value;
+        }
+
+        /// <summary>
         /// Dispose
         /// </summary>
         /// <returns>Returns void.</returns>
         public void Dispose()
         {
+        }
+
+        /// <summary>
+        /// CreateRequestAsync
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="path"></param>
+        /// <param name="content"></param>
+        /// <returns>Returns HttpResponseMessage.</returns>
+        private static async Task<HttpResponseMessage> SendRequestAsync(
+            HttpMethod method,
+            string path,
+            HttpContent? content = null)
+        {
+            HttpRequestMessage request = new(method, s_ServerUrl + path)
+            {
+                Content = content
+            };
+
+            if (!string.IsNullOrWhiteSpace(s_ServerApiKey))
+            {
+                request.Headers.Add("X-Zeron-Agent-Key", s_ServerApiKey);
+            }
+
+            return await s_HttpClient.SendAsync(request);
         }
 
         /// <summary>
@@ -50,12 +87,19 @@ namespace Zeron.Demand.ZServers.Impls
 
             try
             {
-                HttpResponseMessage response = await s_HttpClient.PostAsJsonAsync(
-                    s_ServerUrl + "/api/agents/heartbeat",
-                    request);
+                HttpResponseMessage response = await SendRequestAsync(
+                    HttpMethod.Post,
+                    "/api/agents/heartbeat",
+                    JsonContent.Create(request));
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    string body = await response.Content.ReadAsStringAsync();
+                    Zeron.ZCore.ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
+                        "ReporterImpl SendHeartbeatAsync failed. Status={0}, Body={1}",
+                        (int)response.StatusCode,
+                        body));
+
                     return null;
                 }
 
@@ -84,7 +128,10 @@ namespace Zeron.Demand.ZServers.Impls
 
             try
             {
-                await s_HttpClient.PostAsJsonAsync(s_ServerUrl + "/api/events", report);
+                await SendRequestAsync(
+                    HttpMethod.Post,
+                    "/api/events",
+                    JsonContent.Create(report));
             }
             catch (Exception e)
             {
@@ -107,7 +154,10 @@ namespace Zeron.Demand.ZServers.Impls
 
             try
             {
-                await s_HttpClient.PostAsJsonAsync(s_ServerUrl + "/api/tasks/results", report);
+                await SendRequestAsync(
+                    HttpMethod.Post,
+                    "/api/tasks/results",
+                    JsonContent.Create(report));
             }
             catch (Exception e)
             {

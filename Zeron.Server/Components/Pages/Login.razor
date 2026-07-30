@@ -1,0 +1,47 @@
+@page "/login"
+@layout EmptyLayout
+@attribute [AllowAnonymous]
+
+<div class="login-page">
+    <div class="login-card">
+        <div class="brand" style="margin-bottom: 1.5rem;">
+            <span class="brand-mark">Z</span>
+            <div>
+                <strong>Zeron Server</strong>
+                <small>Dashboard Login</small>
+            </div>
+        </div>
+
+        <form method="post" action="/account/login">
+            <AntiforgeryToken />
+            <div class="form-grid">
+                <label>
+                    Username
+                    <input name="username" required autocomplete="username" />
+                </label>
+                <label>
+                    Password
+                    <input name="password" type="password" required autocomplete="current-password" />
+                </label>
+                <button class="btn" type="submit">Sign In</button>
+            </div>
+        </form>
+
+        @if (m_ShowError)
+        {
+            <p class="error">Invalid username or password.</p>
+        }
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "failed")]
+    public string? Failed { get; set; }
+
+    private bool m_ShowError;
+
+    protected override void OnInitialized()
+    {
+        m_ShowError = Failed == "1";
+    }
+}

@@ -1,13 +1,20 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using NLog;
 using NLog.Extensions.Logging;
+using System.Text;
 using Zeron.Server.Background;
+using Zeron.Server.Components;
 using Zeron.Server.Data;
 using Zeron.Server.Endpoints;
+using Zeron.Server.Hubs;
 using Zeron.Server.ZCore;
+using Zeron.Server.ZInterfaces;
 using Zeron.Server.ZServers;
 
 namespace Zeron.Server
@@ -47,33 +54,100 @@ namespace Zeron.Server
 
             builder.Services.AddSingleton(serverSettings);
             builder.Services.AddDbContext<ZeronServerDbContext>(options => options.UseSqlite("Data Source=" + dbPath));
+            builder.Services.AddSingleton<JwtTokenServer>();
+            builder.Services.AddScoped<AuthServer>();
             builder.Services.AddScoped<AgentManagerServer>();
             builder.Services.AddScoped<TaskDispatcherServer>();
             builder.Services.AddScoped<EventIngestorServer>();
             builder.Services.AddSingleton<CommandPublisherServer>();
+            builder.Services.AddSingleton<IDashboardNotifier, DashboardNotifierServer>();
             builder.Services.AddHostedService<HeartbeatMonitorWorker>();
             builder.Services.AddHostedService<TaskDispatchWorker>();
+            builder.Services.AddHttpContextAccessor();
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+            .AddCookie(options =>
+            {
+                options.LoginPath = "/login";
+                options.LogoutPath = "/api/auth/logout";
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = serverSettings.JwtIssuer,
+                    ValidAudience = serverSettings.JwtIssuer,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(serverSettings.JwtSecret))
+                };
+            });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy(ServerPolicies.ViewerOrAbove, policy =>
+                    policy.RequireRole(ServerRoles.Admin, ServerRoles.Operator, ServerRoles.Viewer));
+                options.AddPolicy(ServerPolicies.OperatorOrAbove, policy =>
+                    policy.RequireRole(ServerRoles.Admin, ServerRoles.Operator));
+                options.AddPolicy(ServerPolicies.AdminOnly, policy =>
+                    policy.RequireRole(ServerRoles.Admin));
+            });
+
+            builder.Services.AddCascadingAuthenticationState();
+            var razorComponents = builder.Services.AddRazorComponents()
+                .AddInteractiveServerComponents();
+
+            if (builder.Environment.IsDevelopment())
+            {
+                razorComponents.AddCircuitOptions(options => options.DetailedErrors = true);
+            }
+
+            builder.Services.AddSignalR();
 
             WebApplication app = builder.Build();
 
             using (IServiceScope scope = app.Services.CreateScope())
             {
                 ZeronServerDbContext dbContext = scope.ServiceProvider.GetRequiredService<ZeronServerDbContext>();
-                dbContext.Database.EnsureCreated();
+                DatabaseBootstrapServer.EnsureSchemaAsync(dbContext).GetAwaiter().GetResult();
+
+                AuthServer authServer = scope.ServiceProvider.GetRequiredService<AuthServer>();
+                authServer.SeedDefaultUserAsync().GetAwaiter().GetResult();
             }
 
             CommandPublisherServer commandPublisher = app.Services.GetRequiredService<CommandPublisherServer>();
             commandPublisher.Start();
 
-            app.MapGet("/", () => Results.Ok(new
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseExceptionHandler("/Error");
+            }
+
+            app.UseStaticFiles();
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseAntiforgery();
+
+            app.MapGet("/api", () => Results.Ok(new
             {
                 name = "Zeron.Server",
                 version = typeof(Program).Assembly.GetName().Version?.ToString()
-            }));
+            })).AllowAnonymous();
 
+            app.MapAuthEndpoints();
             app.MapAgentEndpoints();
             app.MapTaskEndpoints();
             app.MapEventEndpoints();
+            app.MapHub<DashboardHub>("/hubs/dashboard");
+
+            app.MapRazorComponents<App>()
+                .AddInteractiveServerRenderMode();
 
             app.Lifetime.ApplicationStopping.Register(() => commandPublisher.Dispose());
 

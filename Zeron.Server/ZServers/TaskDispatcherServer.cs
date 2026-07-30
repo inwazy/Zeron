@@ -16,7 +16,10 @@ namespace Zeron.Server.ZServers
     /// </summary>
     public class TaskDispatcherServer
     {
+        // DbContext
         private readonly ZeronServerDbContext m_DbContext;
+
+        // CommandPublisher 
         private readonly CommandPublisherServer m_CommandPublisher;
 
         /// <summary>
@@ -199,6 +202,47 @@ namespace Zeron.Server.ZServers
                 .Include(task => task.Assignments)
                 .ThenInclude(assignment => assignment.Result)
                 .FirstOrDefaultAsync(task => task.Id == taskId, cancellationToken);
+        }
+
+        /// <summary>
+        /// CancelTaskAsync
+        /// </summary>
+        /// <param name="taskId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns bool.</returns>
+        public async Task<bool> CancelTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
+        {
+            TaskEntity? task = await m_DbContext.Tasks
+                .Include(item => item.Assignments)
+                .FirstOrDefaultAsync(item => item.Id == taskId, cancellationToken);
+
+            if (task == null)
+            {
+                return false;
+            }
+
+            if (task.Status is "completed" or "failed" or "cancelled")
+            {
+                return false;
+            }
+
+            task.Status = "cancelled";
+
+            foreach (TaskAssignmentEntity assignment in task.Assignments)
+            {
+                if (assignment.Status is "pending" or "dispatched")
+                {
+                    assignment.Status = "cancelled";
+                    assignment.CompletedAt = DateTime.UtcNow;
+                }
+            }
+
+            await m_DbContext.SaveChangesAsync(cancellationToken);
+
+            ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                "TaskDispatcherServer cancelled task '{0}'.", task.Name));
+
+            return true;
         }
 
         /// <summary>

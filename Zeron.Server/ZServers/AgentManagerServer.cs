@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZInterfaces;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
 
@@ -15,16 +16,22 @@ namespace Zeron.Server.ZServers
     /// </summary>
     public class AgentManagerServer
     {
+        // DbContext
         private readonly ZeronServerDbContext m_DbContext;
+
+        // DashboardNotifier
+        private readonly IDashboardNotifier? m_DashboardNotifier;
 
         /// <summary>
         /// AgentManagerServer
         /// </summary>
         /// <param name="dbContext"></param>
+        /// <param name="dashboardNotifier"></param>
         /// <returns>Returns void.</returns>
-        public AgentManagerServer(ZeronServerDbContext dbContext)
+        public AgentManagerServer(ZeronServerDbContext dbContext, IDashboardNotifier? dashboardNotifier = null)
         {
             m_DbContext = dbContext;
+            m_DashboardNotifier = dashboardNotifier;
         }
 
         /// <summary>
@@ -78,6 +85,16 @@ namespace Zeron.Server.ZServers
             });
 
             await m_DbContext.SaveChangesAsync(cancellationToken);
+
+            ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                "AgentManagerServer heartbeat from {0} ({1}), status=online",
+                agent.AgentKey,
+                agent.MachineName));
+
+            if (m_DashboardNotifier != null)
+            {
+                await m_DashboardNotifier.NotifyAgentStatusAsync(agent);
+            }
 
             List<PendingTaskType> pendingTasks = await m_DbContext.TaskAssignments
                 .Include(assignment => assignment.Task)
@@ -146,9 +163,52 @@ namespace Zeron.Server.ZServers
                 await m_DbContext.SaveChangesAsync(cancellationToken);
                 ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                     "AgentManagerServer marked {0} agent(s) offline.", staleAgents.Count));
+
+                if (m_DashboardNotifier != null)
+                {
+                    foreach (AgentEntity agent in staleAgents)
+                    {
+                        await m_DashboardNotifier.NotifyAgentStatusAsync(agent);
+                    }
+                }
             }
 
             return staleAgents.Count;
+        }
+
+        /// <summary>
+        /// UpdateAgentAsync
+        /// </summary>
+        /// <param name="agentKey"></param>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns updated agent or null.</returns>
+        public async Task<AgentEntity?> UpdateAgentAsync(
+            string agentKey,
+            AgentUpdateRequestType request,
+            CancellationToken cancellationToken = default)
+        {
+            AgentEntity? agent = await m_DbContext.Agents
+                .FirstOrDefaultAsync(item => item.AgentKey == agentKey, cancellationToken);
+
+            if (agent == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                agent.Status = request.Status;
+            }
+
+            await m_DbContext.SaveChangesAsync(cancellationToken);
+
+            if (m_DashboardNotifier != null)
+            {
+                await m_DashboardNotifier.NotifyAgentStatusAsync(agent);
+            }
+
+            return agent;
         }
     }
 }

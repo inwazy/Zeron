@@ -51,6 +51,7 @@ namespace Zeron.Demand.ZServers
             {
                 s_Enabled = bool.Parse(aConfig["server_enabled"] ?? "false");
                 ReporterImpl.ServerUrl = aConfig["server_url"];
+                ReporterImpl.ServerApiKey = aConfig["server_api_key"] ?? "zeron.testkey";
                 HeartbeatIntervalMs = int.Parse(aConfig["server_heartbeat_interval_ms"] ?? "30000", CultureInfo.InvariantCulture);
             }
             catch (Exception e)
@@ -79,6 +80,8 @@ namespace Zeron.Demand.ZServers
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "ReporterServer initialized. ServerUrl={0}", ReporterImpl.ServerUrl));
+
+            _ = SendHeartbeatAndProcessTasksAsync();
         }
 
         /// <summary>
@@ -151,7 +154,15 @@ namespace Zeron.Demand.ZServers
         /// <returns>Returns void.</returns>
         private static async void OnHeartbeatTimer(object? sender, ElapsedEventArgs args)
         {
-            await SendHeartbeatAndProcessTasksAsync();
+            try
+            {
+                await SendHeartbeatAndProcessTasksAsync();
+            }
+            catch (Exception e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
+                    "ReporterServer OnHeartbeatTimer Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
         }
 
         /// <summary>
@@ -178,7 +189,28 @@ namespace Zeron.Demand.ZServers
 
             AgentHeartbeatResponseType? response = await ReporterImpl.SendHeartbeatAsync(request);
 
-            if (response?.PendingTasks == null)
+            if (response == null)
+            {
+                ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
+                    "ReporterServer heartbeat failed for AgentId={0}", AgentServer.AgentId));
+
+                return;
+            }
+
+            if (!response.Success)
+            {
+                ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
+                    "ReporterServer heartbeat rejected for AgentId={0}", AgentServer.AgentId));
+
+                return;
+            }
+
+            ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                "ReporterServer heartbeat ok. AgentId={0}, PendingTasks={1}",
+                AgentServer.AgentId,
+                response.PendingTasks?.Count ?? 0));
+
+            if (response.PendingTasks == null)
             {
                 return;
             }
