@@ -53,8 +53,9 @@ jobs:
         shell: pwsh
         run: Copy-Item ./Zeron.Demand/App.Sample.config ./Zeron.Demand/App.config -Force
 
-      - name: Restore
-        run: dotnet restore Zeron.sln
+      # Must restore with RID so project.assets.json includes net10.0-windows/win-x64
+      - name: Restore (win-x64)
+        run: dotnet restore Zeron.sln -r win-x64
 
       - name: Publish Zeron.Server
         run: >
