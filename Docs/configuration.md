@@ -82,3 +82,11 @@ While `MustChangePassword` is true, other Dashboard pages and APIs return redire
 | `GET /ready` | Anonymous | Readiness probe — SQLite database is reachable |
 
 Use `/ready` for load balancer / process manager health checks.
+
+## Dashboard Summary
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/dashboard/summary` | Viewer+ | Aggregated online/offline agents, stale connections, active tasks, open alerts, recent lists |
+
+The Dashboard home page (`/`) uses this summary and refreshes every 15 seconds (plus SignalR updates).

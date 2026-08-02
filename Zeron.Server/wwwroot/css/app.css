@@ -134,12 +134,67 @@ body {
     margin-top: 0.35rem;
 }
 
+.card small {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--muted);
+}
+
+.card-link {
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.card-link:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-danger { color: var(--danger); }
+
+.muted {
+    color: var(--muted);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
 .panel {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 1.25rem;
     margin-bottom: 1.5rem;
+}
+
+.dashboard-grid .panel {
+    margin-bottom: 0;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.panel-header a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9rem;
 }
 
 table {
@@ -311,5 +366,9 @@ table select {
     .sidebar {
         border-right: none;
         border-bottom: 1px solid var(--border);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
     }
 }

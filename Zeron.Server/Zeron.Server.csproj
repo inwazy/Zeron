@@ -11,7 +11,12 @@
     <Company>Inwazy Technology</Company>
     <Product>Zeron.Server</Product>
     <Copyright>Copyright (c) 2017-2026 Ji-Feng Tsai</Copyright>
+    <ApplicationIcon>App.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="App.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Zeron\Zeron.csproj" />

@@ -121,6 +121,31 @@ namespace Zeron.Server.Tests
         }
 
         /// <summary>
+        /// Dashboard summary endpoint returns aggregated counts.
+        /// </summary>
+        [TestMethod()]
+        public async Task DashboardSummaryReturnsCountsTest()
+        {
+            using HttpClient agentClient = s_Factory!.CreateClient();
+            using HttpClient dashboardClient = s_Factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            agentClient.DefaultRequestHeaders.Add("X-Zeron-Agent-Key", AgentApiKey);
+            await PostHeartbeatAsync(agentClient);
+            await LoginAsync(dashboardClient);
+
+            DashboardSummaryType? summary = await dashboardClient
+                .GetFromJsonAsync<DashboardSummaryType>("/api/dashboard/summary");
+
+            Assert.IsNotNull(summary);
+            Assert.IsTrue(summary!.AgentsTotal >= 1);
+            Assert.IsTrue(summary.AgentsOnline >= 1);
+            Assert.IsNotNull(summary.RecentAgents);
+        }
+
+        /// <summary>
         /// Admin can create users via API.
         /// </summary>
         [TestMethod()]

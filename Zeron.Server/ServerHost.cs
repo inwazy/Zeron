@@ -61,6 +61,7 @@ namespace Zeron.Server
             builder.Services.AddScoped<EventIngestorServer>();
             builder.Services.AddScoped<AlertNotifierServer>();
             builder.Services.AddScoped<AlertRuleServer>();
+            builder.Services.AddScoped<DashboardSummaryServer>();
             builder.Services.AddSingleton<CommandPublisherServer>();
             builder.Services.AddSingleton<IDashboardNotifier, DashboardNotifierServer>();
             builder.Services.AddHttpContextAccessor();
@@ -153,6 +154,7 @@ namespace Zeron.Server
 
             app.MapHealthEndpoints();
             app.MapAuthEndpoints();
+            app.MapDashboardEndpoints();
             app.MapAgentEndpoints();
             app.MapTaskEndpoints();
             app.MapEventEndpoints();
