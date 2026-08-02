@@ -121,6 +121,44 @@ namespace Zeron.Server.Tests
         }
 
         /// <summary>
+        /// Operator can deploy ManagedPackage via packages API.
+        /// </summary>
+        [TestMethod()]
+        public async Task PackageDeployCreatesTaskTest()
+        {
+            using HttpClient agentClient = s_Factory!.CreateClient();
+            using HttpClient dashboardClient = s_Factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            agentClient.DefaultRequestHeaders.Add("X-Zeron-Agent-Key", AgentApiKey);
+            await PostHeartbeatAsync(agentClient);
+            await LoginAsync(dashboardClient);
+
+            HttpResponseMessage deployResponse = await dashboardClient.PostAsJsonAsync(
+                "/api/packages/deploy",
+                new PackageDeployRequestType
+                {
+                    Operation = "install",
+                    PackageName = "ccleaner",
+                    ExtraArgs = "/S",
+                    TargetType = "agent",
+                    AgentIds = [TestAgentId]
+                });
+
+            Assert.AreEqual(HttpStatusCode.Created, deployResponse.StatusCode);
+
+            PackageDeployResponseType? deploy = await deployResponse.Content
+                .ReadFromJsonAsync<PackageDeployResponseType>();
+
+            Assert.IsNotNull(deploy);
+            Assert.IsTrue(deploy!.Success);
+            Assert.AreEqual("install ccleaner /S", deploy.Command);
+            Assert.IsNotNull(deploy.TaskId);
+        }
+
+        /// <summary>
         /// Operator can create and list task schedules.
         /// </summary>
         [TestMethod()]

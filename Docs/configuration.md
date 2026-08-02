@@ -109,3 +109,30 @@ Central cron schedules live on `Zeron.Server` (not agent `scheduler-tasks.json`)
 Cron uses 5-field NCrontab expressions evaluated in **server local time**. When due, `TaskScheduleWorker` creates a normal `TaskEntity` via `TaskDispatcherServer` (same path as one-shot tasks).
 
 Dashboard pages: `/schedules`, `/schedules/create`, `/schedules/{id}`.
+
+## ManagedPackage Central Deploy
+
+Central package deploy reuses the task dispatch path (`TargetApi=ManagedPackage`).
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `POST /api/packages/deploy` | Operator+ | Create install/uninstall deploy task |
+| `GET /api/packages/deploys` | Viewer+ | Recent ManagedPackage tasks |
+| `GET /api/packages/install-events` | Viewer+ | Recent `install.*` events |
+
+Command format sent to agents:
+
+```text
+install <packageName> [extraArgs]
+uninstall <packageName> [extraArgs]
+```
+
+Package names must exist in each agent's local SQLite `managed_packages` catalog (`status=1`).
+
+Task assignment success means **queued on agent**. Final outcome is reported as:
+
+- `install.started` / `install.uninstall`
+- `install.completed`
+- `install.failed`
+
+Dashboard pages: `/packages`, `/packages/deploy`. Events shortcut: `/events?topic=install.`.

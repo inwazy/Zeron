@@ -27,6 +27,11 @@ namespace Zeron.ZCore
 
             string[] commands = command.Split(' ', 3);
 
+            if (commands.Length == 1)
+            {
+                result.Option = commands[0].Trim();
+            }
+
             if (commands.Length == 2)
             {
                 result.Option = commands[0].Trim();

@@ -59,6 +59,7 @@ namespace Zeron.Server
             builder.Services.AddScoped<AgentDiagnosticServer>();
             builder.Services.AddScoped<TaskDispatcherServer>();
             builder.Services.AddScoped<TaskScheduleServer>();
+            builder.Services.AddScoped<PackageDeployServer>();
             builder.Services.AddScoped<EventIngestorServer>();
             builder.Services.AddScoped<AlertNotifierServer>();
             builder.Services.AddScoped<AlertRuleServer>();
@@ -160,6 +161,7 @@ namespace Zeron.Server
             app.MapAgentEndpoints();
             app.MapTaskEndpoints();
             app.MapTaskScheduleEndpoints();
+            app.MapPackageEndpoints();
             app.MapEventEndpoints();
             app.MapAlertEndpoints();
             app.MapUserEndpoints();

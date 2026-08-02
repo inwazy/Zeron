@@ -1,0 +1,104 @@
+@page "/packages"
+@rendermode InteractiveServer
+@using Zeron.Server.Data.Entities
+@using Zeron.Server.ZServers
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject PackageDeployServer PackageDeployServer
+
+<div class="page-header">
+    <div>
+        <h1>Packages</h1>
+        <p>Central ManagedPackage install and uninstall deployments.</p>
+    </div>
+    <div class="actions">
+        <a class="btn btn-secondary" href="/events?topic=install.">Install Events</a>
+        <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+            <Authorized>
+                <a class="btn" href="/packages/deploy">Deploy Package</a>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2>Recent Deploys</h2>
+        <button class="btn btn-secondary" @onclick="ReloadAsync">Refresh</button>
+    </div>
+
+    @if (m_Deploys.Count == 0)
+    {
+        <p class="muted">No package deploy tasks yet. Create one from Deploy Package.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Command</th>
+                    <th>Status</th>
+                    <th>Assignments</th>
+                    <th>Created</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (TaskEntity task in m_Deploys)
+                {
+                    <tr>
+                        <td>@task.Name</td>
+                        <td><code>@task.Command</code></td>
+                        <td><span class="status @task.Status">@task.Status</span></td>
+                        <td>@task.Assignments.Count</td>
+                        <td>@task.CreatedAt.ToLocalTime()</td>
+                        <td><a href="@($"/tasks/{task.Id}")">Details</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <p class="muted" style="margin-top: 1rem;">
+            Task status reflects queue acceptance on the agent. Final install outcome appears under
+            <a href="/events?topic=install.">install.* events</a>.
+        </p>
+    }
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2>Recent Install Events</h2>
+        <a href="/events?topic=install.">View all</a>
+    </div>
+
+    @if (m_InstallEvents.Count == 0)
+    {
+        <p class="muted">No install events received yet.</p>
+    }
+    else
+    {
+        @foreach (EventEntity evt in m_InstallEvents)
+        {
+            <div class="timeline-item">
+                <strong>@evt.Topic</strong>
+                <small>@evt.Agent?.AgentKey · @evt.ReceivedAt.ToLocalTime()</small>
+                <div>@evt.Payload</div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<TaskEntity> m_Deploys = [];
+    private List<EventEntity> m_InstallEvents = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        m_Deploys = await PackageDeployServer.GetRecentDeploysAsync(20);
+        m_InstallEvents = await PackageDeployServer.GetInstallEventsAsync(limit: 15);
+    }
+}
