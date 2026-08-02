@@ -17,7 +17,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="plainText"></param>
         /// <returns>Returns string.</returns>
-        public static string Protect(string plainText)
+        public static string Protect(
+            string plainText)
         {
             byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
             byte[] protectedBytes = ProtectedData.Protect(plainBytes, null, DataProtectionScope.LocalMachine);
@@ -30,7 +31,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="protectedBase64"></param>
         /// <returns>Returns string.</returns>
-        public static string Unprotect(string protectedBase64)
+        public static string Unprotect(
+            string protectedBase64)
         {
             byte[] protectedBytes = Convert.FromBase64String(protectedBase64);
             byte[] plainBytes = ProtectedData.Unprotect(protectedBytes, null, DataProtectionScope.LocalMachine);

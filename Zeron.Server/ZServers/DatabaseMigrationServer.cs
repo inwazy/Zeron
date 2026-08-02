@@ -23,7 +23,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="dbContext"></param>
         /// <returns>Returns void.</returns>
-        public static async Task MigrateAsync(ZeronServerDbContext dbContext)
+        public static async Task MigrateAsync(
+            ZeronServerDbContext dbContext)
         {
             if (await ShouldBaselineLegacyDatabaseAsync(dbContext))
             {
@@ -42,7 +43,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="dbContext"></param>
         /// <returns>Returns bool.</returns>
-        internal static async Task<bool> ShouldBaselineLegacyDatabaseAsync(ZeronServerDbContext dbContext)
+        internal static async Task<bool> ShouldBaselineLegacyDatabaseAsync(
+            ZeronServerDbContext dbContext)
         {
             if (!await dbContext.Database.CanConnectAsync())
             {
@@ -64,7 +66,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="dbContext"></param>
         /// <returns>Returns void.</returns>
-        internal static async Task BaselineLegacyDatabaseAsync(ZeronServerDbContext dbContext)
+        internal static async Task BaselineLegacyDatabaseAsync(
+            ZeronServerDbContext dbContext)
         {
             await dbContext.Database.ExecuteSqlRawAsync("""
                 CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
@@ -87,7 +90,9 @@ namespace Zeron.Server.ZServers
         /// <param name="dbContext"></param>
         /// <param name="tableName"></param>
         /// <returns>Returns bool.</returns>
-        internal static async Task<bool> TableExistsAsync(ZeronServerDbContext dbContext, string tableName)
+        internal static async Task<bool> TableExistsAsync(
+            ZeronServerDbContext dbContext, 
+            string tableName)
         {
             System.Data.Common.DbConnection connection = dbContext.Database.GetDbConnection();
             bool wasClosed = connection.State == ConnectionState.Closed;

@@ -23,7 +23,8 @@ namespace Zeron.Server.Endpoints
         /// </summary>
         /// <param name="app"></param>
         /// <returns>Returns WebApplication.</returns>
-        public static WebApplication MapAuthEndpoints(this WebApplication app)
+        public static WebApplication MapAuthEndpoints(
+            this WebApplication app)
         {
             app.MapPost("/account/login", async (
                 HttpContext context,
@@ -92,6 +93,13 @@ namespace Zeron.Server.Endpoints
 
                 return Results.Ok(response);
             }).AllowAnonymous();
+
+            app.MapPost("/account/logout", async (HttpContext context) =>
+            {
+                await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                return Results.Redirect("/login");
+            }).AllowAnonymous().DisableAntiforgery();
 
             app.MapPost("/api/auth/logout", async (HttpContext context) =>
             {

@@ -18,7 +18,8 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="result"></param>
         /// <returns>Returns JSON string.</returns>
-        public static string SerializeSuccess(object? result = null)
+        public static string SerializeSuccess(
+            object? result = null)
         {
             dynamic response = new ExpandoObject();
             response.success = true;
@@ -35,7 +36,9 @@ namespace Zeron.Demand.ZCore
         /// <param name="message"></param>
         /// <param name="result"></param>
         /// <returns>Returns JSON string.</returns>
-        public static string SerializeFailure(string? message, object? result = null)
+        public static string SerializeFailure(
+            string? message, 
+            object? result = null)
         {
             dynamic response = new ExpandoObject();
             response.success = false;

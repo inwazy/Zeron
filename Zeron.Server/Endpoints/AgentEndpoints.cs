@@ -17,7 +17,8 @@ namespace Zeron.Server.Endpoints
         /// </summary>
         /// <param name="app"></param>
         /// <returns>Returns WebApplication.</returns>
-        public static WebApplication MapAgentEndpoints(this WebApplication app)
+        public static WebApplication MapAgentEndpoints(
+            this WebApplication app)
         {
             app.MapPost("/api/agents/heartbeat", async (
                 AgentHeartbeatRequestType request,

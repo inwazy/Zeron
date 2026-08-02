@@ -4,19 +4,10 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// UserInfoType
+    /// UserCreateRequestType
     /// </summary>
-    public class UserInfoType
+    public class UserCreateRequestType
     {
-        /// <summary>
-        /// Id
-        /// </summary>
-        public string? Id
-        {
-            get;
-            set;
-        }
-
         /// <summary>
         /// Username
         /// </summary>
@@ -27,27 +18,18 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
-        /// Role
+        /// Password
         /// </summary>
-        public string? Role
+        public string? Password
         {
             get;
             set;
         }
 
         /// <summary>
-        /// IsActive
+        /// Role - Admin, Operator, Viewer
         /// </summary>
-        public bool IsActive
-        {
-            get;
-            set;
-        } = true;
-
-        /// <summary>
-        /// CreatedAt
-        /// </summary>
-        public DateTime? CreatedAt
+        public string? Role
         {
             get;
             set;

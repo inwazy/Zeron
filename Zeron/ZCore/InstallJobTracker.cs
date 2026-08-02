@@ -54,7 +54,9 @@ namespace Zeron.ZCore
         /// <param name="packageName"></param>
         /// <param name="operation"></param>
         /// <returns>Returns void.</returns>
-        public static void MarkRunning(string? packageName, string? operation)
+        public static void MarkRunning(
+            string? packageName, 
+            string? operation)
         {
             lock (s_Lock)
             {
@@ -72,7 +74,11 @@ namespace Zeron.ZCore
         /// <param name="success"></param>
         /// <param name="exitCode"></param>
         /// <returns>Returns void.</returns>
-        public static void MarkCompleted(string? packageName, string? operation, bool success, int exitCode)
+        public static void MarkCompleted(
+            string? packageName, 
+            string? operation, 
+            bool success, 
+            int exitCode)
         {
             lock (s_Lock)
             {

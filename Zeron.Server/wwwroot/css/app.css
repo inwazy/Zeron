@@ -64,6 +64,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    flex: 1;
 }
 
 .nav-menu a {
@@ -243,6 +244,31 @@ th {
 .error {
     color: var(--danger);
     margin-top: 0.75rem;
+}
+
+.success-text {
+    color: var(--success);
+    margin-top: 0.75rem;
+}
+
+.nav-user form {
+    margin: 0;
+}
+
+.nav-user small {
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+table input,
+table select {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0.45rem 0.6rem;
+    width: 100%;
+    min-width: 120px;
 }
 
 .timeline-item {

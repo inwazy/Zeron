@@ -26,7 +26,8 @@ namespace Zeron.Client
         /// </summary>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        public static void Main(string[] args)
+        public static void Main(
+            string[] args)
         {
             m_Options.Add(new OptionAttribute("Run HealthCheckRequest", () => RunCommandRequest(new HealthCheckImpl(), null)));
             m_Options.Add(new OptionAttribute("Run ServerInfoRequest", () => RunCommandRequest(new ServerInfoImpl(), null)));
@@ -84,7 +85,9 @@ namespace Zeron.Client
         /// <param name="request"></param>
         /// <param name="commandPrompt"></param>
         /// <returns>Returns void.</returns>
-        private static void RunCommandRequest(IServicesRequest request, string? commandPrompt)
+        private static void RunCommandRequest(
+            IServicesRequest request, 
+            string? commandPrompt)
         {
             Console.WriteLine();
             Console.WriteLine("Run API {0}", request.APIName);

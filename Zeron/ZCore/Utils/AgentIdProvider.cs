@@ -14,7 +14,9 @@ namespace Zeron.ZCore.Utils
         /// <param name="configuredAgentId"></param>
         /// <param name="identityFilePath"></param>
         /// <returns>Returns agent id.</returns>
-        public static string LoadOrCreate(string? configuredAgentId, string? identityFilePath)
+        public static string LoadOrCreate(
+            string? configuredAgentId, 
+            string? identityFilePath)
         {
             if (!string.IsNullOrWhiteSpace(configuredAgentId))
             {
@@ -51,7 +53,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="identityFilePath"></param>
         /// <returns>Returns file path.</returns>
-        public static string ResolveIdentityFilePath(string? identityFilePath)
+        public static string ResolveIdentityFilePath(
+            string? identityFilePath)
         {
             if (!string.IsNullOrWhiteSpace(identityFilePath))
             {

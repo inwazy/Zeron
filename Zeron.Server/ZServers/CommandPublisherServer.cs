@@ -17,8 +17,13 @@ namespace Zeron.Server.ZServers
     /// </summary>
     public class CommandPublisherServer : IDisposable
     {
+        // Settings
         private readonly ServerSettings m_Settings;
+
+        // PublisherSocket
         private PublisherSocket? m_PublisherSocket;
+
+        // IsBound
         private bool m_IsBound;
 
         /// <summary>
@@ -26,7 +31,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="settings"></param>
         /// <returns>Returns void.</returns>
-        public CommandPublisherServer(ServerSettings settings)
+        public CommandPublisherServer(
+            ServerSettings settings)
         {
             m_Settings = settings;
         }
@@ -59,7 +65,11 @@ namespace Zeron.Server.ZServers
         /// <param name="targetApi"></param>
         /// <param name="command"></param>
         /// <returns>Returns bool.</returns>
-        public bool PublishRemoteCommand(string agentKey, Guid assignmentId, string targetApi, string command)
+        public bool PublishRemoteCommand(
+            string agentKey, 
+            Guid assignmentId, 
+            string targetApi, 
+            string command)
         {
             if (m_PublisherSocket == null)
             {

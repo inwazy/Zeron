@@ -47,7 +47,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="dataSource"></param>
         /// <returns>Returns void.</returns>
-        public void PrepareDatabase(string? dataSource)
+        public void PrepareDatabase(
+            string? dataSource)
         {
             if (File.Exists(dataSource))
             {
@@ -67,7 +68,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="colName"></param>
         /// <returns>Returns ManagedPackageRepoType.</returns>
-        public static ManagedPackageRepoType GetSingleByName(string? colName)
+        public static ManagedPackageRepoType GetSingleByName(
+            string? colName)
         {
             ManagedPackageRepoType result = new();
 

@@ -33,7 +33,10 @@ namespace Zeron.Server.ZServers
         /// <param name="settings"></param>
         /// <param name="jwtTokenServer"></param>
         /// <returns>Returns void.</returns>
-        public AuthServer(ZeronServerDbContext dbContext, ServerSettings settings, JwtTokenServer jwtTokenServer)
+        public AuthServer(
+            ZeronServerDbContext dbContext, 
+            ServerSettings settings, 
+            JwtTokenServer jwtTokenServer)
         {
             m_DbContext = dbContext;
             m_Settings = settings;
@@ -45,7 +48,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns void.</returns>
-        public async Task SeedDefaultUserAsync(CancellationToken cancellationToken = default)
+        public async Task SeedDefaultUserAsync(
+            CancellationToken cancellationToken = default)
         {
             bool hasUsers = await m_DbContext.Users.AnyAsync(cancellationToken);
 
@@ -120,7 +124,9 @@ namespace Zeron.Server.ZServers
         /// <param name="userId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns UserInfoType or null.</returns>
-        public async Task<UserInfoType?> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken = default)
+        public async Task<UserInfoType?> GetUserByIdAsync(
+            Guid userId, 
+            CancellationToken cancellationToken = default)
         {
             UserEntity? user = await m_DbContext.Users
                 .FirstOrDefaultAsync(item => item.Id == userId && item.IsActive, cancellationToken);
@@ -153,7 +159,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="apiKey"></param>
         /// <returns>Returns bool.</returns>
-        public bool ValidateAgentApiKey(string? apiKey)
+        public bool ValidateAgentApiKey(
+            string? apiKey)
         {
             return !string.IsNullOrWhiteSpace(apiKey)
                 && string.Equals(apiKey, m_Settings.AgentApiKey, StringComparison.Ordinal);

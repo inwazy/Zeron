@@ -28,7 +28,9 @@ namespace Zeron.Server.ZServers
         /// <param name="settings"></param>
         /// <param name="dashboardNotifier"></param>
         /// <returns>Returns void.</returns>
-        public AlertNotifierServer(ServerSettings settings, IDashboardNotifier? dashboardNotifier = null)
+        public AlertNotifierServer(
+            ServerSettings settings, 
+            IDashboardNotifier? dashboardNotifier = null)
         {
             m_Settings = settings;
             m_DashboardNotifier = dashboardNotifier;
@@ -39,7 +41,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="alert"></param>
         /// <returns>Returns void.</returns>
-        public async Task NotifyAsync(AlertEntity alert)
+        public async Task NotifyAsync(
+            AlertEntity alert)
         {
             if (m_DashboardNotifier != null)
             {
@@ -57,7 +60,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="alert"></param>
         /// <returns>Returns void.</returns>
-        public async Task TrySendEmailAsync(AlertEntity alert)
+        public async Task TrySendEmailAsync(
+            AlertEntity alert)
         {
             if (string.IsNullOrWhiteSpace(m_Settings.SmtpHost)
                 || string.IsNullOrWhiteSpace(m_Settings.AlertEmailTo))

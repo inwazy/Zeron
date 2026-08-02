@@ -15,7 +15,8 @@ namespace Zeron.ZCore
         /// </summary>
         /// <param name="command"></param>
         /// <returns>Returns ServicesSubCommandType.</returns>
-        public static ServicesSubCommandType BuildCommands(string? command)
+        public static ServicesSubCommandType BuildCommands(
+            string? command)
         {
             ServicesSubCommandType result = new();
 
@@ -47,7 +48,8 @@ namespace Zeron.ZCore
         /// </summary>
         /// <param name="command"></param>
         /// <returns>Returns verb and arguments.</returns>
-        public static (string? Verb, string? Arguments) SplitCommand(string? command)
+        public static (string? Verb, string? Arguments) SplitCommand(
+            string? command)
         {
             if (string.IsNullOrWhiteSpace(command))
             {

@@ -28,7 +28,9 @@ namespace Zeron.Server.ZServers
         /// <param name="dbContext"></param>
         /// <param name="commandPublisher"></param>
         /// <returns>Returns void.</returns>
-        public TaskDispatcherServer(ZeronServerDbContext dbContext, CommandPublisherServer commandPublisher)
+        public TaskDispatcherServer(
+            ZeronServerDbContext dbContext, 
+            CommandPublisherServer commandPublisher)
         {
             m_DbContext = dbContext;
             m_CommandPublisher = commandPublisher;
@@ -40,7 +42,9 @@ namespace Zeron.Server.ZServers
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns TaskEntity.</returns>
-        public async Task<TaskEntity> CreateTaskAsync(TaskCreateRequestType request, CancellationToken cancellationToken = default)
+        public async Task<TaskEntity> CreateTaskAsync(
+            TaskCreateRequestType request, 
+            CancellationToken cancellationToken = default)
         {
             List<AgentEntity> targetAgents = await ResolveTargetAgentsAsync(request, cancellationToken);
 
@@ -84,7 +88,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns dispatched count.</returns>
-        public async Task<int> DispatchPendingAssignmentsAsync(CancellationToken cancellationToken = default)
+        public async Task<int> DispatchPendingAssignmentsAsync(
+            CancellationToken cancellationToken = default)
         {
             List<TaskAssignmentEntity> pendingAssignments = await m_DbContext.TaskAssignments
                 .Include(assignment => assignment.Task)
@@ -133,7 +138,9 @@ namespace Zeron.Server.ZServers
         /// <param name="report"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns bool.</returns>
-        public async Task<bool> ReportResultAsync(TaskResultReportType report, CancellationToken cancellationToken = default)
+        public async Task<bool> ReportResultAsync(
+            TaskResultReportType report, 
+            CancellationToken cancellationToken = default)
         {
             if (!Guid.TryParse(report.AssignmentId, out Guid assignmentId))
             {
@@ -182,7 +189,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns task list.</returns>
-        public async Task<List<TaskEntity>> GetTasksAsync(CancellationToken cancellationToken = default)
+        public async Task<List<TaskEntity>> GetTasksAsync(
+            CancellationToken cancellationToken = default)
         {
             return await m_DbContext.Tasks
                 .Include(task => task.Assignments)
@@ -196,7 +204,9 @@ namespace Zeron.Server.ZServers
         /// <param name="taskId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns task or null.</returns>
-        public async Task<TaskEntity?> GetTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
+        public async Task<TaskEntity?> GetTaskAsync(
+            Guid taskId, 
+            CancellationToken cancellationToken = default)
         {
             return await m_DbContext.Tasks
                 .Include(task => task.Assignments)
@@ -210,7 +220,9 @@ namespace Zeron.Server.ZServers
         /// <param name="taskId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns bool.</returns>
-        public async Task<bool> CancelTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
+        public async Task<bool> CancelTaskAsync(
+            Guid taskId, 
+            CancellationToken cancellationToken = default)
         {
             TaskEntity? task = await m_DbContext.Tasks
                 .Include(item => item.Assignments)

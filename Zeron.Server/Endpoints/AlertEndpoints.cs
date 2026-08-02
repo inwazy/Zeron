@@ -16,7 +16,8 @@ namespace Zeron.Server.Endpoints
         /// </summary>
         /// <param name="app"></param>
         /// <returns>Returns WebApplication.</returns>
-        public static WebApplication MapAlertEndpoints(this WebApplication app)
+        public static WebApplication MapAlertEndpoints(
+            this WebApplication app)
         {
             app.MapGet("/api/alerts", async (string? status, int? limit, AlertRuleServer alertRuleServer) =>
             {

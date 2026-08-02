@@ -66,7 +66,8 @@ namespace Zeron.Server.Data
         /// </summary>
         /// <param name="modelBuilder"></param>
         /// <returns>Returns void.</returns>
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(
+            ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AgentEntity>(entity =>
             {

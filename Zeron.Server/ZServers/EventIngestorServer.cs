@@ -26,7 +26,9 @@ namespace Zeron.Server.ZServers
         /// <param name="dbContext"></param>
         /// <param name="dashboardNotifier"></param>
         /// <returns>Returns void.</returns>
-        public EventIngestorServer(ZeronServerDbContext dbContext, IDashboardNotifier? dashboardNotifier = null)
+        public EventIngestorServer(
+            ZeronServerDbContext dbContext, 
+            IDashboardNotifier? dashboardNotifier = null)
         {
             m_DbContext = dbContext;
             m_DashboardNotifier = dashboardNotifier;
@@ -38,7 +40,9 @@ namespace Zeron.Server.ZServers
         /// <param name="report"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns bool.</returns>
-        public async Task<bool> IngestEventAsync(AgentEventReportType report, CancellationToken cancellationToken = default)
+        public async Task<bool> IngestEventAsync(
+            AgentEventReportType report, 
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(report.AgentId) || string.IsNullOrWhiteSpace(report.Topic))
             {

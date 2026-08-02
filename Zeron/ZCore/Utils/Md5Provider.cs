@@ -16,7 +16,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="plainText"></param>
         /// <returns>Returns string.</returns>
-        public static string GenerateBase64(string? plainText)
+        public static string GenerateBase64(
+            string? plainText)
         {
             string result = "";
 

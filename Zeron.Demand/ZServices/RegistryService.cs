@@ -23,7 +23,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnRequest(dynamic aJson)
+        public string OnRequest(
+            dynamic aJson)
         {
             try
             {
@@ -57,7 +58,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="arguments"></param>
         /// <returns>Returns JSON response.</returns>
-        private static string ReadValue(string? arguments)
+        private static string ReadValue(
+            string? arguments)
         {
             if (!TryParseRegistryPath(arguments, out Microsoft.Win32.RegistryKey hive, out string? subKeyPath, out string? valueName))
             {
@@ -88,7 +90,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="arguments"></param>
         /// <returns>Returns JSON response.</returns>
-        private static string WriteValue(string? arguments)
+        private static string WriteValue(
+            string? arguments)
         {
             if (string.IsNullOrWhiteSpace(arguments))
             {
@@ -129,7 +132,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="arguments"></param>
         /// <returns>Returns JSON response.</returns>
-        private static string DeleteValue(string? arguments)
+        private static string DeleteValue(
+            string? arguments)
         {
             if (!TryParseRegistryPath(arguments, out Microsoft.Win32.RegistryKey hive, out string? subKeyPath, out string? valueName))
             {
@@ -155,7 +159,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="arguments"></param>
         /// <returns>Returns JSON response.</returns>
-        private static string ListSubKeys(string? arguments)
+        private static string ListSubKeys(
+            string? arguments)
         {
             if (string.IsNullOrWhiteSpace(arguments))
             {
@@ -204,7 +209,11 @@ namespace Zeron.Demand.ZServices
         /// <param name="subKeyPath"></param>
         /// <param name="valueName"></param>
         /// <returns>Returns bool.</returns>
-        private static bool TryParseRegistryPath(string? path, out Microsoft.Win32.RegistryKey hive, out string? subKeyPath, out string? valueName)
+        private static bool TryParseRegistryPath(
+            string? path, 
+            out Microsoft.Win32.RegistryKey hive, 
+            out string? subKeyPath, 
+            out string? valueName)
         {
             hive = Win32Registry.CurrentUser;
             subKeyPath = null;
@@ -249,7 +258,9 @@ namespace Zeron.Demand.ZServices
         /// <param name="hiveName"></param>
         /// <param name="hive"></param>
         /// <returns>Returns bool.</returns>
-        private static bool TryGetHive(string hiveName, out Microsoft.Win32.RegistryKey? hive)
+        private static bool TryGetHive(
+            string hiveName, 
+            out Microsoft.Win32.RegistryKey? hive)
         {
             hive = hiveName.ToUpperInvariant() switch
             {
@@ -270,7 +281,9 @@ namespace Zeron.Demand.ZServices
         /// <param name="topic"></param>
         /// <param name="path"></param>
         /// <returns>Returns void.</returns>
-        private static void PublishEvent(string topic, string? path)
+        private static void PublishEvent(
+            string topic, 
+            string? path)
         {
             InstallEventPublisher.Publish(topic, JsonSerializer.Serialize(new
             {
@@ -284,21 +297,24 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnRequestAsync(dynamic aJson) => "";
+        public string OnRequestAsync(
+            dynamic aJson) => "";
 
         /// <summary>
         /// OnSubscriber
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnSubscriber(dynamic aJson) => "";
+        public string OnSubscriber(
+            dynamic aJson) => "";
 
         /// <summary>
         /// OnSubscriberAsync
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnSubscriberAsync(dynamic aJson) => "";
+        public string OnSubscriberAsync(
+            dynamic aJson) => "";
 
         /// <summary>
         /// OnNotifySubscriber
@@ -306,6 +322,8 @@ namespace Zeron.Demand.ZServices
         /// <param name="aJson"></param>
         /// <param name="processedMsg"></param>
         /// <returns>Returns string.</returns>
-        public string OnNotifySubscriber(dynamic aJson, string processedMsg) => "";
+        public string OnNotifySubscriber(
+            dynamic aJson, 
+            string processedMsg) => "";
     }
 }

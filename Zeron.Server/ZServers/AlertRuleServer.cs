@@ -27,7 +27,9 @@ namespace Zeron.Server.ZServers
         /// <param name="dbContext"></param>
         /// <param name="alertNotifier"></param>
         /// <returns>Returns void.</returns>
-        public AlertRuleServer(ZeronServerDbContext dbContext, AlertNotifierServer alertNotifier)
+        public AlertRuleServer(
+            ZeronServerDbContext dbContext, 
+            AlertNotifierServer alertNotifier)
         {
             m_DbContext = dbContext;
             m_AlertNotifier = alertNotifier;
@@ -162,7 +164,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns count.</returns>
-        public async Task<int> GetOpenAlertCountAsync(CancellationToken cancellationToken = default)
+        public async Task<int> GetOpenAlertCountAsync(
+            CancellationToken cancellationToken = default)
         {
             return await m_DbContext.Alerts
                 .CountAsync(alert => alert.Status == AlertStatusesType.Open, cancellationToken);
@@ -174,7 +177,9 @@ namespace Zeron.Server.ZServers
         /// <param name="alertId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns bool.</returns>
-        public async Task<bool> AcknowledgeAlertAsync(Guid alertId, CancellationToken cancellationToken = default)
+        public async Task<bool> AcknowledgeAlertAsync(
+            Guid alertId, 
+            CancellationToken cancellationToken = default)
         {
             AlertEntity? alert = await m_DbContext.Alerts
                 .FirstOrDefaultAsync(item => item.Id == alertId, cancellationToken);

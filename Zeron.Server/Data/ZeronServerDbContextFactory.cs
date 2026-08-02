@@ -16,7 +16,8 @@ namespace Zeron.Server.Data
         /// </summary>
         /// <param name="args"></param>
         /// <returns>Returns ZeronServerDbContext.</returns>
-        public ZeronServerDbContext CreateDbContext(string[] args)
+        public ZeronServerDbContext CreateDbContext(
+            string[] args)
         {
             DbContextOptions<ZeronServerDbContext> options = new DbContextOptionsBuilder<ZeronServerDbContext>()
                 .UseSqlite("Data Source=Data/zeron-server.db")

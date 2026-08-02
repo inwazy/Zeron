@@ -30,7 +30,8 @@ namespace Zeron.Server
         /// </summary>
         /// <param name="args"></param>
         /// <returns>Returns WebApplication.</returns>
-        public static WebApplication BuildApplication(string[] args)
+        public static WebApplication BuildApplication(
+            string[] args)
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,7 @@ namespace Zeron.Server
             builder.Services.AddDbContext<ZeronServerDbContext>(options => options.UseSqlite("Data Source=" + dbPath));
             builder.Services.AddSingleton<JwtTokenServer>();
             builder.Services.AddScoped<AuthServer>();
+            builder.Services.AddScoped<UserManagerServer>();
             builder.Services.AddScoped<AgentManagerServer>();
             builder.Services.AddScoped<AgentDiagnosticServer>();
             builder.Services.AddScoped<TaskDispatcherServer>();
@@ -76,7 +78,7 @@ namespace Zeron.Server
             .AddCookie(options =>
             {
                 options.LoginPath = "/login";
-                options.LogoutPath = "/api/auth/logout";
+                options.LogoutPath = "/account/logout";
             })
             .AddJwtBearer(options =>
             {
@@ -147,11 +149,13 @@ namespace Zeron.Server
                 version = typeof(ServerHost).Assembly.GetName().Version?.ToString()
             })).AllowAnonymous();
 
+            app.MapHealthEndpoints();
             app.MapAuthEndpoints();
             app.MapAgentEndpoints();
             app.MapTaskEndpoints();
             app.MapEventEndpoints();
             app.MapAlertEndpoints();
+            app.MapUserEndpoints();
             app.MapHub<DashboardHub>("/hubs/dashboard");
 
             app.MapRazorComponents<App>()
@@ -165,7 +169,8 @@ namespace Zeron.Server
         /// </summary>
         /// <param name="databasePath"></param>
         /// <returns>Returns absolute database path.</returns>
-        public static string ResolveDatabasePath(string databasePath)
+        public static string ResolveDatabasePath(
+            string databasePath)
         {
             string dbPath = Path.IsPathRooted(databasePath)
                 ? databasePath

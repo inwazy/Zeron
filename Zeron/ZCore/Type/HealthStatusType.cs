@@ -4,50 +4,50 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// UserInfoType
+    /// HealthStatusType
     /// </summary>
-    public class UserInfoType
+    public class HealthStatusType
     {
         /// <summary>
-        /// Id
+        /// Status - healthy, unhealthy, degraded
         /// </summary>
-        public string? Id
+        public string Status
+        {
+            get;
+            set;
+        } = "healthy";
+
+        /// <summary>
+        /// Service
+        /// </summary>
+        public string Service
+        {
+            get;
+            set;
+        } = "Zeron.Server";
+
+        /// <summary>
+        /// Version
+        /// </summary>
+        public string? Version
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Username
+        /// TimestampUtc
         /// </summary>
-        public string? Username
+        public DateTime TimestampUtc
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Role
+        /// Checks
         /// </summary>
-        public string? Role
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// IsActive
-        /// </summary>
-        public bool IsActive
-        {
-            get;
-            set;
-        } = true;
-
-        /// <summary>
-        /// CreatedAt
-        /// </summary>
-        public DateTime? CreatedAt
+        public Dictionary<string, string>? Checks
         {
             get;
             set;

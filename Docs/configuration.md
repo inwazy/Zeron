@@ -51,6 +51,17 @@ Agent identity is persisted under `Resource/agent-id.txt`. The agent sends heart
 
 | Role | Capabilities |
 |------|--------------|
-| Admin | Full access, disable/enable agents |
+| Admin | Full access, user management, disable/enable agents |
 | Operator | Create and manage tasks |
 | Viewer | Read-only access to agents, tasks, events, alerts |
+
+Admin users can manage accounts on the Dashboard **Users** page (`/users`).
+
+## Health Endpoints
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /health` | Anonymous | Liveness probe — process is running |
+| `GET /ready` | Anonymous | Readiness probe — SQLite database is reachable |
+
+Use `/ready` for load balancer / process manager health checks.

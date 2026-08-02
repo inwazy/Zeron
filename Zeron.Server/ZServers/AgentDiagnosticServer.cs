@@ -27,7 +27,9 @@ namespace Zeron.Server.ZServers
         /// <param name="dbContext"></param>
         /// <param name="settings"></param>
         /// <returns>Returns void.</returns>
-        public AgentDiagnosticServer(ZeronServerDbContext dbContext, ServerSettings settings)
+        public AgentDiagnosticServer(
+            ZeronServerDbContext dbContext, 
+            ServerSettings settings)
         {
             m_DbContext = dbContext;
             m_Settings = settings;
@@ -38,7 +40,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns diagnostics list.</returns>
-        public async Task<List<AgentDiagnosticType>> GetDiagnosticsAsync(CancellationToken cancellationToken = default)
+        public async Task<List<AgentDiagnosticType>> GetDiagnosticsAsync(
+            CancellationToken cancellationToken = default)
         {
             List<AgentEntity> agents = await m_DbContext.Agents
                 .OrderByDescending(agent => agent.LastHeartbeatAt)
@@ -87,7 +90,9 @@ namespace Zeron.Server.ZServers
         /// <param name="agent"></param>
         /// <param name="hasOpenOfflineAlert"></param>
         /// <returns>Returns AgentDiagnosticType.</returns>
-        private AgentDiagnosticType BuildDiagnostic(AgentEntity agent, bool hasOpenOfflineAlert)
+        private AgentDiagnosticType BuildDiagnostic(
+            AgentEntity agent, 
+            bool hasOpenOfflineAlert)
         {
             int secondsSinceHeartbeat = agent.LastHeartbeatAt == default
                 ? int.MaxValue
@@ -159,7 +164,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="value"></param>
         /// <returns>Returns UTC DateTime.</returns>
-        private static DateTime ToUtc(DateTime value)
+        private static DateTime ToUtc(
+            DateTime value)
         {
             return value.Kind switch
             {

@@ -4,30 +4,12 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// UserInfoType
+    /// UserUpdateRequestType
     /// </summary>
-    public class UserInfoType
+    public class UserUpdateRequestType
     {
         /// <summary>
-        /// Id
-        /// </summary>
-        public string? Id
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Username
-        /// </summary>
-        public string? Username
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Role
+        /// Role - Admin, Operator, Viewer
         /// </summary>
         public string? Role
         {
@@ -38,16 +20,16 @@ namespace Zeron.ZCore.Type
         /// <summary>
         /// IsActive
         /// </summary>
-        public bool IsActive
+        public bool? IsActive
         {
             get;
             set;
-        } = true;
+        }
 
         /// <summary>
-        /// CreatedAt
+        /// Password - optional reset
         /// </summary>
-        public DateTime? CreatedAt
+        public string? Password
         {
             get;
             set;

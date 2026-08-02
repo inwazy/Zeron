@@ -20,7 +20,8 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="task"></param>
         /// <returns>Returns execution result.</returns>
-        public static TaskPipelineResultType ExecuteTask(SchedulerTaskDefinition task)
+        public static TaskPipelineResultType ExecuteTask(
+            SchedulerTaskDefinition task)
         {
             TaskPipelineResultType result = new()
             {
@@ -76,7 +77,8 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="step"></param>
         /// <returns>Returns step result.</returns>
-        public static TaskStepResultType ExecuteStep(TaskStepDefinition step)
+        public static TaskStepResultType ExecuteStep(
+            TaskStepDefinition step)
         {
             string stepType = step.Type?.Trim().ToLowerInvariant() ?? "";
 
@@ -100,7 +102,8 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="step"></param>
         /// <returns>Returns step result.</returns>
-        private static TaskStepResultType ExecutePowerShellStep(TaskStepDefinition step)
+        private static TaskStepResultType ExecutePowerShellStep(
+            TaskStepDefinition step)
         {
             bool success = ScriptExecutor.Execute(step.Script);
 
@@ -117,7 +120,8 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="step"></param>
         /// <returns>Returns step result.</returns>
-        private static TaskStepResultType ExecuteWaitStep(TaskStepDefinition step)
+        private static TaskStepResultType ExecuteWaitStep(
+            TaskStepDefinition step)
         {
             int seconds = step.Seconds > 0 ? step.Seconds : 1;
             Thread.Sleep(TimeSpan.FromSeconds(seconds));
@@ -136,7 +140,9 @@ namespace Zeron.Demand.ZCore
         /// <param name="apiName"></param>
         /// <param name="command"></param>
         /// <returns>Returns step result.</returns>
-        private static TaskStepResultType ExecuteApiStep(string? apiName, string? command)
+        private static TaskStepResultType ExecuteApiStep(
+            string? apiName, 
+            string? command)
         {
             string responseJson = InternalServiceInvoker.Invoke(apiName, command);
             bool success = responseJson.Contains("\"success\":true", StringComparison.OrdinalIgnoreCase)

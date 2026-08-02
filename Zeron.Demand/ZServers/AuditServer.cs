@@ -47,7 +47,12 @@ namespace Zeron.Demand.ZServers
         /// <param name="message"></param>
         /// <param name="source"></param>
         /// <returns>Returns void.</returns>
-        public static void Log(string? apiName, string? command, bool success, string? message, string source = "rep")
+        public static void Log(
+            string? apiName, 
+            string? command, 
+            bool success, 
+            string? message, 
+            string source = "rep")
         {
             if (!Enabled)
             {
@@ -62,7 +67,8 @@ namespace Zeron.Demand.ZServers
         /// </summary>
         /// <param name="aConfig"></param>
         /// <returns>Returns void.</returns>
-        public override void LoadConfig(NameValueCollection aConfig)
+        public override void LoadConfig(
+            NameValueCollection aConfig)
         {
             try
             {

@@ -22,7 +22,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnSubscriber(dynamic aJson)
+        public string OnSubscriber(
+            dynamic aJson)
         {
             try
             {
@@ -77,21 +78,24 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnRequest(dynamic aJson) => "";
+        public string OnRequest(
+            dynamic aJson) => "";
 
         /// <summary>
         /// OnRequestAsync
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnRequestAsync(dynamic aJson) => "";
+        public string OnRequestAsync(
+            dynamic aJson) => "";
 
         /// <summary>
         /// OnSubscriberAsync
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnSubscriberAsync(dynamic aJson) => "";
+        public string OnSubscriberAsync(
+            dynamic aJson) => "";
 
         /// <summary>
         /// OnNotifySubscriber
@@ -99,6 +103,8 @@ namespace Zeron.Demand.ZServices
         /// <param name="aJson"></param>
         /// <param name="processedMsg"></param>
         /// <returns>Returns string.</returns>
-        public string OnNotifySubscriber(dynamic aJson, string processedMsg) => "";
+        public string OnNotifySubscriber(
+            dynamic aJson, 
+            string processedMsg) => "";
     }
 }

@@ -99,6 +99,57 @@ namespace Zeron.Server.Tests
         }
 
         /// <summary>
+        /// Health endpoints return healthy status without authentication.
+        /// </summary>
+        [TestMethod()]
+        public async Task HealthEndpointsReturnHealthyTest()
+        {
+            using HttpClient client = s_Factory!.CreateClient();
+
+            HttpResponseMessage healthResponse = await client.GetAsync("/health");
+            HttpResponseMessage readyResponse = await client.GetAsync("/ready");
+
+            Assert.AreEqual(HttpStatusCode.OK, healthResponse.StatusCode);
+            Assert.AreEqual(HttpStatusCode.OK, readyResponse.StatusCode);
+
+            HealthStatusType? health = await healthResponse.Content.ReadFromJsonAsync<HealthStatusType>();
+            HealthStatusType? ready = await readyResponse.Content.ReadFromJsonAsync<HealthStatusType>();
+
+            Assert.AreEqual("healthy", health?.Status);
+            Assert.AreEqual("healthy", ready?.Status);
+            Assert.AreEqual("healthy", ready?.Checks?["database"]);
+        }
+
+        /// <summary>
+        /// Admin can create users via API.
+        /// </summary>
+        [TestMethod()]
+        public async Task AdminCanCreateUserTest()
+        {
+            using HttpClient dashboardClient = s_Factory!.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            await LoginAsync(dashboardClient);
+
+            string username = "e2e-ops-" + Guid.NewGuid().ToString("N")[..8];
+            HttpResponseMessage createResponse = await dashboardClient.PostAsJsonAsync("/api/users", new UserCreateRequestType
+            {
+                Username = username,
+                Password = "secret12",
+                Role = "Operator"
+            });
+
+            Assert.AreEqual(HttpStatusCode.Created, createResponse.StatusCode);
+
+            List<UserInfoType>? users = await dashboardClient.GetFromJsonAsync<List<UserInfoType>>("/api/users");
+
+            Assert.IsNotNull(users);
+            Assert.IsTrue(users!.Any(user => user.Username == username && user.Role == "Operator"));
+        }
+
+        /// <summary>
         /// Diagnostics endpoint returns healthy agent after heartbeat.
         /// </summary>
         [TestMethod()]

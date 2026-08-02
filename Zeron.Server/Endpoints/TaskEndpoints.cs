@@ -17,7 +17,8 @@ namespace Zeron.Server.Endpoints
         /// </summary>
         /// <param name="app"></param>
         /// <returns>Returns WebApplication.</returns>
-        public static WebApplication MapTaskEndpoints(this WebApplication app)
+        public static WebApplication MapTaskEndpoints(
+            this WebApplication app)
         {
             app.MapPost("/api/tasks", async (TaskCreateRequestType request, TaskDispatcherServer taskDispatcher) =>
             {

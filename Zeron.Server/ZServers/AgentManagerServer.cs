@@ -136,7 +136,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns agent list.</returns>
-        public async Task<List<AgentEntity>> GetAgentsAsync(CancellationToken cancellationToken = default)
+        public async Task<List<AgentEntity>> GetAgentsAsync(
+            CancellationToken cancellationToken = default)
         {
             return await m_DbContext.Agents
                 .OrderByDescending(agent => agent.LastHeartbeatAt)
@@ -149,7 +150,9 @@ namespace Zeron.Server.ZServers
         /// <param name="agentKey"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns agent or null.</returns>
-        public async Task<AgentEntity?> GetAgentByKeyAsync(string agentKey, CancellationToken cancellationToken = default)
+        public async Task<AgentEntity?> GetAgentByKeyAsync(
+            string agentKey, 
+            CancellationToken cancellationToken = default)
         {
             return await m_DbContext.Agents
                 .FirstOrDefaultAsync(agent => agent.AgentKey == agentKey, cancellationToken);
@@ -161,7 +164,9 @@ namespace Zeron.Server.ZServers
         /// <param name="timeoutSeconds"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns affected count.</returns>
-        public async Task<int> MarkOfflineAgentsAsync(int timeoutSeconds, CancellationToken cancellationToken = default)
+        public async Task<int> MarkOfflineAgentsAsync(
+            int timeoutSeconds, 
+            CancellationToken cancellationToken = default)
         {
             DateTime threshold = DateTime.UtcNow.AddSeconds(-timeoutSeconds);
             List<AgentEntity> staleAgents = await m_DbContext.Agents

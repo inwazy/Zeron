@@ -22,7 +22,9 @@ namespace Zeron.ZCore.Utils
         /// <param name="configuredKeys"></param>
         /// <param name="encryptedClientKey"></param>
         /// <returns>Returns bool.</returns>
-        public static bool Validate(string? configuredKeys, string? encryptedClientKey)
+        public static bool Validate(
+            string? configuredKeys, 
+            string? encryptedClientKey)
         {
             if (string.IsNullOrEmpty(configuredKeys) || string.IsNullOrEmpty(encryptedClientKey))
             {
@@ -53,7 +55,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="configuredKey"></param>
         /// <returns>Returns string.</returns>
-        private static string ResolveConfiguredKey(string configuredKey)
+        private static string ResolveConfiguredKey(
+            string configuredKey)
         {
             if (configuredKey.StartsWith("dpapi:", StringComparison.OrdinalIgnoreCase))
             {
@@ -69,7 +72,9 @@ namespace Zeron.ZCore.Utils
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns>Returns bool.</returns>
-        private static bool FixedTimeEquals(string left, string right)
+        private static bool FixedTimeEquals(
+            string left, 
+            string right)
         {
             byte[] leftBytes = Encoding.UTF8.GetBytes(left);
             byte[] rightBytes = Encoding.UTF8.GetBytes(right);

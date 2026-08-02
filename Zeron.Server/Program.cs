@@ -13,7 +13,8 @@ namespace Zeron.Server
         /// </summary>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        public static void Main(string[] args)
+        public static void Main(
+            string[] args)
         {
             CreateApp(args).Run();
         }
@@ -23,7 +24,8 @@ namespace Zeron.Server
         /// </summary>
         /// <param name="args"></param>
         /// <returns>Returns WebApplication.</returns>
-        public static WebApplication CreateApp(string[] args)
+        public static WebApplication CreateApp(
+            string[] args)
         {
             return ServerHost.BuildApplication(args);
         }

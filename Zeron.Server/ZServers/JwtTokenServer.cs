@@ -24,7 +24,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="settings"></param>
         /// <returns>Returns void.</returns>
-        public JwtTokenServer(ServerSettings settings)
+        public JwtTokenServer(
+            ServerSettings settings)
         {
             m_Settings = settings;
         }
@@ -34,7 +35,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="user"></param>
         /// <returns>Returns JWT string.</returns>
-        public string CreateToken(UserEntity user)
+        public string CreateToken(
+            UserEntity user)
         {
             Claim[] claims =
             [
@@ -62,7 +64,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="user"></param>
         /// <returns>Returns ClaimsPrincipal.</returns>
-        public static ClaimsPrincipal CreateClaimsPrincipal(UserEntity user)
+        public static ClaimsPrincipal CreateClaimsPrincipal(
+            UserEntity user)
         {
             Claim[] claims =
             [
@@ -81,13 +84,16 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="user"></param>
         /// <returns>Returns UserInfoType.</returns>
-        public static UserInfoType ToUserInfo(UserEntity user)
+        public static UserInfoType ToUserInfo(
+            UserEntity user)
         {
             return new UserInfoType
             {
                 Id = user.Id.ToString(),
                 Username = user.Username,
-                Role = user.Role
+                Role = user.Role,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt
             };
         }
     }
