@@ -24,7 +24,10 @@ namespace Zeron.ZCore.Utils
         /// <param name="apiName"></param>
         /// <param name="requiredScope"></param>
         /// <returns>Returns bool.</returns>
-        public static bool IsAllowed(string? configuredScopes, string? apiName, string? requiredScope = "*")
+        public static bool IsAllowed(
+            string? configuredScopes, 
+            string? apiName, 
+            string? requiredScope = "*")
         {
             if (string.IsNullOrWhiteSpace(apiName))
             {
@@ -61,7 +64,10 @@ namespace Zeron.ZCore.Utils
         /// <param name="apiName"></param>
         /// <param name="action"></param>
         /// <returns>Returns bool.</returns>
-        private static bool MatchesRule(string rule, string apiName, string action)
+        private static bool MatchesRule(
+            string rule, 
+            string apiName, 
+            string action)
         {
             int colonIndex = rule.IndexOf(':');
 

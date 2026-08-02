@@ -46,7 +46,8 @@ namespace Zeron.Demand.ZServers
         /// </summary>
         /// <param name="aConfig"></param>
         /// <returns>Returns void.</returns>
-        public override void LoadConfig(NameValueCollection aConfig)
+        public override void LoadConfig(
+            NameValueCollection aConfig)
         {
             if (aConfig == null)
             {
@@ -106,7 +107,8 @@ namespace Zeron.Demand.ZServers
         /// <param name="commands"></param>
         /// <returns>Returns ManagedPackageRepoType.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ManagedPackageRepoType GetRepoByName(ServicesSubCommandType? commands)
+        public static ManagedPackageRepoType GetRepoByName(
+            ServicesSubCommandType? commands)
         {
             ManagedPackageRepoType? result = new();
 

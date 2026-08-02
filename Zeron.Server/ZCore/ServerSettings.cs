@@ -102,5 +102,77 @@ namespace Zeron.Server.ZCore
             get;
             set;
         } = "admin";
+
+        /// <summary>
+        /// AlertEmailEnabled
+        /// </summary>
+        public bool AlertEmailEnabled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// AlertEmailTo
+        /// </summary>
+        public string? AlertEmailTo
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// SmtpHost
+        /// </summary>
+        public string? SmtpHost
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// SmtpPort
+        /// </summary>
+        public int SmtpPort
+        {
+            get;
+            set;
+        } = 587;
+
+        /// <summary>
+        /// SmtpUser
+        /// </summary>
+        public string? SmtpUser
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// SmtpPassword
+        /// </summary>
+        public string? SmtpPassword
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// SmtpFrom
+        /// </summary>
+        public string? SmtpFrom
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// SmtpEnableSsl
+        /// </summary>
+        public bool SmtpEnableSsl
+        {
+            get;
+            set;
+        } = true;
     }
 }

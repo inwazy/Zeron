@@ -88,7 +88,9 @@ namespace Zeron.ZServers.Impls
         /// <param name="source"></param>
         /// <param name="eventArgs"></param>
         /// <returns>Returns void.</returns>
-        public void OnChanged(object source, FileSystemEventArgs eventArgs)
+        public void OnChanged(
+            object source, 
+            FileSystemEventArgs eventArgs)
         {
             try
             {

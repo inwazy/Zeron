@@ -17,7 +17,9 @@ namespace Zeron.Demand.ZCore
         /// <param name="apiName"></param>
         /// <param name="command"></param>
         /// <returns>Returns JSON response.</returns>
-        public static string Invoke(string? apiName, string? command)
+        public static string Invoke(
+            string? apiName, 
+            string? command)
         {
             dynamic request = new ExpandoObject();
             request.Command = command ?? "";

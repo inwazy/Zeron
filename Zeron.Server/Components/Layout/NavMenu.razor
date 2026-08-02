@@ -1,36 +1,34 @@
-@using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Components.Authorization
-@inject NavigationManager Navigation
 
 <nav class="nav-menu">
     <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
     <NavLink href="/agents">Agents</NavLink>
     <NavLink href="/tasks">Tasks</NavLink>
     <NavLink href="/events">Events</NavLink>
+    <NavLink href="/alerts">Alerts</NavLink>
+    <AuthorizeView Roles="@ServerRoles.Admin">
+        <Authorized>
+            <NavLink href="/users">Users</NavLink>
+        </Authorized>
+    </AuthorizeView>
 </nav>
 
 <AuthorizeView>
     <Authorized>
         <div class="nav-user">
             <span>@context.User.Identity?.Name</span>
-            <button class="btn-link" @onclick="LogoutAsync">Logout</button>
+            <small>@GetRole(context.User)</small>
+            <a class="btn-link" href="/account/change-password">Change Password</a>
+            <form method="post" action="/account/logout">
+                <button class="btn-link" type="submit">Logout</button>
+            </form>
         </div>
     </Authorized>
 </AuthorizeView>
 
 @code {
-    [Inject]
-    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
-
-    private async Task LogoutAsync()
+    private static string GetRole(System.Security.Claims.ClaimsPrincipal user)
     {
-        HttpContext? httpContext = HttpContextAccessor.HttpContext;
-
-        if (httpContext != null)
-        {
-            await httpContext.SignOutAsync();
-        }
-
-        Navigation.NavigateTo("/login", true);
+        return user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
     }
 }

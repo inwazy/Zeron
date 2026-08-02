@@ -24,7 +24,8 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="assembly"></param>
         /// <returns>Returns void.</returns>
-        public static void RegisterFromAssembly(Assembly assembly)
+        public static void RegisterFromAssembly(
+            Assembly assembly)
         {
             s_RepServices.Clear();
             s_SubServices.Clear();
@@ -55,7 +56,9 @@ namespace Zeron.Demand.ZCore
         /// <param name="apiName"></param>
         /// <param name="entry"></param>
         /// <returns>Returns bool.</returns>
-        public static bool TryGetRepEntry(string? apiName, out RepEntry? entry)
+        public static bool TryGetRepEntry(
+            string? apiName, 
+            out RepEntry? entry)
         {
             if (apiName != null && s_RepServices.TryGetValue(apiName, out RepEntry? found))
             {
@@ -75,7 +78,9 @@ namespace Zeron.Demand.ZCore
         /// <param name="apiName"></param>
         /// <param name="entry"></param>
         /// <returns>Returns bool.</returns>
-        public static bool TryGetSubEntry(string? apiName, out SubEntry? entry)
+        public static bool TryGetSubEntry(
+            string? apiName, 
+            out SubEntry? entry)
         {
             if (apiName != null && s_SubServices.TryGetValue(apiName, out SubEntry? found))
             {
@@ -96,7 +101,10 @@ namespace Zeron.Demand.ZCore
         /// <param name="request"></param>
         /// <param name="asyncTask"></param>
         /// <returns>Returns response JSON.</returns>
-        public static string InvokeRep(string? apiName, dynamic request, bool asyncTask = false)
+        public static string InvokeRep(
+            string? apiName, 
+            dynamic request, 
+            bool asyncTask = false)
         {
             if (!TryGetRepEntry(apiName, out RepEntry? entry) || entry == null)
             {
@@ -120,7 +128,10 @@ namespace Zeron.Demand.ZCore
         /// <param name="request"></param>
         /// <param name="asyncTask"></param>
         /// <returns>Returns response JSON.</returns>
-        public static string InvokeSub(string? apiName, dynamic request, bool asyncTask = false)
+        public static string InvokeSub(
+            string? apiName, 
+            dynamic request, 
+            bool asyncTask = false)
         {
             if (!TryGetSubEntry(apiName, out SubEntry? entry) || entry == null)
             {
@@ -143,7 +154,9 @@ namespace Zeron.Demand.ZCore
         /// <param name="configuredName"></param>
         /// <param name="fallbackName"></param>
         /// <returns>Returns api name.</returns>
-        private static string ResolveApiName(string? configuredName, string fallbackName)
+        private static string ResolveApiName(
+            string? configuredName, 
+            string fallbackName)
         {
             return string.IsNullOrWhiteSpace(configuredName) ? fallbackName : configuredName;
         }
@@ -153,11 +166,15 @@ namespace Zeron.Demand.ZCore
         /// </summary>
         /// <param name="Attribute"></param>
         /// <param name="Type"></param>
-        internal sealed record RepEntry(ServicesRepAttribute Attribute, global::System.Type ServiceType);
+        internal sealed record RepEntry(
+            ServicesRepAttribute Attribute, 
+            global::System.Type ServiceType);
 
         /// <summary>
         /// SubEntry
         /// </summary>
-        internal sealed record SubEntry(ServicesSubAttribute Attribute, global::System.Type ServiceType);
+        internal sealed record SubEntry(
+            ServicesSubAttribute Attribute, 
+            global::System.Type ServiceType);
     }
 }

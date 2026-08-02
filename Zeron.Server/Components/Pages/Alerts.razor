@@ -1,0 +1,120 @@
+@page "/alerts"
+@rendermode InteractiveServer
+@using Zeron.Server.Data.Entities
+@using Zeron.Server.ZCore
+@using Zeron.Server.ZCore.Type
+@using Zeron.Server.ZServers
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject AlertRuleServer AlertRuleServer
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@implements IAsyncDisposable
+
+<div class="page-header">
+    <div>
+        <h1>Alerts</h1>
+        <p>Agent offline and other operational alerts.</p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-secondary" @onclick="() => LoadAlertsAsync(null)">All</button>
+        <button class="btn btn-secondary" @onclick="() => LoadAlertsAsync(AlertStatusesType.Open)">Open</button>
+        <button class="btn btn-secondary" @onclick="() => LoadAlertsAsync(AlertStatusesType.Resolved)">Resolved</button>
+    </div>
+</div>
+
+<div class="panel">
+    @if (m_Alerts.Count == 0)
+    {
+        <p>No alerts found.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Severity</th>
+                    <th>Title</th>
+                    <th>Agent</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (AlertEntity alert in m_Alerts)
+                {
+                    <tr>
+                        <td><span class="status @alert.Severity">@alert.Severity</span></td>
+                        <td>
+                            <strong>@alert.Title</strong>
+                            <div><small>@alert.Message</small></div>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(alert.AgentKey))
+                            {
+                                <a href="@($"/agents/{alert.AgentKey}")">@alert.AgentKey</a>
+                            }
+                        </td>
+                        <td><span class="status @alert.Status">@alert.Status</span></td>
+                        <td>@alert.CreatedAt.ToLocalTime()</td>
+                        <td>
+                            @if (alert.Status == AlertStatusesType.Open)
+                            {
+                                <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+                                    <Authorized>
+                                        <button class="btn-link" @onclick="() => AcknowledgeAsync(alert.Id)">Acknowledge</button>
+                                    </Authorized>
+                                </AuthorizeView>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<AlertEntity> m_Alerts = [];
+    private HubConnection? m_HubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAlertsAsync(AlertStatusesType.Open);
+        await ConnectHubAsync();
+    }
+
+    private async Task LoadAlertsAsync(string? status)
+    {
+        m_Alerts = await AlertRuleServer.GetAlertsAsync(status, 100);
+    }
+
+    private async Task AcknowledgeAsync(Guid alertId)
+    {
+        await AlertRuleServer.AcknowledgeAlertAsync(alertId);
+        await LoadAlertsAsync(AlertStatusesType.Open);
+    }
+
+    private async Task ConnectHubAsync()
+    {
+        m_HubConnection = DashboardHubClient.Create(Navigation, HttpContextAccessor);
+
+        m_HubConnection.On<Guid, string, string?, string, string, string, string, DateTime>(
+            "AlertReceived",
+            async (_, __, ___, ____, _____, ______, _______, ________) =>
+        {
+            await LoadAlertsAsync(AlertStatusesType.Open);
+            await InvokeAsync(StateHasChanged);
+        });
+
+        await DashboardHubClient.TryStartAsync(m_HubConnection);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (m_HubConnection != null)
+        {
+            await m_HubConnection.DisposeAsync();
+        }
+    }
+}

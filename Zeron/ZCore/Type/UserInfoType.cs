@@ -34,5 +34,32 @@ namespace Zeron.ZCore.Type
             get;
             set;
         }
+
+        /// <summary>
+        /// IsActive
+        /// </summary>
+        public bool IsActive
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
+        /// CreatedAt
+        /// </summary>
+        public DateTime? CreatedAt
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// MustChangePassword
+        /// </summary>
+        public bool MustChangePassword
+        {
+            get;
+            set;
+        }
     }
 }

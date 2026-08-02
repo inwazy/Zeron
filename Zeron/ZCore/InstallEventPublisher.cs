@@ -29,7 +29,9 @@ namespace Zeron.ZCore
         /// <param name="topic"></param>
         /// <param name="message"></param>
         /// <returns>Returns void.</returns>
-        public static void Publish(string topic, string message)
+        public static void Publish(
+            string topic, 
+            string message)
         {
             PublishHandler?.Invoke(topic, EnrichMessage(message));
         }
@@ -40,7 +42,9 @@ namespace Zeron.ZCore
         /// <param name="topic"></param>
         /// <param name="payload"></param>
         /// <returns>Returns void.</returns>
-        public static void PublishObject(string topic, object payload)
+        public static void PublishObject(
+            string topic, 
+            object payload)
         {
             Publish(topic, JsonSerializer.Serialize(payload));
         }
@@ -50,7 +54,8 @@ namespace Zeron.ZCore
         /// </summary>
         /// <param name="message"></param>
         /// <returns>Returns enriched JSON string.</returns>
-        public static string EnrichMessage(string message)
+        public static string EnrichMessage(
+            string message)
         {
             try
             {

@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zeron.Server.Data;
 using Zeron.Server.ZCore;
 using Zeron.Server.ZServers;
+using Zeron.ZCore.Type;
 
 namespace Zeron.Server.ZServers.Tests
 {
@@ -29,12 +30,13 @@ namespace Zeron.Server.ZServers.Tests
             AuthServer authServer = CreateAuthServer(dbContext, settings);
             await authServer.SeedDefaultUserAsync();
 
-            var response = await authServer.LoginAsync("admin", "admin123");
+            LoginResponseType response = await authServer.LoginAsync("admin", "admin123");
 
             Assert.IsTrue(response.Success);
             Assert.IsNotNull(response.Token);
             Assert.AreEqual("admin", response.User?.Username);
             Assert.AreEqual(ServerRoles.Admin, response.User?.Role);
+            Assert.IsTrue(response.User!.MustChangePassword);
         }
 
         /// <summary>
@@ -54,9 +56,73 @@ namespace Zeron.Server.ZServers.Tests
             AuthServer authServer = CreateAuthServer(dbContext, settings);
             await authServer.SeedDefaultUserAsync();
 
-            var response = await authServer.LoginAsync("admin", "wrong-password");
+            LoginResponseType response = await authServer.LoginAsync("admin", "wrong-password");
 
             Assert.IsFalse(response.Success);
+        }
+
+        /// <summary>
+        /// ChangePasswordAsync clears MustChangePassword flag.
+        /// </summary>
+        [TestMethod()]
+        public async Task ChangePasswordAsyncClearsMustChangePasswordTest()
+        {
+            string dbName = Guid.NewGuid().ToString();
+            await using ZeronServerDbContext dbContext = CreateContext(dbName);
+            ServerSettings settings = new()
+            {
+                DefaultAdminUsername = "admin",
+                DefaultAdminPassword = "admin123"
+            };
+
+            AuthServer authServer = CreateAuthServer(dbContext, settings);
+            await authServer.SeedDefaultUserAsync();
+
+            LoginResponseType login = await authServer.LoginAsync("admin", "admin123");
+            Guid userId = Guid.Parse(login.User!.Id!);
+
+            (UserInfoType? updated, string? error) = await authServer.ChangePasswordAsync(
+                userId,
+                "admin123",
+                "new-secure-password");
+
+            Assert.IsNull(error);
+            Assert.IsNotNull(updated);
+            Assert.IsFalse(updated!.MustChangePassword);
+
+            LoginResponseType afterChange = await authServer.LoginAsync("admin", "new-secure-password");
+
+            Assert.IsTrue(afterChange.Success);
+            Assert.IsFalse(afterChange.User!.MustChangePassword);
+        }
+
+        /// <summary>
+        /// ChangePasswordAsync rejects incorrect current password.
+        /// </summary>
+        [TestMethod()]
+        public async Task ChangePasswordAsyncRejectsWrongCurrentPasswordTest()
+        {
+            string dbName = Guid.NewGuid().ToString();
+            await using ZeronServerDbContext dbContext = CreateContext(dbName);
+            ServerSettings settings = new()
+            {
+                DefaultAdminUsername = "admin",
+                DefaultAdminPassword = "admin123"
+            };
+
+            AuthServer authServer = CreateAuthServer(dbContext, settings);
+            await authServer.SeedDefaultUserAsync();
+
+            LoginResponseType login = await authServer.LoginAsync("admin", "admin123");
+            Guid userId = Guid.Parse(login.User!.Id!);
+
+            (UserInfoType? updated, string? error) = await authServer.ChangePasswordAsync(
+                userId,
+                "wrong-password",
+                "new-secure-password");
+
+            Assert.IsNull(updated);
+            Assert.AreEqual("Current password is incorrect.", error);
         }
 
         /// <summary>

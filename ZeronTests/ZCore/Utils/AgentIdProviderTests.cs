@@ -1,5 +1,5 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zeron.ZCore.Utils;
+// Zeron - Scheduled Task Application for Windows OS
+// Copyright (c) 2019 Jiowcl. All rights reserved.
 
 namespace Zeron.ZCore.Utils.Tests
 {

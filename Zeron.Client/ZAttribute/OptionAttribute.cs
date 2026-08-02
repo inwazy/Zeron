@@ -31,7 +31,9 @@ namespace Zeron.Client.ZAttribute
         /// <param name="name"></param>
         /// <param name="optselected"></param>
         /// <returns>Returns void.</returns>
-        public OptionAttribute(string? name, Action? optselected)
+        public OptionAttribute(
+            string? name, 
+            Action? optselected)
         {
             Name = name;
             OptSelected = optselected;

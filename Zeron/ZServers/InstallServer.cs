@@ -70,7 +70,8 @@ namespace Zeron.ZServers
         /// </summary>
         /// <param name="aConfig"></param>
         /// <returns>Returns void.</returns>
-        public override void LoadConfig(NameValueCollection aConfig)
+        public override void LoadConfig(
+            NameValueCollection aConfig)
         {
             try
             {
@@ -158,7 +159,8 @@ namespace Zeron.ZServers
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
-        private static void QueuesProc(object? aArg)
+        private static void QueuesProc(
+            object? aArg)
         {
             while (m_EnableQueuesProc)
             {
@@ -196,7 +198,9 @@ namespace Zeron.ZServers
         /// <param name="source"></param>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        private static void TimerProc(object? source, ElapsedEventArgs args)
+        private static void TimerProc(
+            object? source, 
+            ElapsedEventArgs args)
         {
             if (m_InstallQueues.Count == 0)
             {
@@ -232,7 +236,9 @@ namespace Zeron.ZServers
         /// <param name="source"></param>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        private static void QatcherProc(object? source, ElapsedEventArgs args)
+        private static void QatcherProc(
+            object? source, 
+            ElapsedEventArgs args)
         {
             if (!m_EnableInstallQueue || m_RunningProcId <= 0)
             {
@@ -260,7 +266,9 @@ namespace Zeron.ZServers
         /// <param name="queuesType"></param>
         /// <returns>Returns bool.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ExecuteQueues(string operation, InstallQueuesType? queuesType)
+        public static bool ExecuteQueues(
+            string operation, 
+            InstallQueuesType? queuesType)
         {
             if (queuesType == null)
             {
@@ -358,7 +366,8 @@ namespace Zeron.ZServers
         /// <param name="queuesType"></param>
         /// <returns>Returns bool.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ExecuteInstallQueues(InstallQueuesType? queuesType)
+        public static bool ExecuteInstallQueues(
+            InstallQueuesType? queuesType)
         {
             return ExecuteQueues("install", queuesType);
         }
@@ -372,7 +381,12 @@ namespace Zeron.ZServers
         /// <param name="success"></param>
         /// <param name="exitCode"></param>
         /// <returns>Returns void.</returns>
-        private static void PublishInstallEvent(string topic, InstallQueuesType queuesType, string operation, bool? success, int? exitCode)
+        private static void PublishInstallEvent(
+            string topic, 
+            InstallQueuesType queuesType, 
+            string operation, 
+            bool? success, 
+            int? exitCode)
         {
             var payload = new
             {
@@ -394,7 +408,9 @@ namespace Zeron.ZServers
         /// <param name="queuesType"></param>
         /// <returns>Returns int.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int AddQueues(string? token, InstallQueuesType queuesType)
+        public static int AddQueues(
+            string? token, 
+            InstallQueuesType queuesType)
         {
             int result = m_InstallQueues.Count;
 
@@ -419,7 +435,8 @@ namespace Zeron.ZServers
         /// </summary>
         /// <param name="queuesType"></param>
         /// <returns>Returns bool.</returns>
-        public static bool GetBinaryFileFromUrl(InstallQueuesType? queuesType)
+        public static bool GetBinaryFileFromUrl(
+            InstallQueuesType? queuesType)
         {
             bool result = false;
 

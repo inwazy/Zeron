@@ -2,7 +2,6 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.IdentityModel.Tokens;
-using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -25,7 +24,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="settings"></param>
         /// <returns>Returns void.</returns>
-        public JwtTokenServer(ServerSettings settings)
+        public JwtTokenServer(
+            ServerSettings settings)
         {
             m_Settings = settings;
         }
@@ -35,14 +35,10 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="user"></param>
         /// <returns>Returns JWT string.</returns>
-        public string CreateToken(UserEntity user)
+        public string CreateToken(
+            UserEntity user)
         {
-            Claim[] claims =
-            [
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
-            ];
+            Claim[] claims = CreateClaims(user);
 
             SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(m_Settings.JwtSecret));
             SigningCredentials credentials = new(key, SecurityAlgorithms.HmacSha256);
@@ -63,16 +59,10 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="user"></param>
         /// <returns>Returns ClaimsPrincipal.</returns>
-        public static ClaimsPrincipal CreateClaimsPrincipal(UserEntity user)
+        public static ClaimsPrincipal CreateClaimsPrincipal(
+            UserEntity user)
         {
-            Claim[] claims =
-            [
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
-            ];
-
-            ClaimsIdentity identity = new(claims, "ZeronCookie");
+            ClaimsIdentity identity = new(CreateClaims(user), "ZeronCookie");
 
             return new ClaimsPrincipal(identity);
         }
@@ -82,14 +72,37 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="user"></param>
         /// <returns>Returns UserInfoType.</returns>
-        public static UserInfoType ToUserInfo(UserEntity user)
+        public static UserInfoType ToUserInfo(
+            UserEntity user)
         {
             return new UserInfoType
             {
                 Id = user.Id.ToString(),
                 Username = user.Username,
-                Role = user.Role
+                Role = user.Role,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
+                MustChangePassword = user.MustChangePassword
             };
+        }
+
+        /// <summary>
+        /// CreateClaims
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns>Returns claim array.</returns>
+        private static Claim[] CreateClaims(
+            UserEntity user)
+        {
+            return
+            [
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(
+                    ServerClaimTypes.MustChangePassword,
+                    user.MustChangePassword ? "true" : "false")
+            ];
         }
     }
 }

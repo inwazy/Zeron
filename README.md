@@ -9,7 +9,7 @@ Zeron is an open source Windows remote automation platform based on NetMQ (ZeroM
 ![Travis (.com)](https://img.shields.io/travis/com/jiowcl/Zeron)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/6bf8bdd0b9634cf3b8c50079e6bbbbfd)](https://www.codacy.com/gh/jiowcl/Zeron/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jiowcl/Zeron&amp;utm_campaign=Badge_Grade)
 
-![Screenshot](https://github.com/inwazy/Zeron/Zeron.Server/Screenshot/Dashboard.png)
+![Screenshot](./Zeron.Server/Screenshot/Dashboard.png?raw=true)
 
 ## Projects
 
@@ -34,6 +34,10 @@ Zeron is an open source Windows remote automation platform based on NetMQ (ZeroM
 - **Audit Log** — SQLite audit trail at `Resource/audit.db`
 - **Zeron.Server** — Central HTTP API + NetMQ command PUB for multi-agent management
 - **Dashboard** — Blazor Server UI with JWT/Cookie auth and role-based access
+- **Offline Alerts** — Automatic `agent.offline` alerts with optional email notification
+- **User Management** — Admin CRUD for Admin / Operator / Viewer accounts
+- **Password Policy** — Forced change on first login + self-service change password
+- **Health Probes** — `/health` and `/ready` for deployment monitoring
 
 ## How to Build
 
@@ -55,6 +59,25 @@ Run the test client:
 ```powershell
 dotnet run --project Zeron.Client
 ```
+
+Run the central server:
+
+```powershell
+dotnet run --project Zeron.Server
+```
+
+Default Dashboard: `http://localhost:5000` (admin / admin123 in Development).
+
+## Documentation
+
+Detailed guides are in the [`Docs/`](./Docs/) directory:
+
+- [Deployment Guide](./Docs/deployment.md) — production setup for server and agents
+- [Configuration Reference](./Docs/configuration.md) — server and agent settings
+- [Agent Connection Guide](./Docs/agent-connection.md) — heartbeat, diagnostics, troubleshooting
+- [Testing Guide](./Docs/testing.md) — unit tests, E2E tests, EF migrations
+
+Production settings: copy `Zeron.Server/appsettings.Production.template.json` to `appsettings.Production.json` and set secrets before deploy.
 
 ## Task Pipeline Example
 

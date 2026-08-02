@@ -21,7 +21,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="hubContext"></param>
         /// <returns>Returns void.</returns>
-        public DashboardNotifierServer(IHubContext<DashboardHub> hubContext)
+        public DashboardNotifierServer(
+            IHubContext<DashboardHub> hubContext)
         {
             m_HubContext = hubContext;
         }
@@ -31,7 +32,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="eventEntity"></param>
         /// <returns>Returns void.</returns>
-        public async Task NotifyEventAsync(EventEntity eventEntity)
+        public async Task NotifyEventAsync(
+            EventEntity eventEntity)
         {
             await m_HubContext.Clients.All.SendAsync("EventReceived", new
             {
@@ -48,7 +50,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="agent"></param>
         /// <returns>Returns void.</returns>
-        public async Task NotifyAgentStatusAsync(AgentEntity agent)
+        public async Task NotifyAgentStatusAsync(
+            AgentEntity agent)
         {
             await m_HubContext.Clients.All.SendAsync("AgentStatusChanged", new
             {
@@ -56,6 +59,27 @@ namespace Zeron.Server.ZServers
                 agent.MachineName,
                 agent.Status,
                 agent.LastHeartbeatAt
+            });
+        }
+
+        /// <summary>
+        /// NotifyAlertAsync
+        /// </summary>
+        /// <param name="alert"></param>
+        /// <returns>Returns void.</returns>
+        public async Task NotifyAlertAsync(
+            AlertEntity alert)
+        {
+            await m_HubContext.Clients.All.SendAsync("AlertReceived", new
+            {
+                alert.Id,
+                alert.RuleType,
+                alert.AgentKey,
+                alert.Title,
+                alert.Message,
+                alert.Severity,
+                alert.Status,
+                alert.CreatedAt
             });
         }
     }

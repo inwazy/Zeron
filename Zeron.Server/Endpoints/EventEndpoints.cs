@@ -17,7 +17,8 @@ namespace Zeron.Server.Endpoints
         /// </summary>
         /// <param name="app"></param>
         /// <returns>Returns WebApplication.</returns>
-        public static WebApplication MapEventEndpoints(this WebApplication app)
+        public static WebApplication MapEventEndpoints(
+            this WebApplication app)
         {
             app.MapPost("/api/events", async (
                 AgentEventReportType report,

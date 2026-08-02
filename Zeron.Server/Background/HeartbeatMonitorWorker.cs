@@ -23,7 +23,9 @@ namespace Zeron.Server.Background
         /// <param name="serviceProvider"></param>
         /// <param name="settings"></param>
         /// <returns>Returns void.</returns>
-        public HeartbeatMonitorWorker(IServiceProvider serviceProvider, ServerSettings settings)
+        public HeartbeatMonitorWorker(
+            IServiceProvider serviceProvider, 
+            ServerSettings settings)
         {
             m_ServiceProvider = serviceProvider;
             m_Settings = settings;
@@ -34,7 +36,8 @@ namespace Zeron.Server.Background
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns>Returns Task.</returns>
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(
+            CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {

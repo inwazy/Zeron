@@ -52,7 +52,8 @@ namespace Zeron.ZServers
         /// </summary>
         /// <param name="aConfig"></param>
         /// <returns>Returns void.</returns>
-        public override void LoadConfig(NameValueCollection aConfig)
+        public override void LoadConfig(
+            NameValueCollection aConfig)
         {
             try
             {

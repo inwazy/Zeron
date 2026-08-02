@@ -17,7 +17,9 @@ namespace Zeron.Server.ZServers
         /// <param name="navigation"></param>
         /// <param name="httpContextAccessor"></param>
         /// <returns>Returns HubConnection.</returns>
-        public static HubConnection Create(NavigationManager navigation, IHttpContextAccessor httpContextAccessor)
+        public static HubConnection Create(
+            NavigationManager navigation, 
+            IHttpContextAccessor httpContextAccessor)
         {
             return new HubConnectionBuilder()
                 .WithUrl(navigation.ToAbsoluteUri("/hubs/dashboard"), options =>
@@ -38,7 +40,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="connection"></param>
         /// <returns>Returns bool.</returns>
-        public static async Task<bool> TryStartAsync(HubConnection? connection)
+        public static async Task<bool> TryStartAsync(
+            HubConnection? connection)
         {
             if (connection == null)
             {

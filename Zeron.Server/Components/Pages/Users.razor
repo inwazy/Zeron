@@ -1,0 +1,299 @@
+@page "/users"
+@rendermode InteractiveServer
+@using Zeron.Server.ZCore
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.AdminOnly)]
+@inject UserManagerServer UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="page-header">
+    <div>
+        <h1>Users</h1>
+        <p>Manage dashboard accounts and roles.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Create User</h2>
+    <div class="form-grid">
+        <label>
+            Username
+            <InputText @bind-Value="m_CreateModel.Username" />
+        </label>
+        <label>
+            Password
+            <InputText type="password" @bind-Value="m_CreateModel.Password" />
+        </label>
+        <label>
+            Role
+            <InputSelect @bind-Value="m_CreateModel.Role">
+                <option value="@ServerRoles.Viewer">Viewer</option>
+                <option value="@ServerRoles.Operator">Operator</option>
+                <option value="@ServerRoles.Admin">Admin</option>
+            </InputSelect>
+        </label>
+        <div class="actions">
+            <button class="btn" @onclick="CreateUserAsync" disabled="@m_IsBusy">Create User</button>
+        </div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(m_CreateMessage))
+    {
+        <p class="@(m_CreateSucceeded ? "success-text" : "error")">@m_CreateMessage</p>
+    }
+</div>
+
+<div class="panel">
+    <h2>Existing Users</h2>
+    @if (m_Rows.Count == 0)
+    {
+        <p>No users found.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Password</th>
+                    <th>Created</th>
+                    <th>Reset Password</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (UserEditRow row in m_Rows)
+                {
+                    <tr>
+                        <td>@row.Username</td>
+                        <td>
+                            <InputSelect @bind-Value="row.Role" disabled="@m_IsBusy">
+                                <option value="@ServerRoles.Viewer">Viewer</option>
+                                <option value="@ServerRoles.Operator">Operator</option>
+                                <option value="@ServerRoles.Admin">Admin</option>
+                            </InputSelect>
+                        </td>
+                        <td>
+                            <span class="status @(row.IsActive ? "online" : "offline")">
+                                @(row.IsActive ? "active" : "inactive")
+                            </span>
+                        </td>
+                        <td>
+                            @if (row.MustChangePassword)
+                            {
+                                <span class="status stale">must change</span>
+                            }
+                            else
+                            {
+                                <span class="status healthy">ok</span>
+                            }
+                        </td>
+                        <td>@(row.CreatedAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                        <td>
+                            <InputText type="password"
+                                       @bind-Value="row.NewPassword"
+                                       placeholder="New password"
+                                       disabled="@m_IsBusy" />
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-secondary" @onclick="() => SaveUserAsync(row)" disabled="@m_IsBusy">Save</button>
+                                @if (row.IsActive)
+                                {
+                                    <button class="btn btn-danger"
+                                            @onclick="() => SetActiveAsync(row, false)"
+                                            disabled="@(m_IsBusy || row.Id == m_CurrentUserId)">
+                                        Deactivate
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary"
+                                            @onclick="() => SetActiveAsync(row, true)"
+                                            disabled="@m_IsBusy">
+                                        Activate
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(m_UpdateMessage))
+    {
+        <p class="@(m_UpdateSucceeded ? "success-text" : "error")">@m_UpdateMessage</p>
+    }
+</div>
+
+@code {
+    private List<UserEditRow> m_Rows = [];
+    private readonly CreateFormModel m_CreateModel = new();
+    private string? m_CurrentUserId;
+    private string? m_CreateMessage;
+    private string? m_UpdateMessage;
+    private bool m_CreateSucceeded;
+    private bool m_UpdateSucceeded;
+    private bool m_IsBusy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        m_CurrentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        List<UserInfoType> users = await UserManager.GetUsersAsync();
+
+        m_Rows = users
+            .Where(user => !string.IsNullOrWhiteSpace(user.Id))
+            .Select(user => new UserEditRow
+            {
+                Id = user.Id!,
+                Username = user.Username ?? "",
+                Role = user.Role ?? ServerRoles.Viewer,
+                IsActive = user.IsActive,
+                MustChangePassword = user.MustChangePassword,
+                CreatedAt = user.CreatedAt,
+                NewPassword = ""
+            })
+            .ToList();
+    }
+
+    private async Task CreateUserAsync()
+    {
+        m_CreateMessage = null;
+        m_IsBusy = true;
+
+        try
+        {
+            (UserInfoType? user, string? error) = await UserManager.CreateUserAsync(new UserCreateRequestType
+            {
+                Username = m_CreateModel.Username,
+                Password = m_CreateModel.Password,
+                Role = m_CreateModel.Role
+            });
+
+            if (error != null)
+            {
+                m_CreateSucceeded = false;
+                m_CreateMessage = error;
+                return;
+            }
+
+            m_CreateSucceeded = true;
+            m_CreateMessage = $"Created user '{user!.Username}'.";
+            m_CreateModel.Username = "";
+            m_CreateModel.Password = "";
+            m_CreateModel.Role = ServerRoles.Viewer;
+            await ReloadAsync();
+        }
+        finally
+        {
+            m_IsBusy = false;
+        }
+    }
+
+    private async Task SaveUserAsync(UserEditRow row)
+    {
+        if (!Guid.TryParse(row.Id, out Guid userId))
+        {
+            return;
+        }
+
+        m_UpdateMessage = null;
+        m_IsBusy = true;
+
+        try
+        {
+            (UserInfoType? updated, string? error) = await UserManager.UpdateUserAsync(
+                userId,
+                new UserUpdateRequestType
+                {
+                    Role = row.Role,
+                    Password = string.IsNullOrWhiteSpace(row.NewPassword) ? null : row.NewPassword
+                },
+                ParseCurrentUserId());
+
+            if (error != null)
+            {
+                m_UpdateSucceeded = false;
+                m_UpdateMessage = error;
+                return;
+            }
+
+            m_UpdateSucceeded = true;
+            m_UpdateMessage = $"Updated user '{updated!.Username}'.";
+            await ReloadAsync();
+        }
+        finally
+        {
+            m_IsBusy = false;
+        }
+    }
+
+    private async Task SetActiveAsync(UserEditRow row, bool isActive)
+    {
+        if (!Guid.TryParse(row.Id, out Guid userId))
+        {
+            return;
+        }
+
+        m_UpdateMessage = null;
+        m_IsBusy = true;
+
+        try
+        {
+            (UserInfoType? updated, string? error) = await UserManager.UpdateUserAsync(
+                userId,
+                new UserUpdateRequestType { IsActive = isActive },
+                ParseCurrentUserId());
+
+            if (error != null)
+            {
+                m_UpdateSucceeded = false;
+                m_UpdateMessage = error;
+                return;
+            }
+
+            m_UpdateSucceeded = true;
+            m_UpdateMessage = isActive
+                ? $"Activated user '{updated!.Username}'."
+                : $"Deactivated user '{updated!.Username}'.";
+            await ReloadAsync();
+        }
+        finally
+        {
+            m_IsBusy = false;
+        }
+    }
+
+    private Guid? ParseCurrentUserId()
+    {
+        return Guid.TryParse(m_CurrentUserId, out Guid userId) ? userId : null;
+    }
+
+    private sealed class CreateFormModel
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string Role { get; set; } = ServerRoles.Viewer;
+    }
+
+    private sealed class UserEditRow
+    {
+        public string Id { get; set; } = "";
+        public string Username { get; set; } = "";
+        public string Role { get; set; } = ServerRoles.Viewer;
+        public bool IsActive { get; set; }
+        public bool MustChangePassword { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public string NewPassword { get; set; } = "";
+    }
+}

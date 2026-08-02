@@ -95,7 +95,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="assembly"></param>
         /// <returns>Returns void.</returns>
-        public static void PrepareServices(Assembly assembly)
+        public static void PrepareServices(
+            Assembly assembly)
         {
             ServiceRegistry.RegisterFromAssembly(assembly);
         }
@@ -106,7 +107,9 @@ namespace Zeron.Demand.ZServers.Impls
         /// <param name="apiKey"></param>
         /// <param name="apiScopes"></param>
         /// <returns>Returns void.</returns>
-        public void PrepareSubAPI(string? apiKey, string? apiScopes)
+        public void PrepareSubAPI(
+            string? apiKey, 
+            string? apiScopes)
         {
             m_SubscriberApiKey = apiKey ?? "";
             m_SubApiScopes = string.IsNullOrWhiteSpace(apiScopes) ? "*" : apiScopes;
@@ -118,7 +121,9 @@ namespace Zeron.Demand.ZServers.Impls
         /// <param name="apiKey"></param>
         /// <param name="apiScopes"></param>
         /// <returns>Returns void.</returns>
-        public void PrepareRepAPI(string? apiKey, string? apiScopes)
+        public void PrepareRepAPI(
+            string? apiKey, 
+            string? apiScopes)
         {
             m_ResponsetApiKey = apiKey ?? "";
             m_RepApiScopes = string.IsNullOrWhiteSpace(apiScopes) ? "*" : apiScopes;
@@ -129,7 +134,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="addr"></param>
         /// <returns>Returns void.</returns>
-        public void PreparePubSocket(string? addr)
+        public void PreparePubSocket(
+            string? addr)
         {
             if (addr == null || addr.Length == 0)
             {
@@ -149,7 +155,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="addr"></param>
         /// <returns>Returns void.</returns>
-        public void PrepareSubSocket(string? addr)
+        public void PrepareSubSocket(
+            string? addr)
         {
             if (addr == null || addr.Length == 0)
             {
@@ -170,7 +177,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="addr"></param>
         /// <returns>Returns void.</returns>
-        public void PrepareRepSocket(string? addr)
+        public void PrepareRepSocket(
+            string? addr)
         {
             if (addr == null || addr.Length == 0)
             {
@@ -190,7 +198,9 @@ namespace Zeron.Demand.ZServers.Impls
         /// <param name="aMessage"></param>
         /// <returns>Returns void.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void PublishMessage(string aTopic, byte[] aMessage)
+        public static void PublishMessage(
+            string aTopic, 
+            byte[] aMessage)
         {
             if (!m_EnablePublisherProc || m_PublisherSocket == null)
             {
@@ -206,7 +216,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
-        private static void PublisherSocketProc(object? aArg)
+        private static void PublisherSocketProc(
+            object? aArg)
         {
             while (m_EnablePublisherProc)
             {
@@ -237,7 +248,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
-        private static void SubscriberSocketProc(object? aArg)
+        private static void SubscriberSocketProc(
+            object? aArg)
         {
             while (m_EnableSubscriberProc)
             {
@@ -302,7 +314,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
-        private static void ResponseSocketProc(object? aArg)
+        private static void ResponseSocketProc(
+            object? aArg)
         {
             while (m_EnableResponseProc)
             {

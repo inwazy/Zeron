@@ -18,7 +18,8 @@ namespace Zeron.ZCore.Foundation
         /// </summary>
         /// <param name="aConfig"></param>
         /// <returns>Returns void.</returns>
-        public virtual void LoadConfig(NameValueCollection aConfig)
+        public virtual void LoadConfig(
+            NameValueCollection aConfig)
         {
             
         }

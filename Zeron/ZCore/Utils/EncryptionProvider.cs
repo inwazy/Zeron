@@ -23,7 +23,9 @@ namespace Zeron.ZCore.Utils
         /// <param name="plainText"></param>
         /// <param name="iv"></param>
         /// <returns>Returns string.</returns>
-        public static string Encrypt(string? plainText, string? iv = "")
+        public static string Encrypt(
+            string? plainText, 
+            string? iv = "")
         {
             if (plainText == null || plainText.Length == 0)
             {
@@ -57,7 +59,9 @@ namespace Zeron.ZCore.Utils
         /// <param name="cipherText"></param>
         /// <param name="iv"></param>
         /// <returns>Returns string.</returns>
-        public static string Decrypt(string? cipherText, string? iv = "")
+        public static string Decrypt(
+            string? cipherText, 
+            string? iv = "")
         {
             if (!TryDecrypt(cipherText, out string? plainText, iv))
             {
@@ -74,7 +78,10 @@ namespace Zeron.ZCore.Utils
         /// <param name="plainText"></param>
         /// <param name="iv"></param>
         /// <returns>Returns bool.</returns>
-        public static bool TryDecrypt(string? cipherText, out string? plainText, string? iv = "")
+        public static bool TryDecrypt(
+            string? cipherText, 
+            out string? plainText, 
+            string? iv = "")
         {
             plainText = null;
 
@@ -119,7 +126,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="source"></param>
         /// <returns>Returns byte array.</returns>
-        private static byte[] DeriveKeyBytes(string source)
+        private static byte[] DeriveKeyBytes(
+            string source)
         {
             byte[] sourceBytes = Encoding.UTF8.GetBytes(source);
 
@@ -133,7 +141,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="source"></param>
         /// <returns>Returns byte array.</returns>
-        private static byte[] DeriveIvBytes(string source)
+        private static byte[] DeriveIvBytes(
+            string source)
         {
             byte[] sourceBytes = Encoding.UTF8.GetBytes(source);
 

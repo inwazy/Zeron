@@ -78,7 +78,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Returns AgentHeartbeatResponseType.</returns>
-        public static async Task<AgentHeartbeatResponseType?> SendHeartbeatAsync(AgentHeartbeatRequestType request)
+        public static async Task<AgentHeartbeatResponseType?> SendHeartbeatAsync(
+            AgentHeartbeatRequestType request)
         {
             if (string.IsNullOrWhiteSpace(s_ServerUrl))
             {
@@ -119,7 +120,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="report"></param>
         /// <returns>Returns void.</returns>
-        public static async Task SendEventAsync(AgentEventReportType report)
+        public static async Task SendEventAsync(
+            AgentEventReportType report)
         {
             if (string.IsNullOrWhiteSpace(s_ServerUrl))
             {
@@ -145,7 +147,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="report"></param>
         /// <returns>Returns void.</returns>
-        public static async Task SendTaskResultAsync(TaskResultReportType report)
+        public static async Task SendTaskResultAsync(
+            TaskResultReportType report)
         {
             if (string.IsNullOrWhiteSpace(s_ServerUrl))
             {

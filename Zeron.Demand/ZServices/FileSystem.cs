@@ -22,7 +22,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnRequest(dynamic aJson)
+        public string OnRequest(
+            dynamic aJson)
         {
             try
             {
@@ -57,7 +58,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="path"></param>
         /// <returns>Returns JSON response.</returns>
-        private static string ListPath(string? path)
+        private static string ListPath(
+            string? path)
         {
             if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
             {
@@ -83,7 +85,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="path"></param>
         /// <returns>Returns JSON response.</returns>
-        private static string ReadFile(string? path)
+        private static string ReadFile(
+            string? path)
         {
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             {
@@ -107,7 +110,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="arguments"></param>
         /// <returns>Returns JSON response.</returns>
-        private static string WriteFile(string? arguments)
+        private static string WriteFile(
+            string? arguments)
         {
             if (string.IsNullOrWhiteSpace(arguments))
             {
@@ -144,7 +148,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="path"></param>
         /// <returns>Returns JSON response.</returns>
-        private static string DeletePath(string? path)
+        private static string DeletePath(
+            string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -175,7 +180,8 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="path"></param>
         /// <returns>Returns JSON response.</returns>
-        private static string ExistsPath(string? path)
+        private static string ExistsPath(
+            string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -197,7 +203,9 @@ namespace Zeron.Demand.ZServices
         /// <param name="topic"></param>
         /// <param name="path"></param>
         /// <returns>Returns void.</returns>
-        private static void PublishEvent(string topic, string? path)
+        private static void PublishEvent(
+            string topic, 
+            string? path)
         {
             InstallEventPublisher.Publish(topic, JsonSerializer.Serialize(new
             {
@@ -211,21 +219,24 @@ namespace Zeron.Demand.ZServices
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnRequestAsync(dynamic aJson) => "";
+        public string OnRequestAsync(
+            dynamic aJson) => "";
 
         /// <summary>
         /// OnSubscriber
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnSubscriber(dynamic aJson) => "";
+        public string OnSubscriber(
+            dynamic aJson) => "";
 
         /// <summary>
         /// OnSubscriberAsync
         /// </summary>
         /// <param name="aJson"></param>
         /// <returns>Returns string.</returns>
-        public string OnSubscriberAsync(dynamic aJson) => "";
+        public string OnSubscriberAsync(
+            dynamic aJson) => "";
 
         /// <summary>
         /// OnNotifySubscriber
@@ -233,6 +244,8 @@ namespace Zeron.Demand.ZServices
         /// <param name="aJson"></param>
         /// <param name="processedMsg"></param>
         /// <returns>Returns string.</returns>
-        public string OnNotifySubscriber(dynamic aJson, string processedMsg) => "";
+        public string OnNotifySubscriber(
+            dynamic aJson, 
+            string processedMsg) => "";
     }
 }

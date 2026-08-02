@@ -31,7 +31,6 @@
     <PackageReference Include="SQLitePCLRaw.core" Version="3.0.5" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
     <PackageReference Include="SQLitePCLRaw.provider.e_sqlite3" Version="3.0.5" />
-    <PackageReference Include="System.Private.Uri" Version="4.3.2" />
     <PackageReference Include="Topshelf" Version="4.3.0" />
   </ItemGroup>
 

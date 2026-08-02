@@ -59,7 +59,8 @@ namespace Zeron.ZServers
         /// </summary>
         /// <param name="aConfig"></param>
         /// <returns>Returns void.</returns>
-        public override void LoadConfig(NameValueCollection aConfig)
+        public override void LoadConfig(
+            NameValueCollection aConfig)
         {
             try
             {
@@ -154,7 +155,9 @@ namespace Zeron.ZServers
         /// <param name="sender"></param>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        private static void OnTimerElapsed(object? sender, ElapsedEventArgs args)
+        private static void OnTimerElapsed(
+            object? sender, 
+            ElapsedEventArgs args)
         {
             DateTime now = DateTime.Now;
 

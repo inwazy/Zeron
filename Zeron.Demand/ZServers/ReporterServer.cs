@@ -45,7 +45,8 @@ namespace Zeron.Demand.ZServers
         /// </summary>
         /// <param name="aConfig"></param>
         /// <returns>Returns void.</returns>
-        public override void LoadConfig(NameValueCollection aConfig)
+        public override void LoadConfig(
+            NameValueCollection aConfig)
         {
             try
             {
@@ -102,7 +103,9 @@ namespace Zeron.Demand.ZServers
         /// <param name="topic"></param>
         /// <param name="message"></param>
         /// <returns>Returns void.</returns>
-        public static void ForwardEvent(string topic, string message)
+        public static void ForwardEvent(
+            string topic, 
+            string message)
         {
             if (!s_Enabled || string.IsNullOrWhiteSpace(ReporterImpl.ServerUrl))
             {
@@ -127,7 +130,11 @@ namespace Zeron.Demand.ZServers
         /// <param name="responseJson"></param>
         /// <param name="errorMessage"></param>
         /// <returns>Returns void.</returns>
-        public static void ReportTaskResult(string? assignmentId, bool success, string? responseJson, string? errorMessage = null)
+        public static void ReportTaskResult(
+            string? assignmentId, 
+            bool success, 
+            string? responseJson, 
+            string? errorMessage = null)
         {
             if (!s_Enabled || string.IsNullOrWhiteSpace(assignmentId))
             {
@@ -152,7 +159,9 @@ namespace Zeron.Demand.ZServers
         /// <param name="sender"></param>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        private static async void OnHeartbeatTimer(object? sender, ElapsedEventArgs args)
+        private static async void OnHeartbeatTimer(
+            object? sender, 
+            ElapsedEventArgs args)
         {
             try
             {

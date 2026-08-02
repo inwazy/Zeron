@@ -42,7 +42,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="dataSource"></param>
         /// <returns>Returns void.</returns>
-        public void PrepareDatabase(string? dataSource)
+        public void PrepareDatabase(
+            string? dataSource)
         {
             string dbPath = ResolveDatabasePath(dataSource);
             string? directory = Path.GetDirectoryName(dbPath);
@@ -68,7 +69,13 @@ namespace Zeron.Demand.ZServers.Impls
         /// <param name="message"></param>
         /// <param name="source"></param>
         /// <returns>Returns void.</returns>
-        public static void Insert(string? agentId, string? apiName, string? command, bool success, string? message, string? source)
+        public static void Insert(
+            string? agentId, 
+            string? apiName, 
+            string? command, 
+            bool success, 
+            string? message, 
+            string? source)
         {
             if (s_DbConnection == null)
             {
@@ -102,7 +109,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="limit"></param>
         /// <returns>Returns audit rows.</returns>
-        public static List<AuditLogEntryType> QueryRecent(int limit)
+        public static List<AuditLogEntryType> QueryRecent(
+            int limit)
         {
             List<AuditLogEntryType> results = [];
 
@@ -179,7 +187,8 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="dataSource"></param>
         /// <returns>Returns file path.</returns>
-        private static string ResolveDatabasePath(string? dataSource)
+        private static string ResolveDatabasePath(
+            string? dataSource)
         {
             string relativePath = string.IsNullOrWhiteSpace(dataSource) ? "Resource/audit.db" : dataSource;
 

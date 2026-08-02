@@ -16,7 +16,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="script"></param>
         /// <returns>Returns bool.</returns>
-        public static bool Execute(string? script)
+        public static bool Execute(
+            string? script)
         {
             if (string.IsNullOrWhiteSpace(script))
             {
@@ -64,7 +65,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="value"></param>
         /// <returns>Returns string.</returns>
-        private static string QuoteArgument(string value)
+        private static string QuoteArgument(
+            string value)
         {
             return "\"" + value.Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
         }

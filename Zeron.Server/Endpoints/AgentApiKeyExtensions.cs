@@ -16,7 +16,9 @@ namespace Zeron.Server.Endpoints
         /// <param name="context"></param>
         /// <param name="authServer"></param>
         /// <returns>Returns IResult or null when valid.</returns>
-        public static IResult? ValidateAgentApiKey(this HttpContext context, AuthServer authServer)
+        public static IResult? ValidateAgentApiKey(
+            this HttpContext context, 
+            AuthServer authServer)
         {
             string? apiKey = context.Request.Headers["X-Zeron-Agent-Key"].FirstOrDefault()
                 ?? context.Request.Query["apiKey"].FirstOrDefault();

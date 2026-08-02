@@ -22,16 +22,24 @@ namespace Zeron.Server.ZServers
         // DashboardNotifier
         private readonly IDashboardNotifier? m_DashboardNotifier;
 
+        // AlertRuleServer
+        private readonly AlertRuleServer? m_AlertRuleServer;
+
         /// <summary>
         /// AgentManagerServer
         /// </summary>
         /// <param name="dbContext"></param>
         /// <param name="dashboardNotifier"></param>
+        /// <param name="alertRuleServer"></param>
         /// <returns>Returns void.</returns>
-        public AgentManagerServer(ZeronServerDbContext dbContext, IDashboardNotifier? dashboardNotifier = null)
+        public AgentManagerServer(
+            ZeronServerDbContext dbContext,
+            IDashboardNotifier? dashboardNotifier = null,
+            AlertRuleServer? alertRuleServer = null)
         {
             m_DbContext = dbContext;
             m_DashboardNotifier = dashboardNotifier;
+            m_AlertRuleServer = alertRuleServer;
         }
 
         /// <summary>
@@ -67,6 +75,8 @@ namespace Zeron.Server.ZServers
                 m_DbContext.Agents.Add(agent);
             }
 
+            bool wasOffline = agent.Status == "offline";
+
             agent.MachineName = request.MachineName;
             agent.IpAddress = ipAddress;
             agent.Version = request.Version;
@@ -96,6 +106,11 @@ namespace Zeron.Server.ZServers
                 await m_DashboardNotifier.NotifyAgentStatusAsync(agent);
             }
 
+            if (wasOffline && m_AlertRuleServer != null)
+            {
+                await m_AlertRuleServer.ResolveAgentOfflineAlertsAsync(agent.AgentKey, cancellationToken);
+            }
+
             List<PendingTaskType> pendingTasks = await m_DbContext.TaskAssignments
                 .Include(assignment => assignment.Task)
                 .Where(assignment => assignment.AgentId == agent.Id && assignment.Status == "pending")
@@ -121,7 +136,8 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns agent list.</returns>
-        public async Task<List<AgentEntity>> GetAgentsAsync(CancellationToken cancellationToken = default)
+        public async Task<List<AgentEntity>> GetAgentsAsync(
+            CancellationToken cancellationToken = default)
         {
             return await m_DbContext.Agents
                 .OrderByDescending(agent => agent.LastHeartbeatAt)
@@ -134,7 +150,9 @@ namespace Zeron.Server.ZServers
         /// <param name="agentKey"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns agent or null.</returns>
-        public async Task<AgentEntity?> GetAgentByKeyAsync(string agentKey, CancellationToken cancellationToken = default)
+        public async Task<AgentEntity?> GetAgentByKeyAsync(
+            string agentKey, 
+            CancellationToken cancellationToken = default)
         {
             return await m_DbContext.Agents
                 .FirstOrDefaultAsync(agent => agent.AgentKey == agentKey, cancellationToken);
@@ -146,7 +164,9 @@ namespace Zeron.Server.ZServers
         /// <param name="timeoutSeconds"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns affected count.</returns>
-        public async Task<int> MarkOfflineAgentsAsync(int timeoutSeconds, CancellationToken cancellationToken = default)
+        public async Task<int> MarkOfflineAgentsAsync(
+            int timeoutSeconds, 
+            CancellationToken cancellationToken = default)
         {
             DateTime threshold = DateTime.UtcNow.AddSeconds(-timeoutSeconds);
             List<AgentEntity> staleAgents = await m_DbContext.Agents
@@ -171,9 +191,34 @@ namespace Zeron.Server.ZServers
                         await m_DashboardNotifier.NotifyAgentStatusAsync(agent);
                     }
                 }
+
+                if (m_AlertRuleServer != null)
+                {
+                    await m_AlertRuleServer.ProcessAgentOfflineAsync(staleAgents, cancellationToken);
+                }
             }
 
             return staleAgents.Count;
+        }
+
+        /// <summary>
+        /// GetAgentHeartbeatsAsync
+        /// </summary>
+        /// <param name="agentKey"></param>
+        /// <param name="limit"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns heartbeat history.</returns>
+        public async Task<List<AgentHeartbeatEntity>> GetAgentHeartbeatsAsync(
+            string agentKey,
+            int limit,
+            CancellationToken cancellationToken = default)
+        {
+            return await m_DbContext.AgentHeartbeats
+                .Include(item => item.Agent)
+                .Where(item => item.Agent!.AgentKey == agentKey)
+                .OrderByDescending(item => item.ReportedAt)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
         }
 
         /// <summary>
