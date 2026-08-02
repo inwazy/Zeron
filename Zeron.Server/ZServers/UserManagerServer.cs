@@ -105,6 +105,7 @@ namespace Zeron.Server.ZServers
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
                 Role = role,
                 IsActive = true,
+                MustChangePassword = true,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -186,6 +187,7 @@ namespace Zeron.Server.ZServers
                 }
 
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                user.MustChangePassword = true;
             }
 
             await m_DbContext.SaveChangesAsync(cancellationToken);

@@ -87,10 +87,11 @@ sc start ZeronDemand
 
 1. Check health probes: `GET /health` and `GET /ready` should return `"status":"healthy"`.
 2. Open the Dashboard at `http://your-server:5000` and sign in with the default admin account.
-3. Confirm the agent appears on **Agents** with connection state **healthy**.
-4. Create a test task (e.g. `HealthCheck`) targeting the agent.
-5. Check **Events** and **Alerts** for operational data.
-6. On **Users**, create Operator/Viewer accounts as needed. Change the default admin password via **Save** with a new password.
+3. Complete the forced password change page (required on first login / while using the default password).
+4. Confirm the agent appears on **Agents** with connection state **healthy**.
+5. Create a test task (e.g. `HealthCheck`) targeting the agent.
+6. Check **Events** and **Alerts** for operational data.
+7. On **Users**, create Operator/Viewer accounts as needed.
 
 See [Agent Connection Guide](./agent-connection.md) if agents stay offline or stale.
 

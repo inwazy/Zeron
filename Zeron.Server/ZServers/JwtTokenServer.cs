@@ -38,12 +38,7 @@ namespace Zeron.Server.ZServers
         public string CreateToken(
             UserEntity user)
         {
-            Claim[] claims =
-            [
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
-            ];
+            Claim[] claims = CreateClaims(user);
 
             SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(m_Settings.JwtSecret));
             SigningCredentials credentials = new(key, SecurityAlgorithms.HmacSha256);
@@ -67,14 +62,7 @@ namespace Zeron.Server.ZServers
         public static ClaimsPrincipal CreateClaimsPrincipal(
             UserEntity user)
         {
-            Claim[] claims =
-            [
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
-            ];
-
-            ClaimsIdentity identity = new(claims, "ZeronCookie");
+            ClaimsIdentity identity = new(CreateClaims(user), "ZeronCookie");
 
             return new ClaimsPrincipal(identity);
         }
@@ -93,8 +81,28 @@ namespace Zeron.Server.ZServers
                 Username = user.Username,
                 Role = user.Role,
                 IsActive = user.IsActive,
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+                MustChangePassword = user.MustChangePassword
             };
+        }
+
+        /// <summary>
+        /// CreateClaims
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns>Returns claim array.</returns>
+        private static Claim[] CreateClaims(
+            UserEntity user)
+        {
+            return
+            [
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(
+                    ServerClaimTypes.MustChangePassword,
+                    user.MustChangePassword ? "true" : "false")
+            ];
         }
     }
 }

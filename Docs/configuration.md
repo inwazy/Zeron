@@ -57,6 +57,23 @@ Agent identity is persisted under `Resource/agent-id.txt`. The agent sends heart
 
 Admin users can manage accounts on the Dashboard **Users** page (`/users`).
 
+## Password Policy
+
+| Rule | Behavior |
+|------|----------|
+| Seeded default admin | `MustChangePassword=true` — redirected to `/account/change-password` after login |
+| Existing default password | If admin password still matches `DefaultAdminPassword`, it is marked for forced change on startup |
+| Admin-created users | Must change password on first login |
+| Admin password reset | Target user must change password on next login |
+| Self-service | Any logged-in user can open **Change Password** in the sidebar |
+
+Endpoints:
+
+- `POST /account/change-password` — form post (Dashboard)
+- `POST /api/auth/change-password` — JSON API (`currentPassword`, `newPassword`)
+
+While `MustChangePassword` is true, other Dashboard pages and APIs return redirect / `403` until the password is updated.
+
 ## Health Endpoints
 
 | Endpoint | Auth | Description |

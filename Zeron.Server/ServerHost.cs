@@ -14,6 +14,7 @@ using Zeron.Server.Components;
 using Zeron.Server.Data;
 using Zeron.Server.Endpoints;
 using Zeron.Server.Hubs;
+using Zeron.Server.Middleware;
 using Zeron.Server.ZCore;
 using Zeron.Server.ZInterfaces;
 using Zeron.Server.ZServers;
@@ -141,6 +142,7 @@ namespace Zeron.Server
             app.UseStaticFiles();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseMiddleware<MustChangePasswordMiddleware>();
             app.UseAntiforgery();
 
             app.MapGet("/api", () => Results.Ok(new

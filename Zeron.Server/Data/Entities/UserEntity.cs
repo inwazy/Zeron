@@ -61,5 +61,14 @@ namespace Zeron.Server.Data.Entities
             get;
             set;
         }
+
+        /// <summary>
+        /// MustChangePassword
+        /// </summary>
+        public bool MustChangePassword
+        {
+            get;
+            set;
+        }
     }
 }

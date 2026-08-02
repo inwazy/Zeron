@@ -52,5 +52,14 @@ namespace Zeron.ZCore.Type
             get;
             set;
         }
+
+        /// <summary>
+        /// MustChangePassword
+        /// </summary>
+        public bool MustChangePassword
+        {
+            get;
+            set;
+        }
     }
 }

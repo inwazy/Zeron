@@ -35,6 +35,7 @@ namespace Zeron.Server.ZServers.Tests
                     IEnumerable<string> applied = await dbContext.Database.GetAppliedMigrationsAsync();
 
                     Assert.IsTrue(applied.Contains("20260730132711_InitialCreate"));
+                    Assert.IsTrue(applied.Contains("20260802060734_AddUserMustChangePassword"));
                 }
 
                 SqliteConnection.ClearAllPools();
@@ -73,6 +74,15 @@ namespace Zeron.Server.ZServers.Tests
                     "RegisteredAt" TEXT NOT NULL,
                     "LastSeenAt" TEXT NOT NULL,
                     "LastHeartbeatAt" TEXT NOT NULL
+                );
+
+                CREATE TABLE "Users" (
+                    "Id" TEXT NOT NULL CONSTRAINT "PK_Users" PRIMARY KEY,
+                    "Username" TEXT NOT NULL,
+                    "PasswordHash" TEXT NOT NULL,
+                    "Role" TEXT NOT NULL,
+                    "IsActive" INTEGER NOT NULL,
+                    "CreatedAt" TEXT NOT NULL
                 );
                 """;
 

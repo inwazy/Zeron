@@ -36,6 +36,7 @@ Zeron is an open source Windows remote automation platform based on NetMQ (ZeroM
 - **Dashboard** — Blazor Server UI with JWT/Cookie auth and role-based access
 - **Offline Alerts** — Automatic `agent.offline` alerts with optional email notification
 - **User Management** — Admin CRUD for Admin / Operator / Viewer accounts
+- **Password Policy** — Forced change on first login + self-service change password
 - **Health Probes** — `/health` and `/ready` for deployment monitoring
 
 ## How to Build

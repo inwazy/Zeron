@@ -34,8 +34,8 @@ namespace Zeron.Server.ZServers
         /// <param name="jwtTokenServer"></param>
         /// <returns>Returns void.</returns>
         public AuthServer(
-            ZeronServerDbContext dbContext, 
-            ServerSettings settings, 
+            ZeronServerDbContext dbContext,
+            ServerSettings settings,
             JwtTokenServer jwtTokenServer)
         {
             m_DbContext = dbContext;
@@ -53,26 +53,55 @@ namespace Zeron.Server.ZServers
         {
             bool hasUsers = await m_DbContext.Users.AnyAsync(cancellationToken);
 
-            if (hasUsers)
+            if (!hasUsers)
+            {
+                UserEntity admin = new()
+                {
+                    Id = Guid.NewGuid(),
+                    Username = m_Settings.DefaultAdminUsername,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(m_Settings.DefaultAdminPassword),
+                    Role = ServerRoles.Admin,
+                    IsActive = true,
+                    MustChangePassword = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                m_DbContext.Users.Add(admin);
+                await m_DbContext.SaveChangesAsync(cancellationToken);
+
+                ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                    "AuthServer seeded default admin user '{0}' (must change password).", admin.Username));
+            }
+
+            await EnsureDefaultAdminMustChangePasswordAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// EnsureDefaultAdminMustChangePasswordAsync
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns void.</returns>
+        public async Task EnsureDefaultAdminMustChangePasswordAsync(
+            CancellationToken cancellationToken = default)
+        {
+            UserEntity? admin = await m_DbContext.Users
+                .FirstOrDefaultAsync(user => user.Username == m_Settings.DefaultAdminUsername, cancellationToken);
+
+            if (admin == null || admin.MustChangePassword || !admin.IsActive)
             {
                 return;
             }
 
-            UserEntity admin = new()
+            if (!BCrypt.Net.BCrypt.Verify(m_Settings.DefaultAdminPassword, admin.PasswordHash))
             {
-                Id = Guid.NewGuid(),
-                Username = m_Settings.DefaultAdminUsername,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(m_Settings.DefaultAdminPassword),
-                Role = ServerRoles.Admin,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
+                return;
+            }
 
-            m_DbContext.Users.Add(admin);
+            admin.MustChangePassword = true;
             await m_DbContext.SaveChangesAsync(cancellationToken);
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
-                "AuthServer seeded default admin user '{0}'.", admin.Username));
+                "AuthServer marked default admin '{0}' for forced password change.", admin.Username));
         }
 
         /// <summary>
@@ -119,23 +148,88 @@ namespace Zeron.Server.ZServers
         }
 
         /// <summary>
+        /// ChangePasswordAsync
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="currentPassword"></param>
+        /// <param name="newPassword"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns updated user or error message.</returns>
+        public async Task<(UserInfoType? User, string? Error)> ChangePasswordAsync(
+            Guid userId,
+            string? currentPassword,
+            string? newPassword,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(currentPassword))
+            {
+                return (null, "Current password is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            {
+                return (null, "New password must be at least 6 characters.");
+            }
+
+            if (string.Equals(currentPassword, newPassword, StringComparison.Ordinal))
+            {
+                return (null, "New password must be different from the current password.");
+            }
+
+            UserEntity? user = await m_DbContext.Users
+                .FirstOrDefaultAsync(item => item.Id == userId && item.IsActive, cancellationToken);
+
+            if (user == null)
+            {
+                return (null, "User not found.");
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+            {
+                return (null, "Current password is incorrect.");
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            user.MustChangePassword = false;
+            await m_DbContext.SaveChangesAsync(cancellationToken);
+
+            ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                "AuthServer password changed for user '{0}'.", user.Username));
+
+            return (JwtTokenServer.ToUserInfo(user), null);
+        }
+
+        /// <summary>
+        /// GetUserEntityAsync
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns UserEntity or null.</returns>
+        public async Task<UserEntity?> GetUserEntityAsync(
+            Guid userId, 
+            CancellationToken cancellationToken = default)
+        {
+            return await m_DbContext.Users
+                .FirstOrDefaultAsync(item => item.Id == userId && item.IsActive, cancellationToken);
+        }
+
+        /// <summary>
         /// GetUserByIdAsync
         /// </summary>
         /// <param name="userId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns UserInfoType or null.</returns>
         public async Task<UserInfoType?> GetUserByIdAsync(
-            Guid userId, 
+            Guid userId,
             CancellationToken cancellationToken = default)
         {
-            UserEntity? user = await m_DbContext.Users
-                .FirstOrDefaultAsync(item => item.Id == userId && item.IsActive, cancellationToken);
+            UserEntity? user = await GetUserEntityAsync(userId, cancellationToken);
 
             return user == null ? null : JwtTokenServer.ToUserInfo(user);
         }
 
         /// <summary>
-        /// GetUserFromPrincipal
+        /// GetUserFromPrincipalAsync
         /// </summary>
         /// <param name="principal"></param>
         /// <param name="cancellationToken"></param>

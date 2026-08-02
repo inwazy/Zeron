@@ -203,15 +203,52 @@ namespace Zeron.Server.Tests
             };
         }
 
+        private static string s_AdminPassword = "admin123";
+
         private static async Task LoginAsync(HttpClient client)
         {
-            HttpResponseMessage response = await client.PostAsJsonAsync("/api/auth/login", new LoginRequestType
-            {
-                Username = "admin",
-                Password = "admin"
-            });
+            string[] candidates = [s_AdminPassword, "admin123", "admin", "admin-e2e-changed"];
 
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            foreach (string password in candidates.Distinct())
+            {
+                HttpResponseMessage response = await client.PostAsJsonAsync("/api/auth/login", new LoginRequestType
+                {
+                    Username = "admin",
+                    Password = password
+                });
+
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    continue;
+                }
+
+                LoginResponseType? login = await response.Content.ReadFromJsonAsync<LoginResponseType>();
+
+                Assert.IsNotNull(login);
+                Assert.IsTrue(login!.Success);
+
+                if (login.User?.MustChangePassword == true)
+                {
+                    HttpResponseMessage changeResponse = await client.PostAsJsonAsync(
+                        "/api/auth/change-password",
+                        new ChangePasswordRequestType
+                        {
+                            CurrentPassword = password,
+                            NewPassword = "admin-e2e-changed"
+                        });
+
+                    Assert.AreEqual(HttpStatusCode.OK, changeResponse.StatusCode);
+                    s_AdminPassword = "admin-e2e-changed";
+                }
+                else
+                {
+                    s_AdminPassword = password;
+                }
+
+                return;
+            }
+
+            Assert.Fail("Admin login failed with known test passwords.");
         }
     }
 }

@@ -251,6 +251,15 @@ th {
     margin-top: 0.75rem;
 }
 
+.warning-text {
+    color: var(--warning);
+    margin: 0 0 1rem;
+}
+
+.nav-user a.btn-link {
+    text-decoration: none;
+}
+
 .nav-user form {
     margin: 0;
 }

@@ -34,6 +34,7 @@ namespace Zeron.Server.ZServers.Tests
             Assert.AreEqual("ops1", user!.Username);
             Assert.AreEqual(ServerRoles.Operator, user.Role);
             Assert.IsTrue(user.IsActive);
+            Assert.IsTrue(user.MustChangePassword);
         }
 
         /// <summary>

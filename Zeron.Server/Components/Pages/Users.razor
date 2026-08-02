@@ -57,6 +57,7 @@
                     <th>Username</th>
                     <th>Role</th>
                     <th>Status</th>
+                    <th>Password</th>
                     <th>Created</th>
                     <th>Reset Password</th>
                     <th></th>
@@ -78,6 +79,16 @@
                             <span class="status @(row.IsActive ? "online" : "offline")">
                                 @(row.IsActive ? "active" : "inactive")
                             </span>
+                        </td>
+                        <td>
+                            @if (row.MustChangePassword)
+                            {
+                                <span class="status stale">must change</span>
+                            }
+                            else
+                            {
+                                <span class="status healthy">ok</span>
+                            }
                         </td>
                         <td>@(row.CreatedAt?.ToLocalTime().ToString("g") ?? "-")</td>
                         <td>
@@ -148,6 +159,7 @@
                 Username = user.Username ?? "",
                 Role = user.Role ?? ServerRoles.Viewer,
                 IsActive = user.IsActive,
+                MustChangePassword = user.MustChangePassword,
                 CreatedAt = user.CreatedAt,
                 NewPassword = ""
             })
@@ -280,6 +292,7 @@
         public string Username { get; set; } = "";
         public string Role { get; set; } = ServerRoles.Viewer;
         public bool IsActive { get; set; }
+        public bool MustChangePassword { get; set; }
         public DateTime? CreatedAt { get; set; }
         public string NewPassword { get; set; } = "";
     }
