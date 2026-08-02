@@ -10,14 +10,30 @@ This guide covers deploying **Zeron.Server** (central management) and **Zeron.De
 
 ## 1. Build
 
+### From CI artifacts (recommended)
+
+GitHub Actions CI publishes framework-dependent **win-x64** zip packages after tests pass:
+
+| Artifact | Contents |
+|----------|----------|
+| `zeron-server-win-x64` | `Zeron.Server` publish output |
+| `zeron-agent-win-x64` | `Zeron.Demand` publish output + `App.Sample.config` |
+
+Download from the workflow run → **Artifacts**, extract, then configure before first start. Each zip includes `BUILD.txt` with commit SHA.
+
+### Local build
+
 From the repository root:
 
 ```powershell
 dotnet build Zeron.sln -c Release
 dotnet test Zeron.sln -c Release
-dotnet publish Zeron.Server/Zeron.Server.csproj -c Release -o ./publish/server
-dotnet publish Zeron.Demand/Zeron.Demand.csproj -c Release -o ./publish/agent
+dotnet publish Zeron.Server/Zeron.Server.csproj -c Release -r win-x64 --self-contained false -o ./publish/server
+dotnet publish Zeron.Demand/Zeron.Demand.csproj -c Release -r win-x64 --self-contained false -o ./publish/agent
+Copy-Item ./Zeron.Demand/App.Sample.config ./publish/agent/App.config -Force
 ```
+
+Target machines need the [.NET 10 Windows runtime](https://dotnet.microsoft.com/download/dotnet/10.0) (framework-dependent packages).
 
 ## 2. Configure Zeron.Server
 
