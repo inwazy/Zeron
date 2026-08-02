@@ -121,6 +121,40 @@ namespace Zeron.Server.Tests
         }
 
         /// <summary>
+        /// Operator can create and list task schedules.
+        /// </summary>
+        [TestMethod()]
+        public async Task ScheduleCreateAndListTest()
+        {
+            using HttpClient dashboardClient = s_Factory!.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            await LoginAsync(dashboardClient);
+
+            string name = "e2e-sched-" + Guid.NewGuid().ToString("N")[..8];
+            HttpResponseMessage createResponse = await dashboardClient.PostAsJsonAsync(
+                "/api/schedules",
+                new TaskScheduleCreateRequestType
+                {
+                    Name = name,
+                    Cron = "*/15 * * * *",
+                    Enabled = true,
+                    TargetApi = "HealthCheck",
+                    TargetType = "all"
+                });
+
+            Assert.AreEqual(HttpStatusCode.Created, createResponse.StatusCode);
+
+            List<TaskScheduleInfoType>? schedules = await dashboardClient
+                .GetFromJsonAsync<List<TaskScheduleInfoType>>("/api/schedules");
+
+            Assert.IsNotNull(schedules);
+            Assert.IsTrue(schedules!.Any(item => item.Name == name && item.Enabled));
+        }
+
+        /// <summary>
         /// Dashboard summary endpoint returns aggregated counts.
         /// </summary>
         [TestMethod()]

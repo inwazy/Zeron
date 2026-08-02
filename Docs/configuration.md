@@ -9,6 +9,7 @@
 | `AgentApiKey` | (dev key) | Expected value of `X-Zeron-Agent-Key` header from agents |
 | `HeartbeatTimeoutSeconds` | `90` | Seconds without heartbeat before agent marked offline |
 | `DispatchIntervalMs` | `5000` | Background task dispatch interval |
+| `ScheduleIntervalMs` | `15000` | Central cron schedule poll interval |
 | `JwtSecret` | (dev secret) | JWT signing key (min 32 chars) |
 | `JwtIssuer` | `Zeron.Server` | JWT issuer and audience |
 | `JwtExpireMinutes` | `480` | JWT token lifetime |
@@ -90,3 +91,21 @@ Use `/ready` for load balancer / process manager health checks.
 | `GET /api/dashboard/summary` | Viewer+ | Aggregated online/offline agents, stale connections, active tasks, open alerts, recent lists |
 
 The Dashboard home page (`/`) uses this summary and refreshes every 15 seconds (plus SignalR updates).
+
+## Task Schedules
+
+Central cron schedules live on `Zeron.Server` (not agent `scheduler-tasks.json`).
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/schedules` | Viewer+ | List schedules |
+| `POST /api/schedules` | Operator+ | Create schedule |
+| `PUT /api/schedules/{id}` | Operator+ | Update schedule |
+| `POST /api/schedules/{id}/enable` | Operator+ | Enable |
+| `POST /api/schedules/{id}/disable` | Operator+ | Disable |
+| `POST /api/schedules/{id}/run` | Operator+ | Trigger immediately |
+| `DELETE /api/schedules/{id}` | Admin | Delete |
+
+Cron uses 5-field NCrontab expressions evaluated in **server local time**. When due, `TaskScheduleWorker` creates a normal `TaskEntity` via `TaskDispatcherServer` (same path as one-shot tasks).
+
+Dashboard pages: `/schedules`, `/schedules/create`, `/schedules/{id}`.

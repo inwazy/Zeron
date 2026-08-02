@@ -38,6 +38,7 @@ Zeron is an open source Windows remote automation platform based on NetMQ (ZeroM
 - **User Management** — Admin CRUD for Admin / Operator / Viewer accounts
 - **Password Policy** — Forced change on first login + self-service change password
 - **Dashboard Summary** — Home overview of agents, tasks, alerts, and events with live refresh
+- **Task Schedules** — Central cron schedules that dispatch remote APIs to agents
 - **Health Probes** — `/health` and `/ready` for deployment monitoring
 
 ## How to Build

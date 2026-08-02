@@ -255,7 +255,9 @@ namespace Zeron.Demand.ZServers.Impls
             {
                 try
                 {
-                    string message = m_SubscriberSocket.ReceiveFrameString();
+                    // PUB messages are multipart: [topic][json]. Legacy single-frame JSON is also accepted.
+                    NetMQMessage mqMessage = m_SubscriberSocket.ReceiveMultipartMessage();
+                    string message = ExtractSubscriberPayload(mqMessage);
 
                     if (string.IsNullOrEmpty(message))
                     {
@@ -271,7 +273,7 @@ namespace Zeron.Demand.ZServers.Impls
 
                     string apiName = Convert.ToString(json["APIName"]);
                     string apiKey = Convert.ToString(json["APIKey"]);
-                    bool asyncTask = Convert.ToBoolean(json["Async"]);
+                    bool asyncTask = json["Async"] != null && Convert.ToBoolean(json["Async"]);
 
                     if (!ServiceRegistry.TryGetSubEntry(apiName, out ServiceRegistry.SubEntry? entry) || entry == null)
                     {
@@ -307,6 +309,37 @@ namespace Zeron.Demand.ZServers.Impls
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// ExtractSubscriberPayload
+        /// </summary>
+        /// <param name="mqMessage"></param>
+        /// <returns>Returns JSON payload string.</returns>
+        private static string ExtractSubscriberPayload(
+            NetMQMessage mqMessage)
+        {
+            if (mqMessage.FrameCount == 0)
+            {
+                return "";
+            }
+
+            if (mqMessage.FrameCount >= 2)
+            {
+                return mqMessage[1].ConvertToString() ?? "";
+            }
+
+            string singleFrame = mqMessage[0].ConvertToString() ?? "";
+
+            // Ignore bare topic frames that are not JSON payloads.
+            if (!string.IsNullOrEmpty(singleFrame)
+                && singleFrame[0] != '{'
+                && singleFrame[0] != '[')
+            {
+                return "";
+            }
+
+            return singleFrame;
         }
 
         /// <summary>

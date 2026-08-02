@@ -274,6 +274,46 @@ th {
     color: var(--muted);
 }
 
+.form-grid label small {
+    font-size: 0.8rem;
+}
+
+.checkbox-row {
+    display: flex !important;
+    align-items: center;
+    gap: 0.65rem;
+    grid-template-columns: none !important;
+}
+
+.checkbox-row input {
+    width: auto;
+}
+
+.cron-examples {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+}
+
+.cron-examples h3 {
+    margin: 0 0 0.5rem;
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.cron-examples ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.cron-examples code,
+td code,
+.card code {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+}
+
 .form-grid input, .form-grid select, .form-grid textarea {
     background: var(--panel-alt);
     border: 1px solid var(--border);

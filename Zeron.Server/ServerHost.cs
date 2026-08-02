@@ -58,6 +58,7 @@ namespace Zeron.Server
             builder.Services.AddScoped<AgentManagerServer>();
             builder.Services.AddScoped<AgentDiagnosticServer>();
             builder.Services.AddScoped<TaskDispatcherServer>();
+            builder.Services.AddScoped<TaskScheduleServer>();
             builder.Services.AddScoped<EventIngestorServer>();
             builder.Services.AddScoped<AlertNotifierServer>();
             builder.Services.AddScoped<AlertRuleServer>();
@@ -70,6 +71,7 @@ namespace Zeron.Server
             {
                 builder.Services.AddHostedService<HeartbeatMonitorWorker>();
                 builder.Services.AddHostedService<TaskDispatchWorker>();
+                builder.Services.AddHostedService<TaskScheduleWorker>();
             }
 
             builder.Services.AddAuthentication(options =>
@@ -157,6 +159,7 @@ namespace Zeron.Server
             app.MapDashboardEndpoints();
             app.MapAgentEndpoints();
             app.MapTaskEndpoints();
+            app.MapTaskScheduleEndpoints();
             app.MapEventEndpoints();
             app.MapAlertEndpoints();
             app.MapUserEndpoints();

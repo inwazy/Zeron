@@ -59,6 +59,15 @@ namespace Zeron.Server.ZCore
         } = 5000;
 
         /// <summary>
+        /// ScheduleIntervalMs
+        /// </summary>
+        public int ScheduleIntervalMs
+        {
+            get;
+            set;
+        } = 15000;
+
+        /// <summary>
         /// JwtSecret
         /// </summary>
         public string JwtSecret

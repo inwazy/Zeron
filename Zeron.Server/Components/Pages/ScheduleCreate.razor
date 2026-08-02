@@ -1,0 +1,143 @@
+@page "/schedules/create"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.OperatorOrAbove)]
+@inject TaskScheduleServer TaskScheduleServer
+@inject NavigationManager Navigation
+
+<div class="page-header">
+    <div>
+        <h1>Create Schedule</h1>
+        <p>Define a cron expression and the remote API to dispatch when due.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="form-grid">
+        <label>
+            Name
+            <InputText @bind-Value="m_Model.Name" />
+        </label>
+        <label>
+            Description
+            <InputText @bind-Value="m_Model.Description" />
+        </label>
+        <label>
+            Cron Expression
+            <InputText @bind-Value="m_Model.Cron" />
+            <small class="muted">5-field NCrontab, evaluated in server local time. Example: <code>0 8 * * *</code> daily at 08:00</small>
+        </label>
+        <label>
+            Target API
+            <InputText @bind-Value="m_Model.TargetApi" />
+        </label>
+        <label>
+            Command
+            <InputText @bind-Value="m_Model.Command" />
+        </label>
+        <label>
+            Target Type
+            <InputSelect @bind-Value="m_Model.TargetType">
+                <option value="all">All Online Agents</option>
+                <option value="agent">Specific Agent</option>
+                <option value="filter">Hostname Filter</option>
+            </InputSelect>
+        </label>
+        @if (m_Model.TargetType == "agent")
+        {
+            <label>
+                Agent Id
+                <InputText @bind-Value="m_Model.AgentId" />
+            </label>
+        }
+        @if (m_Model.TargetType == "filter")
+        {
+            <label>
+                Hostname Pattern
+                <InputText @bind-Value="m_Model.HostnamePattern" />
+            </label>
+        }
+        <label class="checkbox-row">
+            <InputCheckbox @bind-Value="m_Model.Enabled" />
+            <span>Enabled</span>
+        </label>
+        <div class="actions">
+            <button class="btn" @onclick="HandleCreateAsync" disabled="@m_IsSubmitting">Create Schedule</button>
+            <a class="btn btn-secondary" href="/schedules">Cancel</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(m_Error))
+    {
+        <p class="error">@m_Error</p>
+    }
+
+    <div class="cron-examples">
+        <h3>Common cron examples</h3>
+        <ul>
+            <li><code>*/5 * * * *</code> — every 5 minutes</li>
+            <li><code>0 * * * *</code> — every hour</li>
+            <li><code>0 8 * * *</code> — every day at 08:00</li>
+            <li><code>0 9 * * 1</code> — every Monday at 09:00</li>
+        </ul>
+    </div>
+</div>
+
+@code {
+    private readonly ScheduleFormModel m_Model = new();
+    private string? m_Error;
+    private bool m_IsSubmitting;
+
+    private async Task HandleCreateAsync()
+    {
+        m_Error = null;
+        m_IsSubmitting = true;
+
+        try
+        {
+            (TaskScheduleInfoType? schedule, string? error) = await TaskScheduleServer.CreateScheduleAsync(
+                new TaskScheduleCreateRequestType
+                {
+                    Name = m_Model.Name,
+                    Description = m_Model.Description,
+                    Cron = m_Model.Cron,
+                    Enabled = m_Model.Enabled,
+                    TargetApi = m_Model.TargetApi,
+                    Command = m_Model.Command,
+                    TargetType = m_Model.TargetType,
+                    HostnamePattern = m_Model.HostnamePattern,
+                    AgentIds = string.IsNullOrWhiteSpace(m_Model.AgentId) ? null : [m_Model.AgentId]
+                });
+
+            if (error != null)
+            {
+                m_Error = error;
+                return;
+            }
+
+            Navigation.NavigateTo($"/schedules/{schedule!.Id}");
+        }
+        catch (Exception ex)
+        {
+            m_Error = ex.Message;
+        }
+        finally
+        {
+            m_IsSubmitting = false;
+        }
+    }
+
+    private sealed class ScheduleFormModel
+    {
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public string Cron { get; set; } = "0 8 * * *";
+        public bool Enabled { get; set; } = true;
+        public string TargetApi { get; set; } = "HealthCheck";
+        public string Command { get; set; } = "";
+        public string TargetType { get; set; } = "all";
+        public string? AgentId { get; set; }
+        public string? HostnamePattern { get; set; }
+    }
+}

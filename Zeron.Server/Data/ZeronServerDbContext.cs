@@ -62,6 +62,11 @@ namespace Zeron.Server.Data
         public DbSet<AlertEntity> Alerts => Set<AlertEntity>();
 
         /// <summary>
+        /// TaskSchedules
+        /// </summary>
+        public DbSet<TaskScheduleEntity> TaskSchedules => Set<TaskScheduleEntity>();
+
+        /// <summary>
         /// OnModelCreating
         /// </summary>
         /// <param name="modelBuilder"></param>
@@ -100,6 +105,13 @@ namespace Zeron.Server.Data
                 entity.HasIndex(alert => alert.RuleType);
                 entity.HasIndex(alert => alert.AgentKey);
                 entity.HasIndex(alert => alert.CreatedAt);
+            });
+
+            modelBuilder.Entity<TaskScheduleEntity>(entity =>
+            {
+                entity.HasIndex(schedule => schedule.Name).IsUnique();
+                entity.HasIndex(schedule => schedule.Enabled);
+                entity.HasIndex(schedule => schedule.NextRunAt);
             });
         }
     }
