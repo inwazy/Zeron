@@ -6,7 +6,13 @@
 |-----|---------|-------------|
 | `DatabasePath` | `Data/zeron-server.db` | SQLite database file path |
 | `CommandPubAddr` | `tcp://*:6000` | NetMQ PUB bind address for agent commands |
-| `AgentApiKey` | (dev key) | Expected value of `X-Zeron-Agent-Key` header from agents |
+| `AgentApiKey` | (dev key) | Shared agent secret (`X-Zeron-Agent-Key`); support `old\|new` for rotation |
+| `CurveEnabled` | `false` | Enable NetMQ CURVE on command PUB |
+| `CurveSecretKeyPath` | `Data/curve-server.secret` | Server CURVE secret key (32 raw bytes) |
+| `CurvePublicKeyPath` | `Data/curve-server.public` | Server CURVE public key (copy to agents) |
+| `AgentHmacRequired` | `false` | Require `X-Zeron-Timestamp` + `X-Zeron-Signature` on agent HTTP APIs |
+| `AgentHmacSkewSeconds` | `300` | Allowed clock skew for HMAC timestamps |
+| `RequireHttpsAgents` | `false` | Reject non-HTTPS agent calls (honors `X-Forwarded-Proto`) |
 | `HeartbeatTimeoutSeconds` | `90` | Seconds without heartbeat before agent marked offline |
 | `DispatchIntervalMs` | `5000` | Background task dispatch interval |
 | `ScheduleIntervalMs` | `15000` | Central cron schedule poll interval |
@@ -42,11 +48,28 @@ Set `ASPNETCORE_ENVIRONMENT=Production` to load production settings.
 |-----|-------------|
 | `server_enabled` | `true` to report heartbeat/events to Zeron.Server |
 | `server_url` | Base URL of Zeron.Server (e.g. `http://192.168.1.10:5000`) |
-| `server_api_key` | Must match server `Zeron:AgentApiKey` |
-| `zmq_rep_port` | Local REQ/REP API port (default `5589`) |
-| `zmq_pub_port` | Local event PUB port (default `5588`) |
+| `server_api_key` | Must match server `Zeron:AgentApiKey` (supports `old\|new`) |
+| `server_hmac_enabled` | `true` to sign agent HTTP requests with HMAC-SHA256 |
+| `zmq_sub_enabled` | Connect to Server command PUB |
+| `zmq_sub_addr` | Server PUB address (e.g. `tcp://192.168.1.10:6000`) |
+| `zmq_sub_api_key` | API key expected in RemoteCommand payloads |
+| `zmq_sub_curve_enabled` | Enable CURVE client on SUB (must match Server `CurveEnabled`) |
+| `zmq_sub_curve_server_public_key_file` | Path to Server `.public` key file |
+| `zmq_sub_curve_client_secret_file` | Agent client secret (auto-created if missing) |
+| `zmq_rep_addr` | Local REQ/REP bind (plaintext; for `Zeron.Client`) |
+| `zmq_pub_addr` | Local event PUB bind (plaintext) |
 
-Agent identity is persisted under `Resource/agent-id.txt`. The agent sends heartbeats every 30 seconds when `server_enabled=true`.
+Agent identity is persisted under `Resource/agent.id`. The agent sends heartbeats every 30 seconds when `server_enabled=true`.
+
+### Transport security
+
+| Channel | Protection |
+|---------|------------|
+| Server PUB ↔ Agent SUB | NetMQ CURVE when enabled on both sides |
+| Agent → Server HTTP | Shared key + optional HMAC; prefer HTTPS reverse proxy |
+| Local Agent REP/PUB | Plaintext by design (localhost tooling) |
+
+See [deployment.md](./deployment.md) for enablement and key rotation steps.
 
 ## Dashboard Roles
 

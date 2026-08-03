@@ -143,6 +143,21 @@ namespace Zeron.Server
                 app.UseExceptionHandler("/Error");
             }
 
+            // Buffer agent API bodies so HMAC can be verified after model binding.
+            app.Use(async (context, next) =>
+            {
+                PathString path = context.Request.Path;
+
+                if (path.StartsWithSegments("/api/agents/heartbeat")
+                    || path.StartsWithSegments("/api/events")
+                    || path.Equals("/api/tasks/results", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Request.EnableBuffering();
+                }
+
+                await next();
+            });
+
             app.UseStaticFiles();
             app.UseAuthentication();
             app.UseAuthorization();

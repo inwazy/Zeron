@@ -144,6 +144,26 @@ namespace Zeron.Server.ZServers.Tests
             Assert.IsFalse(authServer.ValidateAgentApiKey("invalid"));
         }
 
+        /// <summary>
+        /// ValidateAgentApiKey accepts any key in a rotation list.
+        /// </summary>
+        [TestMethod()]
+        public void ValidateAgentApiKeySupportsRotationTest()
+        {
+            string dbName = Guid.NewGuid().ToString();
+            using ZeronServerDbContext dbContext = CreateContext(dbName);
+            ServerSettings settings = new()
+            {
+                AgentApiKey = "old-key|new-key"
+            };
+
+            AuthServer authServer = CreateAuthServer(dbContext, settings);
+
+            Assert.IsTrue(authServer.ValidateAgentApiKey("old-key"));
+            Assert.IsTrue(authServer.ValidateAgentApiKey("new-key"));
+            Assert.IsFalse(authServer.ValidateAgentApiKey("other"));
+        }
+
         private static AuthServer CreateAuthServer(ZeronServerDbContext dbContext, ServerSettings settings)
         {
             JwtTokenServer jwtTokenServer = new(settings);

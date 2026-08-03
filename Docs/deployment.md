@@ -112,10 +112,43 @@ sc start ZeronDemand
 
 See [Agent Connection Guide](./agent-connection.md) if agents stay offline or stale.
 
-## 6. Security Checklist
+## 6. Transport Security (CURVE + HMAC)
+
+Production template enables CURVE and HMAC. Dev defaults leave them off for easier local work.
+
+### Enable NetMQ CURVE (command channel)
+
+1. Set Server `Zeron:CurveEnabled=true` and start once — keys are created at `CurveSecretKeyPath` / `CurvePublicKeyPath`.
+2. Copy `curve-server.public` to each agent (e.g. `Resource/curve-server.public`).
+3. On agents:
+   ```xml
+   <add key="zmq_sub_curve_enabled" value="true" />
+   <add key="zmq_sub_curve_server_public_key_file" value="Resource/curve-server.public" />
+   ```
+4. Restart Server, then agents. Both sides must enable CURVE or the SUB connect will fail.
+
+**CURVE key rotation:** generate a new Server key pair (delete old files and restart, or replace both files), distribute the new `.public` to agents, restart Server, then restart agents.
+
+### Enable HTTP HMAC
+
+1. Server: `Zeron:AgentHmacRequired=true`
+2. Agent: `server_hmac_enabled=true`
+3. Keep `server_api_key` / `AgentApiKey` in sync (HMAC uses the same secret)
+
+**API key rotation:** set Server `AgentApiKey` to `oldKey|newKey`, update agents to `newKey`, then remove `oldKey` from Server.
+
+### HTTPS for agents
+
+Prefer a reverse proxy terminating TLS. Set `RequireHttpsAgents=true` when agents call HTTPS directly, or when the proxy sets `X-Forwarded-Proto: https`. If the proxy speaks plain HTTP to Kestrel, leave `RequireHttpsAgents=false`.
+
+Local Agent REP/PUB ports remain plaintext for `Zeron.Client` and local tooling.
+
+## 7. Security Checklist
 
 - Change default admin password immediately after first login
 - Use strong, unique `AgentApiKey` and `JwtSecret`
+- Enable `CurveEnabled` + agent `zmq_sub_curve_enabled` in production
+- Enable `AgentHmacRequired` + agent `server_hmac_enabled` in production
 - Prefer HTTPS reverse proxy (IIS, nginx, Caddy) in production
 - Restrict NetMQ PUB port to agent subnet only
 - Enable alert email (`Zeron:AlertEmailEnabled`) for offline notifications

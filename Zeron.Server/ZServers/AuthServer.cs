@@ -9,6 +9,7 @@ using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server.ZServers
 {
@@ -256,8 +257,7 @@ namespace Zeron.Server.ZServers
         public bool ValidateAgentApiKey(
             string? apiKey)
         {
-            return !string.IsNullOrWhiteSpace(apiKey)
-                && string.Equals(apiKey, m_Settings.AgentApiKey, StringComparison.Ordinal);
+            return AgentApiKeyServer.Matches(m_Settings.AgentApiKey, apiKey);
         }
     }
 }

@@ -34,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="NetMQ" Version="4.0.4.3" />
     <PackageReference Include="NLog" Version="6.1.4" />
     <PackageReference Include="NLog.Schema" Version="6.1.4" />
     <PackageReference Include="NCrontab" Version="3.4.0" />

@@ -24,9 +24,10 @@ namespace Zeron.Server.Endpoints
                 AgentHeartbeatRequestType request,
                 HttpContext context,
                 AgentManagerServer agentManager,
-                AuthServer authServer) =>
+                AuthServer authServer,
+                ServerSettings settings) =>
             {
-                IResult? authResult = context.ValidateAgentApiKey(authServer);
+                IResult? authResult = await context.ValidateAgentRequestAsync(authServer, settings);
 
                 if (authResult != null)
                 {

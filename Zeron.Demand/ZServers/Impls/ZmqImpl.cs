@@ -154,9 +154,15 @@ namespace Zeron.Demand.ZServers.Impls
         /// PrepareSubSocket
         /// </summary>
         /// <param name="addr"></param>
+        /// <param name="curveEnabled"></param>
+        /// <param name="serverPublicKeyFile"></param>
+        /// <param name="clientSecretFile"></param>
         /// <returns>Returns void.</returns>
         public void PrepareSubSocket(
-            string? addr)
+            string? addr,
+            bool curveEnabled = false,
+            string? serverPublicKeyFile = null,
+            string? clientSecretFile = null)
         {
             if (addr == null || addr.Length == 0)
             {
@@ -165,6 +171,28 @@ namespace Zeron.Demand.ZServers.Impls
 
             m_SubscriberSocket.Options.TcpKeepalive = true;
             m_SubscriberSocket.Options.ReceiveHighWatermark = 1000;
+
+            if (curveEnabled)
+            {
+                if (string.IsNullOrWhiteSpace(serverPublicKeyFile))
+                {
+                    throw new InvalidOperationException(
+                        "zmq_sub_curve_enabled=true requires zmq_sub_curve_server_public_key_file.");
+                }
+
+                string clientSecretPath = string.IsNullOrWhiteSpace(clientSecretFile)
+                    ? "Resource/curve-client.secret"
+                    : clientSecretFile;
+                string clientPublicPath = Path.ChangeExtension(clientSecretPath, ".public");
+
+                NetMQCertificate clientCert = CurveKeyServer.LoadOrCreate(clientSecretPath, clientPublicPath);
+                byte[] serverPublicKey = CurveKeyServer.LoadPublicKey(serverPublicKeyFile);
+                CurveKeyServer.ApplyCurveClient(m_SubscriberSocket.Options, clientCert, serverPublicKey);
+
+                ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                    "ZmqImpl SUB CURVE enabled. Server public key: {0}", Path.GetFullPath(serverPublicKeyFile)));
+            }
+
             m_SubscriberSocket.Connect(addr);
             m_SubscriberSocket.Subscribe("");
 

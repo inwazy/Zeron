@@ -50,9 +50,10 @@ namespace Zeron.Server.Endpoints
                 TaskResultReportType report,
                 HttpContext context,
                 TaskDispatcherServer taskDispatcher,
-                AuthServer authServer) =>
+                AuthServer authServer,
+                ServerSettings settings) =>
             {
-                IResult? authResult = context.ValidateAgentApiKey(authServer);
+                IResult? authResult = await context.ValidateAgentRequestAsync(authServer, settings);
 
                 if (authResult != null)
                 {

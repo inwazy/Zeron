@@ -40,6 +40,11 @@ TestResult.xml
 [Rr]eleasePS/
 dlldata.c
 
+# CURVE / agent secrets (never commit)
+*.secret
+**/Data/curve-server.public
+**/Resource/curve-*.public
+
 # .NET Core
 project.lock.json
 project.fragment.lock.json
