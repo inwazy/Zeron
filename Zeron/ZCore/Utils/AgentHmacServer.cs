@@ -30,13 +30,6 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="body"></param>
         /// <returns>Returns hex digest.</returns>
-        public const string AgentKeyHeader = "X-Zeron-Agent-Key";
-
-        /// <summary>
-        /// ComputeBodySha256Hex
-        /// </summary>
-        /// <param name="body"></param>
-        /// <returns>Returns hex digest.</returns>
         public static string ComputeBodySha256Hex(
             ReadOnlySpan<byte> body)
         {
