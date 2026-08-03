@@ -1,0 +1,149 @@
+@page "/packages/deploy"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.OperatorOrAbove)]
+@inject PackageDeployServer PackageDeployServer
+@inject NavigationManager Navigation
+
+<div class="page-header">
+    <div>
+        <h1>Deploy Package</h1>
+        <p>Dispatch ManagedPackage install or uninstall to selected agents.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="form-grid">
+        <label>
+            Operation
+            <InputSelect @bind-Value="m_Model.Operation">
+                <option value="install">Install</option>
+                <option value="uninstall">Uninstall</option>
+            </InputSelect>
+        </label>
+        <label>
+            Package Name
+            <InputText @bind-Value="m_Model.PackageName" />
+            <small class="muted">Must exist in each agent's local <code>managed_packages</code> catalog.</small>
+        </label>
+        <label>
+            Extra Args
+            <InputText @bind-Value="m_Model.ExtraArgs" />
+            <small class="muted">Optional. Appended to the package install/uninstall command.</small>
+        </label>
+        <label>
+            Task Name
+            <InputText @bind-Value="m_Model.Name" />
+            <small class="muted">Optional. Auto-generated if empty.</small>
+        </label>
+        <label>
+            Target Type
+            <InputSelect @bind-Value="m_Model.TargetType">
+                <option value="all">All Online Agents</option>
+                <option value="agent">Specific Agent</option>
+                <option value="filter">Hostname Filter</option>
+            </InputSelect>
+        </label>
+        @if (m_Model.TargetType == "agent")
+        {
+            <label>
+                Agent Id
+                <InputText @bind-Value="m_Model.AgentId" />
+            </label>
+        }
+        @if (m_Model.TargetType == "filter")
+        {
+            <label>
+                Hostname Pattern
+                <InputText @bind-Value="m_Model.HostnamePattern" />
+            </label>
+        }
+        <div class="actions">
+            <button class="btn" @onclick="HandleDeployAsync" disabled="@m_IsSubmitting">Deploy</button>
+            <a class="btn btn-secondary" href="/packages">Cancel</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(m_CommandPreview))
+    {
+        <p class="muted" style="margin-top: 1rem;">
+            Command preview: <code>ManagedPackage @m_CommandPreview</code>
+        </p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(m_Error))
+    {
+        <p class="error">@m_Error</p>
+    }
+</div>
+
+<div class="panel">
+    <h2>How it works</h2>
+    <ol class="help-list">
+        <li>Server creates a task with <code>TargetApi=ManagedPackage</code>.</li>
+        <li>Agent queues the package locally and returns <code>queued:true</code>.</li>
+        <li>Install progress is reported as <code>install.started</code>, <code>install.completed</code>, or <code>install.failed</code> events.</li>
+    </ol>
+</div>
+
+@code {
+    private readonly DeployFormModel m_Model = new();
+    private string? m_Error;
+    private bool m_IsSubmitting;
+
+    private string m_CommandPreview =>
+        string.IsNullOrWhiteSpace(m_Model.PackageName)
+            ? ""
+            : PackageDeployServer.BuildCommand(
+                m_Model.Operation,
+                m_Model.PackageName.Trim(),
+                m_Model.ExtraArgs);
+
+    private async Task HandleDeployAsync()
+    {
+        m_Error = null;
+        m_IsSubmitting = true;
+
+        try
+        {
+            PackageDeployResponseType response = await PackageDeployServer.DeployAsync(new PackageDeployRequestType
+            {
+                Operation = m_Model.Operation,
+                PackageName = m_Model.PackageName,
+                ExtraArgs = m_Model.ExtraArgs,
+                Name = string.IsNullOrWhiteSpace(m_Model.Name) ? null : m_Model.Name,
+                TargetType = m_Model.TargetType,
+                AgentIds = string.IsNullOrWhiteSpace(m_Model.AgentId) ? null : [m_Model.AgentId],
+                HostnamePattern = m_Model.HostnamePattern
+            });
+
+            if (!response.Success || response.TaskId == null)
+            {
+                m_Error = response.Message ?? "Deploy failed.";
+                return;
+            }
+
+            Navigation.NavigateTo($"/tasks/{response.TaskId}");
+        }
+        catch (Exception ex)
+        {
+            m_Error = ex.Message;
+        }
+        finally
+        {
+            m_IsSubmitting = false;
+        }
+    }
+
+    private sealed class DeployFormModel
+    {
+        public string Operation { get; set; } = "install";
+        public string PackageName { get; set; } = "";
+        public string? ExtraArgs { get; set; }
+        public string? Name { get; set; }
+        public string TargetType { get; set; } = "all";
+        public string? AgentId { get; set; }
+        public string? HostnamePattern { get; set; }
+    }
+}

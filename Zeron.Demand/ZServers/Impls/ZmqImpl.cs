@@ -154,9 +154,15 @@ namespace Zeron.Demand.ZServers.Impls
         /// PrepareSubSocket
         /// </summary>
         /// <param name="addr"></param>
+        /// <param name="curveEnabled"></param>
+        /// <param name="serverPublicKeyFile"></param>
+        /// <param name="clientSecretFile"></param>
         /// <returns>Returns void.</returns>
         public void PrepareSubSocket(
-            string? addr)
+            string? addr,
+            bool curveEnabled = false,
+            string? serverPublicKeyFile = null,
+            string? clientSecretFile = null)
         {
             if (addr == null || addr.Length == 0)
             {
@@ -165,6 +171,28 @@ namespace Zeron.Demand.ZServers.Impls
 
             m_SubscriberSocket.Options.TcpKeepalive = true;
             m_SubscriberSocket.Options.ReceiveHighWatermark = 1000;
+
+            if (curveEnabled)
+            {
+                if (string.IsNullOrWhiteSpace(serverPublicKeyFile))
+                {
+                    throw new InvalidOperationException(
+                        "zmq_sub_curve_enabled=true requires zmq_sub_curve_server_public_key_file.");
+                }
+
+                string clientSecretPath = string.IsNullOrWhiteSpace(clientSecretFile)
+                    ? "Resource/curve-client.secret"
+                    : clientSecretFile;
+                string clientPublicPath = Path.ChangeExtension(clientSecretPath, ".public");
+
+                NetMQCertificate clientCert = CurveKeyServer.LoadOrCreate(clientSecretPath, clientPublicPath);
+                byte[] serverPublicKey = CurveKeyServer.LoadPublicKey(serverPublicKeyFile);
+                CurveKeyServer.ApplyCurveClient(m_SubscriberSocket.Options, clientCert, serverPublicKey);
+
+                ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                    "ZmqImpl SUB CURVE enabled. Server public key: {0}", Path.GetFullPath(serverPublicKeyFile)));
+            }
+
             m_SubscriberSocket.Connect(addr);
             m_SubscriberSocket.Subscribe("");
 
@@ -255,7 +283,9 @@ namespace Zeron.Demand.ZServers.Impls
             {
                 try
                 {
-                    string message = m_SubscriberSocket.ReceiveFrameString();
+                    // PUB messages are multipart: [topic][json]. Legacy single-frame JSON is also accepted.
+                    NetMQMessage mqMessage = m_SubscriberSocket.ReceiveMultipartMessage();
+                    string message = ExtractSubscriberPayload(mqMessage);
 
                     if (string.IsNullOrEmpty(message))
                     {
@@ -271,7 +301,7 @@ namespace Zeron.Demand.ZServers.Impls
 
                     string apiName = Convert.ToString(json["APIName"]);
                     string apiKey = Convert.ToString(json["APIKey"]);
-                    bool asyncTask = Convert.ToBoolean(json["Async"]);
+                    bool asyncTask = json["Async"] != null && Convert.ToBoolean(json["Async"]);
 
                     if (!ServiceRegistry.TryGetSubEntry(apiName, out ServiceRegistry.SubEntry? entry) || entry == null)
                     {
@@ -307,6 +337,37 @@ namespace Zeron.Demand.ZServers.Impls
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// ExtractSubscriberPayload
+        /// </summary>
+        /// <param name="mqMessage"></param>
+        /// <returns>Returns JSON payload string.</returns>
+        private static string ExtractSubscriberPayload(
+            NetMQMessage mqMessage)
+        {
+            if (mqMessage.FrameCount == 0)
+            {
+                return "";
+            }
+
+            if (mqMessage.FrameCount >= 2)
+            {
+                return mqMessage[1].ConvertToString() ?? "";
+            }
+
+            string singleFrame = mqMessage[0].ConvertToString() ?? "";
+
+            // Ignore bare topic frames that are not JSON payloads.
+            if (!string.IsNullOrEmpty(singleFrame)
+                && singleFrame[0] != '{'
+                && singleFrame[0] != '[')
+            {
+                return "";
+            }
+
+            return singleFrame;
         }
 
         /// <summary>

@@ -134,12 +134,67 @@ body {
     margin-top: 0.35rem;
 }
 
+.card small {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--muted);
+}
+
+.card-link {
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.card-link:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-danger { color: var(--danger); }
+
+.muted {
+    color: var(--muted);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
 .panel {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 1.25rem;
     margin-bottom: 1.5rem;
+}
+
+.dashboard-grid .panel {
+    margin-bottom: 0;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.panel-header a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9rem;
 }
 
 table {
@@ -219,6 +274,58 @@ th {
     color: var(--muted);
 }
 
+.form-grid label small {
+    font-size: 0.8rem;
+}
+
+.checkbox-row {
+    display: flex !important;
+    align-items: center;
+    gap: 0.65rem;
+    grid-template-columns: none !important;
+}
+
+.checkbox-row input {
+    width: auto;
+}
+
+.cron-examples {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+}
+
+.cron-examples h3 {
+    margin: 0 0 0.5rem;
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.cron-examples ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.help-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: var(--muted);
+    display: grid;
+    gap: 0.5rem;
+}
+
+.help-list code {
+    font-family: Consolas, "Courier New", monospace;
+}
+
+.cron-examples code,
+td code,
+.card code {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+}
+
 .form-grid input, .form-grid select, .form-grid textarea {
     background: var(--panel-alt);
     border: 1px solid var(--border);
@@ -258,6 +365,69 @@ th {
 
 .nav-user a.btn-link {
     text-decoration: none;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(8, 12, 18, 0.72);
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+}
+
+.modal-panel {
+    width: min(420px, 100%);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+    outline: none;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.modal-body p {
+    margin: 0.35rem 0;
+}
+
+.about-org,
+.about-author {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.about-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+}
+
+.about-version {
+    margin-top: 1rem !important;
+    font-size: 0.85rem;
+}
+
+.modal-body a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.modal-body a:hover {
+    text-decoration: underline;
 }
 
 .nav-user form {
@@ -311,5 +481,9 @@ table select {
     .sidebar {
         border-right: none;
         border-bottom: 1px solid var(--border);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
     }
 }

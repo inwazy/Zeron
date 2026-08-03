@@ -1,109 +1,328 @@
 @page "/"
 @rendermode InteractiveServer
-@using Zeron.Server.Data.Entities
 @using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
 @attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
-@inject AgentManagerServer AgentManager
-@inject TaskDispatcherServer TaskDispatcher
-@inject EventIngestorServer EventIngestor
-@inject AlertRuleServer AlertRuleServer
+@inject DashboardSummaryServer DashboardSummaryServer
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@implements IAsyncDisposable
 
 <div class="page-header">
     <div>
         <h1>Dashboard</h1>
-        <p>Overview of agents, tasks, and recent events.</p>
+        <p>Operational summary of agents, tasks, alerts, and events.</p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsLoading">Refresh</button>
+        <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+            <Authorized>
+                <a class="btn" href="/tasks/create">Create Task</a>
+            </Authorized>
+        </AuthorizeView>
     </div>
 </div>
 
-<div class="cards">
-    <div class="card">
-        <span>Agents Online</span>
-        <strong>@m_OnlineCount</strong>
-    </div>
-    <div class="card">
-        <span>Total Agents</span>
-        <strong>@m_Agents.Count</strong>
-    </div>
-    <div class="card">
-        <span>Active Tasks</span>
-        <strong>@m_ActiveTaskCount</strong>
-    </div>
-    <div class="card">
-        <span>Open Alerts</span>
-        <strong>@m_OpenAlertCount</strong>
-    </div>
-    <div class="card">
-        <span>Recent Events</span>
-        <strong>@m_RecentEvents.Count</strong>
-    </div>
-</div>
-
-@if (m_OpenAlertCount > 0)
+@if (m_PasswordChanged)
 {
-    <div class="panel">
-        <h2>Open Alerts</h2>
-        <p><a href="/alerts">View @m_OpenAlertCount open alert(s)</a></p>
-    </div>
+    <p class="success-text">Password updated successfully.</p>
 }
 
-<div class="panel">
-    <h2>Recent Agents</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Agent</th>
-                <th>Host</th>
-                <th>Status</th>
-                <th>Last Heartbeat</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (AgentEntity agent in m_Agents.Take(5))
-            {
-                <tr>
-                    <td><a href="@($"/agents/{agent.AgentKey}")">@agent.AgentKey</a></td>
-                    <td>@agent.MachineName</td>
-                    <td><span class="status @agent.Status">@agent.Status</span></td>
-                    <td>@agent.LastHeartbeatAt.ToLocalTime()</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+@if (m_Summary == null)
+{
+    <div class="panel"><p>Loading dashboard...</p></div>
+}
+else
+{
+    <div class="cards">
+        <a class="card card-link" href="/agents">
+            <span>Agents Online</span>
+            <strong class="text-success">@m_Summary.AgentsOnline</strong>
+            <small>@m_Summary.AgentsTotal total</small>
+        </a>
+        <a class="card card-link" href="/agents">
+            <span>Agents Offline</span>
+            <strong class="@(m_Summary.AgentsOffline > 0 ? "text-danger" : "")">@m_Summary.AgentsOffline</strong>
+            <small>@m_Summary.AgentsDisabled disabled</small>
+        </a>
+        <a class="card card-link" href="/agents">
+            <span>Connection Stale</span>
+            <strong class="@(m_Summary.AgentsStale > 0 ? "text-warning" : "")">@m_Summary.AgentsStale</strong>
+            <small>heartbeat aging</small>
+        </a>
+        <a class="card card-link" href="/tasks">
+            <span>Active Tasks</span>
+            <strong>@m_Summary.ActiveTasks</strong>
+            <small>pending / running</small>
+        </a>
+        <a class="card card-link" href="/alerts">
+            <span>Open Alerts</span>
+            <strong class="@(m_Summary.OpenAlerts > 0 ? "text-warning" : "")">@m_Summary.OpenAlerts</strong>
+            <small>needs attention</small>
+        </a>
+        <a class="card card-link" href="/events">
+            <span>Recent Events</span>
+            <strong>@m_Summary.RecentEvents.Count</strong>
+            <small>latest feed</small>
+        </a>
+    </div>
 
-<div class="panel">
-    <h2>Recent Events</h2>
-    @foreach (EventEntity evt in m_RecentEvents)
-    {
-        <div class="timeline-item">
-            <strong>@evt.Topic</strong>
-            <small>@evt.Agent?.AgentKey · @evt.ReceivedAt.ToLocalTime()</small>
-            <div>@Truncate(evt.Payload, 120)</div>
+    <div class="dashboard-grid">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Open Alerts</h2>
+                <a href="/alerts">View all</a>
+            </div>
+            @if (m_Summary.RecentAlerts.Count == 0)
+            {
+                <p class="muted">No open alerts.</p>
+            }
+            else
+            {
+                @foreach (DashboardAlertItemType alert in m_Summary.RecentAlerts)
+                {
+                    <div class="timeline-item">
+                        <strong>@alert.Title</strong>
+                        <small>
+                            <span class="status @alert.Severity">@alert.Severity</span>
+                            @(alert.AgentKey ?? "system") · @FormatTime(alert.CreatedAt)
+                        </small>
+                        <div>@Truncate(alert.Message, 140)</div>
+                    </div>
+                }
+            }
         </div>
-    }
-</div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Recent Tasks</h2>
+                <a href="/tasks">View all</a>
+            </div>
+            @if (m_Summary.RecentTasks.Count == 0)
+            {
+                <p class="muted">No tasks yet.</p>
+            }
+            else
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>API</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (DashboardTaskItemType task in m_Summary.RecentTasks)
+                        {
+                            <tr>
+                                <td><a href="@($"/tasks/{task.Id}")">@task.Name</a></td>
+                                <td>@task.TargetApi</td>
+                                <td><span class="status @task.Status">@task.Status</span></td>
+                                <td>@FormatTime(task.CreatedAt)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Agents</h2>
+                <a href="/agents">View all</a>
+            </div>
+            @if (m_Summary.RecentAgents.Count == 0)
+            {
+                <p class="muted">No agents registered. Start Zeron.Demand with server_enabled=true.</p>
+            }
+            else
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Host</th>
+                            <th>Status</th>
+                            <th>Connection</th>
+                            <th>Heartbeat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (DashboardAgentItemType agent in m_Summary.RecentAgents)
+                        {
+                            <tr>
+                                <td><a href="@($"/agents/{agent.AgentKey}")">@agent.AgentKey</a></td>
+                                <td>@(agent.MachineName ?? "-")</td>
+                                <td><span class="status @agent.Status">@agent.Status</span></td>
+                                <td><span class="status @agent.ConnectionState">@agent.ConnectionState</span></td>
+                                <td>@FormatHeartbeat(agent.LastHeartbeatAt)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Recent Events</h2>
+                <a href="/events">View all</a>
+            </div>
+            @if (m_Summary.RecentEvents.Count == 0)
+            {
+                <p class="muted">No events received yet.</p>
+            }
+            else
+            {
+                @foreach (DashboardEventItemType evt in m_Summary.RecentEvents)
+                {
+                    <div class="timeline-item">
+                        <strong>@evt.Topic</strong>
+                        <small>@(evt.AgentKey ?? "-") · @FormatTime(evt.ReceivedAt)</small>
+                        <div>@Truncate(evt.Payload, 120)</div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <p class="muted"><small>Updated @FormatTime(m_Summary.GeneratedAtUtc)</small></p>
+}
 
 @code {
-    private List<AgentEntity> m_Agents = [];
-    private List<EventEntity> m_RecentEvents = [];
-    private int m_OnlineCount;
-    private int m_ActiveTaskCount;
-    private int m_OpenAlertCount;
+    private DashboardSummaryType? m_Summary;
+    private HubConnection? m_HubConnection;
+    private PeriodicTimer? m_RefreshTimer;
+    private CancellationTokenSource? m_RefreshCts;
+    private bool m_IsLoading;
+    private bool m_PasswordChanged;
+
+    [SupplyParameterFromQuery(Name = "passwordChanged")]
+    public string? PasswordChanged { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        m_Agents = await AgentManager.GetAgentsAsync();
-        m_OnlineCount = m_Agents.Count(agent => agent.Status == "online");
+        m_PasswordChanged = PasswordChanged == "1";
+        await ReloadAsync();
+        await ConnectHubAsync();
+        StartRefreshTimer();
+    }
 
-        List<TaskEntity> tasks = await TaskDispatcher.GetTasksAsync();
-        m_ActiveTaskCount = tasks.Count(task => task.Status is "pending" or "running");
+    private async Task ReloadAsync()
+    {
+        m_IsLoading = true;
 
-        m_RecentEvents = await EventIngestor.GetEventsAsync(null, null, 8);
-        m_OpenAlertCount = await AlertRuleServer.GetOpenAlertCountAsync();
+        try
+        {
+            m_Summary = await DashboardSummaryServer.GetSummaryAsync();
+        }
+        finally
+        {
+            m_IsLoading = false;
+        }
+    }
+
+    private void StartRefreshTimer()
+    {
+        m_RefreshCts = new CancellationTokenSource();
+        m_RefreshTimer = new PeriodicTimer(TimeSpan.FromSeconds(15));
+        _ = RunRefreshLoopAsync(m_RefreshCts.Token);
+    }
+
+    private async Task RunRefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (await m_RefreshTimer!.WaitForNextTickAsync(cancellationToken))
+            {
+                await ReloadAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task ConnectHubAsync()
+    {
+        m_HubConnection = DashboardHubClient.Create(Navigation, HttpContextAccessor);
+
+        m_HubConnection.On<object>("AgentStatusChanged", async _ => await RefreshFromHubAsync());
+        m_HubConnection.On<object>("AlertReceived", async _ => await RefreshFromHubAsync());
+        m_HubConnection.On<object>("EventReceived", async _ => await RefreshFromHubAsync());
+
+        await DashboardHubClient.TryStartAsync(m_HubConnection);
+    }
+
+    private async Task RefreshFromHubAsync()
+    {
+        await ReloadAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string FormatHeartbeat(DateTime? lastHeartbeatAt)
+    {
+        if (lastHeartbeatAt == null || lastHeartbeatAt == default)
+        {
+            return "Never";
+        }
+
+        return FormatTime(lastHeartbeatAt.Value);
+    }
+
+    private static string FormatTime(DateTime value)
+    {
+        DateTime utc = value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
+
+        TimeSpan ago = DateTime.UtcNow - utc;
+
+        if (ago.TotalSeconds < 60)
+        {
+            return $"{Math.Max(0, (int)ago.TotalSeconds)}s ago";
+        }
+
+        if (ago.TotalMinutes < 60)
+        {
+            return $"{(int)ago.TotalMinutes}m ago";
+        }
+
+        if (ago.TotalHours < 24)
+        {
+            return $"{(int)ago.TotalHours}h ago";
+        }
+
+        return utc.ToLocalTime().ToString("g");
     }
 
     private static string Truncate(string text, int maxLength)
     {
+        if (string.IsNullOrEmpty(text))
+        {
+            return "";
+        }
+
         return text.Length <= maxLength ? text : text[..maxLength] + "...";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        m_RefreshCts?.Cancel();
+        m_RefreshTimer?.Dispose();
+        m_RefreshCts?.Dispose();
+
+        if (m_HubConnection != null)
+        {
+            await m_HubConnection.DisposeAsync();
+        }
     }
 }

@@ -36,6 +36,11 @@ namespace Zeron.ZCore.Tests
             Assert.AreEqual(buildCommands2.Option, buildCommandsResult2.Option);
             Assert.AreEqual(buildCommands2.PackageName, buildCommandsResult2.PackageName);
             Assert.AreEqual(buildCommands2.Args, buildCommandsResult2.Args);
+
+            ServicesSubCommandType statusCommand = Helper.BuildCommands("status");
+
+            Assert.AreEqual("status", statusCommand.Option);
+            Assert.IsTrue(string.IsNullOrEmpty(statusCommand.PackageName));
         }
 
         [TestMethod()]

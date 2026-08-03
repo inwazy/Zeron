@@ -2,8 +2,11 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using System.Globalization;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
 
 namespace Zeron.Demand.ZServers.Impls
@@ -16,11 +19,20 @@ namespace Zeron.Demand.ZServers.Impls
         // Http client.
         private static readonly HttpClient s_HttpClient = new();
 
+        // JSON options (camelCase, matching prior JsonContent.Create behavior).
+        private static readonly JsonSerializerOptions s_JsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
         // Server URL.
         private static string? s_ServerUrl;
 
         // Server API key.
         private static string? s_ServerApiKey;
+
+        // HMAC enabled.
+        private static bool s_HmacEnabled;
 
         /// <summary>
         /// ServerUrl
@@ -41,6 +53,15 @@ namespace Zeron.Demand.ZServers.Impls
         }
 
         /// <summary>
+        /// HmacEnabled
+        /// </summary>
+        public static bool HmacEnabled
+        {
+            get => s_HmacEnabled;
+            set => s_HmacEnabled = value;
+        }
+
+        /// <summary>
         /// Dispose
         /// </summary>
         /// <returns>Returns void.</returns>
@@ -49,17 +70,29 @@ namespace Zeron.Demand.ZServers.Impls
         }
 
         /// <summary>
-        /// CreateRequestAsync
+        /// SendRequestAsync
         /// </summary>
         /// <param name="method"></param>
         /// <param name="path"></param>
-        /// <param name="content"></param>
+        /// <param name="body"></param>
         /// <returns>Returns HttpResponseMessage.</returns>
         private static async Task<HttpResponseMessage> SendRequestAsync(
             HttpMethod method,
             string path,
-            HttpContent? content = null)
+            object? body = null)
         {
+            byte[] bodyBytes = body == null
+                ? Array.Empty<byte>()
+                : JsonSerializer.SerializeToUtf8Bytes(body, s_JsonOptions);
+
+            ByteArrayContent? content = null;
+
+            if (body != null)
+            {
+                content = new ByteArrayContent(bodyBytes);
+                content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            }
+
             HttpRequestMessage request = new(method, s_ServerUrl + path)
             {
                 Content = content
@@ -67,7 +100,31 @@ namespace Zeron.Demand.ZServers.Impls
 
             if (!string.IsNullOrWhiteSpace(s_ServerApiKey))
             {
-                request.Headers.Add("X-Zeron-Agent-Key", s_ServerApiKey);
+                string primaryKey = AgentApiKeyServer.GetPrimaryKey(s_ServerApiKey);
+
+                if (string.IsNullOrEmpty(primaryKey))
+                {
+                    primaryKey = s_ServerApiKey;
+                }
+
+                request.Headers.Add(AgentHmacServer.AgentKeyHeader, primaryKey);
+
+                if (s_HmacEnabled)
+                {
+                    long timestampUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    string bodyHash = AgentHmacServer.ComputeBodySha256Hex(bodyBytes);
+                    string signature = AgentHmacServer.CreateSignature(
+                        primaryKey,
+                        method.Method,
+                        path,
+                        timestampUnix,
+                        bodyHash);
+
+                    request.Headers.Add(
+                        AgentHmacServer.TimestampHeader,
+                        timestampUnix.ToString(CultureInfo.InvariantCulture));
+                    request.Headers.Add(AgentHmacServer.SignatureHeader, signature);
+                }
             }
 
             return await s_HttpClient.SendAsync(request);
@@ -91,15 +148,15 @@ namespace Zeron.Demand.ZServers.Impls
                 HttpResponseMessage response = await SendRequestAsync(
                     HttpMethod.Post,
                     "/api/agents/heartbeat",
-                    JsonContent.Create(request));
+                    request);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    string body = await response.Content.ReadAsStringAsync();
+                    string responseBody = await response.Content.ReadAsStringAsync();
                     Zeron.ZCore.ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
                         "ReporterImpl SendHeartbeatAsync failed. Status={0}, Body={1}",
                         (int)response.StatusCode,
-                        body));
+                        responseBody));
 
                     return null;
                 }
@@ -133,7 +190,7 @@ namespace Zeron.Demand.ZServers.Impls
                 await SendRequestAsync(
                     HttpMethod.Post,
                     "/api/events",
-                    JsonContent.Create(report));
+                    report);
             }
             catch (Exception e)
             {
@@ -160,7 +217,7 @@ namespace Zeron.Demand.ZServers.Impls
                 await SendRequestAsync(
                     HttpMethod.Post,
                     "/api/tasks/results",
-                    JsonContent.Create(report));
+                    report);
             }
             catch (Exception e)
             {

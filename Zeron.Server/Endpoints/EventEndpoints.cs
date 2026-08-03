@@ -24,9 +24,10 @@ namespace Zeron.Server.Endpoints
                 AgentEventReportType report,
                 HttpContext context,
                 EventIngestorServer eventIngestor,
-                AuthServer authServer) =>
+                AuthServer authServer,
+                ServerSettings settings) =>
             {
-                IResult? authResult = context.ValidateAgentApiKey(authServer);
+                IResult? authResult = await context.ValidateAgentRequestAsync(authServer, settings);
 
                 if (authResult != null)
                 {

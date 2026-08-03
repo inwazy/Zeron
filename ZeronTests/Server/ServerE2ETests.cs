@@ -121,6 +121,103 @@ namespace Zeron.Server.Tests
         }
 
         /// <summary>
+        /// Operator can deploy ManagedPackage via packages API.
+        /// </summary>
+        [TestMethod()]
+        public async Task PackageDeployCreatesTaskTest()
+        {
+            using HttpClient agentClient = s_Factory!.CreateClient();
+            using HttpClient dashboardClient = s_Factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            agentClient.DefaultRequestHeaders.Add("X-Zeron-Agent-Key", AgentApiKey);
+            await PostHeartbeatAsync(agentClient);
+            await LoginAsync(dashboardClient);
+
+            HttpResponseMessage deployResponse = await dashboardClient.PostAsJsonAsync(
+                "/api/packages/deploy",
+                new PackageDeployRequestType
+                {
+                    Operation = "install",
+                    PackageName = "ccleaner",
+                    ExtraArgs = "/S",
+                    TargetType = "agent",
+                    AgentIds = [TestAgentId]
+                });
+
+            Assert.AreEqual(HttpStatusCode.Created, deployResponse.StatusCode);
+
+            PackageDeployResponseType? deploy = await deployResponse.Content
+                .ReadFromJsonAsync<PackageDeployResponseType>();
+
+            Assert.IsNotNull(deploy);
+            Assert.IsTrue(deploy!.Success);
+            Assert.AreEqual("install ccleaner /S", deploy.Command);
+            Assert.IsNotNull(deploy.TaskId);
+        }
+
+        /// <summary>
+        /// Operator can create and list task schedules.
+        /// </summary>
+        [TestMethod()]
+        public async Task ScheduleCreateAndListTest()
+        {
+            using HttpClient dashboardClient = s_Factory!.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            await LoginAsync(dashboardClient);
+
+            string name = "e2e-sched-" + Guid.NewGuid().ToString("N")[..8];
+            HttpResponseMessage createResponse = await dashboardClient.PostAsJsonAsync(
+                "/api/schedules",
+                new TaskScheduleCreateRequestType
+                {
+                    Name = name,
+                    Cron = "*/15 * * * *",
+                    Enabled = true,
+                    TargetApi = "HealthCheck",
+                    TargetType = "all"
+                });
+
+            Assert.AreEqual(HttpStatusCode.Created, createResponse.StatusCode);
+
+            List<TaskScheduleInfoType>? schedules = await dashboardClient
+                .GetFromJsonAsync<List<TaskScheduleInfoType>>("/api/schedules");
+
+            Assert.IsNotNull(schedules);
+            Assert.IsTrue(schedules!.Any(item => item.Name == name && item.Enabled));
+        }
+
+        /// <summary>
+        /// Dashboard summary endpoint returns aggregated counts.
+        /// </summary>
+        [TestMethod()]
+        public async Task DashboardSummaryReturnsCountsTest()
+        {
+            using HttpClient agentClient = s_Factory!.CreateClient();
+            using HttpClient dashboardClient = s_Factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            agentClient.DefaultRequestHeaders.Add("X-Zeron-Agent-Key", AgentApiKey);
+            await PostHeartbeatAsync(agentClient);
+            await LoginAsync(dashboardClient);
+
+            DashboardSummaryType? summary = await dashboardClient
+                .GetFromJsonAsync<DashboardSummaryType>("/api/dashboard/summary");
+
+            Assert.IsNotNull(summary);
+            Assert.IsTrue(summary!.AgentsTotal >= 1);
+            Assert.IsTrue(summary.AgentsOnline >= 1);
+            Assert.IsNotNull(summary.RecentAgents);
+        }
+
+        /// <summary>
         /// Admin can create users via API.
         /// </summary>
         [TestMethod()]

@@ -112,6 +112,33 @@ namespace Zeron.Demand.ZServers
         }
 
         /// <summary>
+        /// SubCurveEnabled
+        /// </summary>
+        public static bool SubCurveEnabled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// SubCurveServerPublicKeyFile
+        /// </summary>
+        public static string? SubCurveServerPublicKeyFile
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// SubCurveClientSecretFile
+        /// </summary>
+        public static string? SubCurveClientSecretFile
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// LoadConfig
         /// </summary>
         /// <param name="aConfig"></param>
@@ -134,6 +161,9 @@ namespace Zeron.Demand.ZServers
                 SubSocketEnabled = bool.Parse(aConfig["zmq_sub_enabled"] ?? "false");
                 SubSocketAddr = aConfig["zmq_sub_addr"];
                 SubApiKey = aConfig["zmq_sub_api_key"];
+                SubCurveEnabled = bool.Parse(aConfig["zmq_sub_curve_enabled"] ?? "false");
+                SubCurveServerPublicKeyFile = aConfig["zmq_sub_curve_server_public_key_file"];
+                SubCurveClientSecretFile = aConfig["zmq_sub_curve_client_secret_file"] ?? "Resource/curve-client.secret";
 
                 RepSocketEnabled = bool.Parse(aConfig["zmq_rep_enabled"] ?? "false");
                 RepSocketAddr = aConfig["zmq_rep_addr"];
@@ -174,7 +204,11 @@ namespace Zeron.Demand.ZServers
                 if (SubSocketEnabled)
                 {
                     m_ZmqImpl.PrepareSubAPI(SubApiKey, SubApiScopes);
-                    m_ZmqImpl.PrepareSubSocket(SubSocketAddr);
+                    m_ZmqImpl.PrepareSubSocket(
+                        SubSocketAddr,
+                        SubCurveEnabled,
+                        SubCurveServerPublicKeyFile,
+                        SubCurveClientSecretFile);
                 }
 
                 if (RepSocketEnabled)

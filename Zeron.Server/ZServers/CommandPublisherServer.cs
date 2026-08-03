@@ -50,6 +50,19 @@ namespace Zeron.Server.ZServers
 
             m_PublisherSocket = new PublisherSocket();
             m_PublisherSocket.Options.TcpKeepalive = true;
+
+            if (m_Settings.CurveEnabled)
+            {
+                NetMQCertificate certificate = CurveKeyServer.LoadOrCreate(
+                    m_Settings.CurveSecretKeyPath,
+                    m_Settings.CurvePublicKeyPath);
+                CurveKeyServer.ApplyCurveServer(m_PublisherSocket.Options, certificate);
+
+                ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                    "CommandPublisherServer CURVE enabled. Public key: {0}",
+                    Path.GetFullPath(m_Settings.CurvePublicKeyPath)));
+            }
+
             m_PublisherSocket.Bind(m_Settings.CommandPubAddr);
             m_IsBound = true;
 
@@ -78,10 +91,12 @@ namespace Zeron.Server.ZServers
 
             try
             {
+                string primaryApiKey = AgentApiKeyServer.GetPrimaryKey(m_Settings.AgentApiKey);
+
                 var payload = new
                 {
                     APIName = "RemoteCommand",
-                    APIKey = EncryptionProvider.Encrypt(m_Settings.AgentApiKey),
+                    APIKey = EncryptionProvider.Encrypt(primaryApiKey),
                     TargetApi = targetApi,
                     Command = command,
                     AssignmentId = assignmentId.ToString(),

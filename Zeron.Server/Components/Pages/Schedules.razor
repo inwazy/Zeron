@@ -1,0 +1,68 @@
+@page "/schedules"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject TaskScheduleServer TaskScheduleServer
+
+<div class="page-header">
+    <div>
+        <h1>Schedules</h1>
+        <p>Cron-based task schedules that dispatch to agents.</p>
+    </div>
+    <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+        <Authorized>
+            <a class="btn" href="/schedules/create">Create Schedule</a>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+<div class="panel">
+    @if (m_Schedules.Count == 0)
+    {
+        <p class="muted">No schedules yet. Create a cron schedule to run tasks automatically.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Cron</th>
+                    <th>Target API</th>
+                    <th>Status</th>
+                    <th>Next Run</th>
+                    <th>Last Run</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (TaskScheduleInfoType schedule in m_Schedules)
+                {
+                    <tr>
+                        <td>@schedule.Name</td>
+                        <td><code>@schedule.Cron</code></td>
+                        <td>@schedule.TargetApi</td>
+                        <td>
+                            <span class="status @(schedule.Enabled ? "online" : "disabled")">
+                                @(schedule.Enabled ? "enabled" : "disabled")
+                            </span>
+                        </td>
+                        <td>@(schedule.NextRunAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                        <td>@(schedule.LastRunAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                        <td><a href="@($"/schedules/{schedule.Id}")">Details</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<TaskScheduleInfoType> m_Schedules = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        m_Schedules = await TaskScheduleServer.GetSchedulesAsync();
+    }
+}

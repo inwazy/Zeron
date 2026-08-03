@@ -1,0 +1,318 @@
+@page "/schedules/{ScheduleId:guid}"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject TaskScheduleServer TaskScheduleServer
+@inject NavigationManager Navigation
+
+<div class="page-header">
+    <div>
+        <h1>@(m_Schedule?.Name ?? "Schedule")</h1>
+        <p>Cron schedule details and controls.</p>
+    </div>
+    <div class="actions">
+        <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+            <Authorized>
+                @if (m_Schedule != null)
+                {
+                    <button class="btn" @onclick="RunNowAsync" disabled="@m_IsBusy">Run Now</button>
+                    @if (m_Schedule.Enabled)
+                    {
+                        <button class="btn btn-secondary" @onclick="() => SetEnabledAsync(false)" disabled="@m_IsBusy">Disable</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary" @onclick="() => SetEnabledAsync(true)" disabled="@m_IsBusy">Enable</button>
+                    }
+                }
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="@ServerRoles.Admin">
+            <Authorized>
+                <button class="btn btn-danger" @onclick="DeleteAsync" disabled="@m_IsBusy">Delete</button>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+@if (m_Schedule == null)
+{
+    <p class="error">Schedule not found.</p>
+}
+else
+{
+    <div class="cards">
+        <div class="card">
+            <span>Status</span>
+            <strong>
+                <span class="status @(m_Schedule.Enabled ? "online" : "disabled")">
+                    @(m_Schedule.Enabled ? "enabled" : "disabled")
+                </span>
+            </strong>
+        </div>
+        <div class="card"><span>Cron</span><strong><code>@m_Schedule.Cron</code></strong></div>
+        <div class="card"><span>Target API</span><strong>@m_Schedule.TargetApi</strong></div>
+        <div class="card"><span>Next Run</span><strong>@(m_Schedule.NextRunAt?.ToLocalTime().ToString("g") ?? "-")</strong></div>
+        <div class="card"><span>Last Run</span><strong>@(m_Schedule.LastRunAt?.ToLocalTime().ToString("g") ?? "-")</strong></div>
+    </div>
+
+    <div class="panel">
+        <h2>Details</h2>
+        <table>
+            <tbody>
+                <tr><th>Description</th><td>@(m_Schedule.Description ?? "-")</td></tr>
+                <tr><th>Command</th><td>@(string.IsNullOrWhiteSpace(m_Schedule.Command) ? "-" : m_Schedule.Command)</td></tr>
+                <tr><th>Target Type</th><td>@m_Schedule.TargetType</td></tr>
+                <tr>
+                    <th>Agents</th>
+                    <td>
+                        @if (m_Schedule.AgentIds is { Count: > 0 })
+                        {
+                            @string.Join(", ", m_Schedule.AgentIds)
+                        }
+                        else
+                        {
+                            <text>-</text>
+                        }
+                    </td>
+                </tr>
+                <tr><th>Hostname Pattern</th><td>@(m_Schedule.HostnamePattern ?? "-")</td></tr>
+                <tr>
+                    <th>Last Task</th>
+                    <td>
+                        @if (m_Schedule.LastTaskId.HasValue)
+                        {
+                            <a href="@($"/tasks/{m_Schedule.LastTaskId}")">@m_Schedule.LastTaskId</a>
+                        }
+                        else
+                        {
+                            <text>-</text>
+                        }
+                    </td>
+                </tr>
+                <tr><th>Created</th><td>@m_Schedule.CreatedAt.ToLocalTime()</td></tr>
+                <tr><th>Updated</th><td>@m_Schedule.UpdatedAt.ToLocalTime()</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+        <Authorized>
+            <div class="panel">
+                <h2>Edit Schedule</h2>
+                <div class="form-grid">
+                    <label>
+                        Name
+                        <InputText @bind-Value="m_Edit.Name" />
+                    </label>
+                    <label>
+                        Description
+                        <InputText @bind-Value="m_Edit.Description" />
+                    </label>
+                    <label>
+                        Cron Expression
+                        <InputText @bind-Value="m_Edit.Cron" />
+                    </label>
+                    <label>
+                        Target API
+                        <InputText @bind-Value="m_Edit.TargetApi" />
+                    </label>
+                    <label>
+                        Command
+                        <InputText @bind-Value="m_Edit.Command" />
+                    </label>
+                    <label>
+                        Target Type
+                        <InputSelect @bind-Value="m_Edit.TargetType">
+                            <option value="all">All Online Agents</option>
+                            <option value="agent">Specific Agent</option>
+                            <option value="filter">Hostname Filter</option>
+                        </InputSelect>
+                    </label>
+                    @if (m_Edit.TargetType == "agent")
+                    {
+                        <label>
+                            Agent Id
+                            <InputText @bind-Value="m_Edit.AgentId" />
+                        </label>
+                    }
+                    @if (m_Edit.TargetType == "filter")
+                    {
+                        <label>
+                            Hostname Pattern
+                            <InputText @bind-Value="m_Edit.HostnamePattern" />
+                        </label>
+                    }
+                    <div class="actions">
+                        <button class="btn" @onclick="SaveAsync" disabled="@m_IsBusy">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+
+    @if (!string.IsNullOrWhiteSpace(m_Message))
+    {
+        <p class="@(m_Succeeded ? "success-text" : "error")">@m_Message</p>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid ScheduleId { get; set; }
+
+    private TaskScheduleInfoType? m_Schedule;
+    private readonly EditFormModel m_Edit = new();
+    private string? m_Message;
+    private bool m_Succeeded;
+    private bool m_IsBusy;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        m_Schedule = await TaskScheduleServer.GetScheduleAsync(ScheduleId);
+
+        if (m_Schedule == null)
+        {
+            return;
+        }
+
+        m_Edit.Name = m_Schedule.Name;
+        m_Edit.Description = m_Schedule.Description ?? "";
+        m_Edit.Cron = m_Schedule.Cron;
+        m_Edit.TargetApi = m_Schedule.TargetApi;
+        m_Edit.Command = m_Schedule.Command;
+        m_Edit.TargetType = m_Schedule.TargetType;
+        m_Edit.AgentId = m_Schedule.AgentIds?.FirstOrDefault() ?? "";
+        m_Edit.HostnamePattern = m_Schedule.HostnamePattern ?? "";
+    }
+
+    private async Task SaveAsync()
+    {
+        m_Message = null;
+        m_IsBusy = true;
+
+        try
+        {
+            (TaskScheduleInfoType? updated, string? error) = await TaskScheduleServer.UpdateScheduleAsync(
+                ScheduleId,
+                new TaskScheduleUpdateRequestType
+                {
+                    Name = m_Edit.Name,
+                    Description = m_Edit.Description,
+                    Cron = m_Edit.Cron,
+                    TargetApi = m_Edit.TargetApi,
+                    Command = m_Edit.Command,
+                    TargetType = m_Edit.TargetType,
+                    AgentIds = string.IsNullOrWhiteSpace(m_Edit.AgentId) ? null : [m_Edit.AgentId],
+                    HostnamePattern = string.IsNullOrWhiteSpace(m_Edit.HostnamePattern) ? null : m_Edit.HostnamePattern
+                });
+
+            if (error != null)
+            {
+                m_Succeeded = false;
+                m_Message = error;
+                return;
+            }
+
+            m_Schedule = updated;
+            m_Succeeded = true;
+            m_Message = "Schedule updated.";
+            await ReloadAsync();
+        }
+        finally
+        {
+            m_IsBusy = false;
+        }
+    }
+
+    private async Task SetEnabledAsync(bool enabled)
+    {
+        m_Message = null;
+        m_IsBusy = true;
+
+        try
+        {
+            (TaskScheduleInfoType? updated, string? error) = await TaskScheduleServer.SetEnabledAsync(ScheduleId, enabled);
+
+            if (error != null)
+            {
+                m_Succeeded = false;
+                m_Message = error;
+                return;
+            }
+
+            m_Schedule = updated;
+            m_Succeeded = true;
+            m_Message = enabled ? "Schedule enabled." : "Schedule disabled.";
+        }
+        finally
+        {
+            m_IsBusy = false;
+        }
+    }
+
+    private async Task RunNowAsync()
+    {
+        m_Message = null;
+        m_IsBusy = true;
+
+        try
+        {
+            (Guid? taskId, string? error) = await TaskScheduleServer.TriggerNowAsync(ScheduleId);
+
+            if (error != null || taskId == null)
+            {
+                m_Succeeded = false;
+                m_Message = error ?? "Failed to run schedule.";
+                return;
+            }
+
+            Navigation.NavigateTo($"/tasks/{taskId}");
+        }
+        finally
+        {
+            m_IsBusy = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        m_IsBusy = true;
+
+        try
+        {
+            bool deleted = await TaskScheduleServer.DeleteScheduleAsync(ScheduleId);
+
+            if (!deleted)
+            {
+                m_Succeeded = false;
+                m_Message = "Schedule not found.";
+                return;
+            }
+
+            Navigation.NavigateTo("/schedules");
+        }
+        finally
+        {
+            m_IsBusy = false;
+        }
+    }
+
+    private sealed class EditFormModel
+    {
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Cron { get; set; } = "";
+        public string TargetApi { get; set; } = "";
+        public string Command { get; set; } = "";
+        public string TargetType { get; set; } = "all";
+        public string AgentId { get; set; } = "";
+        public string HostnamePattern { get; set; } = "";
+    }
+}

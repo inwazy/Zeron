@@ -69,11 +69,20 @@ The server now detects this legacy state and baselines the database automaticall
 
 If problems persist, back up and remove the database file (default `Data/zeron-server.db`) and restart to create a fresh schema.
 
-## CI Recommendations
+## CI
 
-```yaml
-- run: dotnet build Zeron.sln -c Release
-- run: dotnet test Zeron.sln -c Release --no-build
-```
+Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+
+| Job | Purpose |
+|-----|---------|
+| `build-and-test` | Restore, build, test on `windows-latest` |
+| `publish` | Publish `Zeron.Server` + `Zeron.Demand` (win-x64), zip, upload artifacts |
+
+Artifacts (retention 30 days):
+
+- `zeron-server-win-x64` → `zeron-server-win-x64.zip`
+- `zeron-agent-win-x64` → `zeron-agent-win-x64.zip`
+
+Triggers: push/PR to `main`, `master`, or `develop`.
 
 E2E tests do not require external services; each run uses a temporary SQLite file.

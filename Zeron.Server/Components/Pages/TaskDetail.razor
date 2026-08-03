@@ -33,6 +33,21 @@ else
         <div class="card"><span>Assignments</span><strong>@m_Task.Assignments.Count</strong></div>
     </div>
 
+    @if (string.Equals(m_Task.TargetApi, "ManagedPackage", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="panel">
+            <h2>Package Deploy Note</h2>
+            <p class="muted">
+                Assignment success means the agent <strong>queued</strong> the package.
+                Watch
+                <a href="/events?topic=install.">install.* events</a>
+                or the
+                <a href="/packages">Packages</a>
+                page for <code>install.completed</code> / <code>install.failed</code>.
+            </p>
+        </div>
+    }
+
     <div class="panel">
         <h2>Assignments</h2>
         <table>

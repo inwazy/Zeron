@@ -41,6 +41,60 @@ namespace Zeron.Server.ZCore
         } = "zeron.testkey";
 
         /// <summary>
+        /// CurveEnabled
+        /// </summary>
+        public bool CurveEnabled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// CurveSecretKeyPath
+        /// </summary>
+        public string CurveSecretKeyPath
+        {
+            get;
+            set;
+        } = "Data/curve-server.secret";
+
+        /// <summary>
+        /// CurvePublicKeyPath
+        /// </summary>
+        public string CurvePublicKeyPath
+        {
+            get;
+            set;
+        } = "Data/curve-server.public";
+
+        /// <summary>
+        /// AgentHmacRequired
+        /// </summary>
+        public bool AgentHmacRequired
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// AgentHmacSkewSeconds
+        /// </summary>
+        public int AgentHmacSkewSeconds
+        {
+            get;
+            set;
+        } = 300;
+
+        /// <summary>
+        /// RequireHttpsAgents
+        /// </summary>
+        public bool RequireHttpsAgents
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// HeartbeatTimeoutSeconds
         /// </summary>
         public int HeartbeatTimeoutSeconds
@@ -57,6 +111,15 @@ namespace Zeron.Server.ZCore
             get;
             set;
         } = 5000;
+
+        /// <summary>
+        /// ScheduleIntervalMs
+        /// </summary>
+        public int ScheduleIntervalMs
+        {
+            get;
+            set;
+        } = 15000;
 
         /// <summary>
         /// JwtSecret

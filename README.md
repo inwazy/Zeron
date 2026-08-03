@@ -1,8 +1,8 @@
 # Zeron
 
-A lightweight Windows Agent Platform Suitable for SMB/internal network IT/developer-built Automation Tools.
+**Fast, Lightweight Windows Remote Automation for Internal Networks.**  
 
-Zeron is an open source Windows remote automation platform based on NetMQ (ZeroMQ). It runs as a Windows Service agent (`Zeron.Demand`) and exposes JSON RPC APIs for software deployment, system control, scheduling, and task pipelines.
+Driven by NetMQ (ZeroMQ), Zeron empowers SMB IT teams and developers to control systems, deploy software, and build task pipelines via clean JSON-RPC APIs.
 
 ![GitHub](https://img.shields.io/github/license/inwazy/Zeron)
 ![.NET](https://img.shields.io/badge/.NET-10.0-windows)
@@ -10,6 +10,13 @@ Zeron is an open source Windows remote automation platform based on NetMQ (ZeroM
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/6bf8bdd0b9634cf3b8c50079e6bbbbfd)](https://www.codacy.com/gh/jiowcl/Zeron/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jiowcl/Zeron&amp;utm_campaign=Badge_Grade)
 
 ![Screenshot](./Zeron.Server/Screenshot/Dashboard.png?raw=true)
+
+## Why Zeron?  
+
+* **⚡ Ultra-Lightweight**: Built on NetMQ (ZeroMQ) for high-performance, low-latency messaging.
+* **🛡️ Private & Secure**: Designed specifically for internal networks and SMB environments — no cloud required.
+* **🔌 Developer-Friendly**: Exposes standard JSON-RPC APIs for full control over deployments, scheduling, and pipelines.
+* **⚙️ Always-On Reliable Agent**: Runs seamless background management via `Zeron.Demand` Windows Service.
 
 ## Projects
 
@@ -37,6 +44,9 @@ Zeron is an open source Windows remote automation platform based on NetMQ (ZeroM
 - **Offline Alerts** — Automatic `agent.offline` alerts with optional email notification
 - **User Management** — Admin CRUD for Admin / Operator / Viewer accounts
 - **Password Policy** — Forced change on first login + self-service change password
+- **Dashboard Summary** — Home overview of agents, tasks, alerts, and events with live refresh
+- **Task Schedules** — Central cron schedules that dispatch remote APIs to agents
+- **Package Deploy** — Central ManagedPackage install/uninstall to selected agents
 - **Health Probes** — `/health` and `/ready` for deployment monitoring
 
 ## How to Build
@@ -47,6 +57,8 @@ Building requires [Visual Studio 2026 Community](https://visualstudio.microsoft.
 dotnet build Zeron.sln -c Release
 dotnet test Zeron.sln -c Release
 ```
+
+CI on GitHub Actions builds, tests, and publishes deploy zips (`zeron-server-win-x64`, `zeron-agent-win-x64`). See [Docs/deployment.md](./Docs/deployment.md).
 
 Run the agent:
 

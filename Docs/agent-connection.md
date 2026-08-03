@@ -10,18 +10,18 @@ sequenceDiagram
     participant Server as Zeron.Server
     participant DB as SQLite
 
-    Agent->>Server: POST /api/agents/heartbeat (X-Zeron-Agent-Key)
+    Agent->>Server: POST /api/agents/heartbeat (API key + optional HMAC)
     Server->>DB: Upsert agent, record heartbeat
     Server-->>Agent: Pending tasks (if any)
     Agent->>Server: POST /api/tasks/results
     Agent->>Server: POST /api/events (optional)
-    Server->>Agent: NetMQ PUB commands (port 6000)
+    Server->>Agent: NetMQ PUB commands (CURVE optional)
 ```
 
 1. **Heartbeat** — Agent sends status every ~30s with `AgentId`, machine name, uptime, and queue stats.
 2. **Task pull** — Pending assignments are returned in the heartbeat response.
 3. **Result report** — Agent posts task execution results to `/api/tasks/results`.
-4. **Command push** — Server may push commands via NetMQ PUB (`CommandPubAddr`).
+4. **Command push** — Server may push commands via NetMQ PUB (`CommandPubAddr`), optionally protected with CURVE.
 
 ## Connection States
 
@@ -64,7 +64,13 @@ Response fields include `connectionState`, `diagnosticMessage`, `recommendedActi
 
 ### Heartbeat returns 401 Unauthorized
 
-The `X-Zeron-Agent-Key` header is missing or does not match `Zeron:AgentApiKey`.
+The `X-Zeron-Agent-Key` header is missing or does not match `Zeron:AgentApiKey`. If `AgentHmacRequired=true`, also ensure `server_hmac_enabled=true` and clocks are within `AgentHmacSkewSeconds`.
+
+### Commands never arrive (SUB / CURVE)
+
+1. Confirm `zmq_sub_enabled=true` and `zmq_sub_addr` points at the Server PUB address.
+2. If Server has `CurveEnabled=true`, agent must set `zmq_sub_curve_enabled=true` and a valid `zmq_sub_curve_server_public_key_file`.
+3. Both sides must agree: CURVE on or CURVE off — mixed mode will not connect.
 
 ### Open offline alert
 
@@ -77,6 +83,12 @@ When an agent goes offline, `AlertRuleServer` creates an `agent.offline` alert. 
   <add key="server_enabled" value="true" />
   <add key="server_url" value="http://192.168.1.100:5000" />
   <add key="server_api_key" value="your-shared-secret" />
+  <add key="server_hmac_enabled" value="true" />
+  <add key="zmq_sub_enabled" value="true" />
+  <add key="zmq_sub_addr" value="tcp://192.168.1.100:6000" />
+  <add key="zmq_sub_api_key" value="your-shared-secret" />
+  <add key="zmq_sub_curve_enabled" value="true" />
+  <add key="zmq_sub_curve_server_public_key_file" value="Resource/curve-server.public" />
 </appSettings>
 ```
 

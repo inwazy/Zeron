@@ -1,9 +1,13 @@
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Reflection
 
 <nav class="nav-menu">
     <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
     <NavLink href="/agents">Agents</NavLink>
     <NavLink href="/tasks">Tasks</NavLink>
+    <NavLink href="/schedules">Schedules</NavLink>
+    <NavLink href="/packages">Packages</NavLink>
     <NavLink href="/events">Events</NavLink>
     <NavLink href="/alerts">Alerts</NavLink>
     <AuthorizeView Roles="@ServerRoles.Admin">
@@ -19,6 +23,7 @@
             <span>@context.User.Identity?.Name</span>
             <small>@GetRole(context.User)</small>
             <a class="btn-link" href="/account/change-password">Change Password</a>
+            <button class="btn-link" type="button" @onclick="OpenAbout">About</button>
             <form method="post" action="/account/logout">
                 <button class="btn-link" type="submit">Logout</button>
             </form>
@@ -26,9 +31,70 @@
     </Authorized>
 </AuthorizeView>
 
+@if (m_ShowAbout)
+{
+    <div class="modal-backdrop" @onclick="CloseAbout" @onkeydown="OnAboutKeyDown">
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="about-title" tabindex="-1" @onclick:stopPropagation="true" @ref="m_AboutPanel">
+            <div class="modal-header">
+                <h2 id="about-title">About Zeron</h2>
+                <button class="btn-link" type="button" @onclick="CloseAbout" aria-label="Close">Close</button>
+            </div>
+            <div class="modal-body">
+                <p class="about-org">Inwazy Technology</p>
+                <p><a href="https://inwazy.com" target="_blank" rel="noopener noreferrer">https://inwazy.com</a></p>
+                <hr class="about-divider" />
+                <p class="about-author">Jiowcl — Ji-Feng Tsai</p>
+                <p><a href="mailto:jiowcl@gmail.com">jiowcl@gmail.com</a></p>
+                <p class="muted about-version">Zeron.Server @m_Version</p>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
+    private bool m_ShowAbout;
+    private bool m_FocusAbout;
+    private ElementReference m_AboutPanel;
+    private readonly string m_Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
+
     private static string GetRole(System.Security.Claims.ClaimsPrincipal user)
     {
         return user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+    }
+
+    private void OpenAbout()
+    {
+        m_ShowAbout = true;
+        m_FocusAbout = true;
+    }
+
+    private void CloseAbout()
+    {
+        m_ShowAbout = false;
+        m_FocusAbout = false;
+    }
+
+    private void OnAboutKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CloseAbout();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (m_ShowAbout && m_FocusAbout)
+        {
+            m_FocusAbout = false;
+
+            try
+            {
+                await m_AboutPanel.FocusAsync();
+            }
+            catch
+            {
+            }
+        }
     }
 }
