@@ -152,3 +152,6 @@ Local Agent REP/PUB ports remain plaintext for `Zeron.Client` and local tooling.
 - Prefer HTTPS reverse proxy (IIS, nginx, Caddy) in production
 - Restrict NetMQ PUB port to agent subnet only
 - Enable alert email (`Zeron:AlertEmailEnabled`) for offline notifications
+- Confirm Dashboard **Transport Security** shows `hardened` after production config
+
+The home Dashboard panel reads server settings only; agents still need matching CURVE/HMAC keys.

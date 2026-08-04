@@ -80,6 +80,63 @@ namespace Zeron.Server.ZServers.Tests
             Assert.AreEqual(1, summary.RecentAlerts.Count);
             Assert.AreEqual(1, summary.RecentTasks.Count);
             Assert.AreEqual(2, summary.RecentAgents.Count);
+            Assert.IsNotNull(summary.Security);
+            Assert.AreEqual("insecure", summary.Security.OverallStatus);
+            Assert.IsFalse(summary.Security.CurveEnabled);
+            Assert.IsFalse(summary.Security.AgentHmacRequired);
+            Assert.IsTrue(summary.Security.Recommendations.Count > 0);
+        }
+
+        /// <summary>
+        /// BuildSecurityStatus reports hardened when CURVE and HMAC are enabled.
+        /// </summary>
+        [TestMethod()]
+        public void BuildSecurityStatusHardenedTest()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "zeron-sec-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string publicKeyPath = Path.Combine(tempDir, "curve-server.public");
+
+            try
+            {
+                File.WriteAllBytes(publicKeyPath, new byte[32]);
+
+                DashboardSecurityStatusType status = DashboardSummaryServer.BuildSecurityStatus(new ServerSettings
+                {
+                    CurveEnabled = true,
+                    CurvePublicKeyPath = publicKeyPath,
+                    AgentHmacRequired = true,
+                    RequireHttpsAgents = true
+                });
+
+                Assert.AreEqual("hardened", status.OverallStatus);
+                Assert.IsTrue(status.CurveEnabled);
+                Assert.IsTrue(status.CurvePublicKeyPresent);
+                Assert.IsTrue(status.AgentHmacRequired);
+                Assert.IsTrue(status.RequireHttpsAgents);
+                Assert.AreEqual(0, status.Recommendations.Count);
+            }
+            finally
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+
+        /// <summary>
+        /// BuildSecurityStatus reports partial when only one transport control is on.
+        /// </summary>
+        [TestMethod()]
+        public void BuildSecurityStatusPartialTest()
+        {
+            DashboardSecurityStatusType status = DashboardSummaryServer.BuildSecurityStatus(new ServerSettings
+            {
+                CurveEnabled = true,
+                AgentHmacRequired = false,
+                RequireHttpsAgents = false
+            });
+
+            Assert.AreEqual("partial", status.OverallStatus);
+            Assert.IsTrue(status.Recommendations.Any(item => item.Contains("AgentHmacRequired", StringComparison.Ordinal)));
         }
 
         private static DashboardSummaryServer CreateSummaryServer(ZeronServerDbContext dbContext)
@@ -97,7 +154,8 @@ namespace Zeron.Server.ZServers.Tests
                 diagnosticServer,
                 taskDispatcher,
                 eventIngestor,
-                alertRuleServer);
+                alertRuleServer,
+                settings);
         }
 
         private static ZeronServerDbContext CreateContext(string dbName)

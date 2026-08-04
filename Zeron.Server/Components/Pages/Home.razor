@@ -34,6 +34,64 @@
 }
 else
 {
+    <div class="panel security-panel">
+        <div class="panel-header">
+            <h2>Transport Security</h2>
+            <span class="status @m_Summary.Security.OverallStatus">@m_Summary.Security.OverallStatus</span>
+        </div>
+        <div class="security-grid">
+            <div class="security-item">
+                <span>NetMQ CURVE</span>
+                <strong>
+                    <span class="status @(m_Summary.Security.CurveEnabled ? "healthy" : "warning")">
+                        @(m_Summary.Security.CurveEnabled ? "enabled" : "off")
+                    </span>
+                </strong>
+                @if (m_Summary.Security.CurveEnabled)
+                {
+                    <small>public key @(m_Summary.Security.CurvePublicKeyPresent ? "present" : "missing")</small>
+                }
+                else
+                {
+                    <small>command channel plaintext</small>
+                }
+            </div>
+            <div class="security-item">
+                <span>Agent HTTP HMAC</span>
+                <strong>
+                    <span class="status @(m_Summary.Security.AgentHmacRequired ? "healthy" : "warning")">
+                        @(m_Summary.Security.AgentHmacRequired ? "required" : "optional")
+                    </span>
+                </strong>
+                <small>heartbeat / events / results</small>
+            </div>
+            <div class="security-item">
+                <span>HTTPS for Agents</span>
+                <strong>
+                    <span class="status @(m_Summary.Security.RequireHttpsAgents ? "healthy" : "warning")">
+                        @(m_Summary.Security.RequireHttpsAgents ? "required" : "not enforced")
+                    </span>
+                </strong>
+                <small>or reverse-proxy TLS</small>
+            </div>
+        </div>
+        @if (m_Summary.Security.Recommendations.Count > 0)
+        {
+            <ul class="security-recommendations">
+                @foreach (string tip in m_Summary.Security.Recommendations)
+                {
+                    <li>@tip</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="muted" style="margin-top: 0.75rem; margin-bottom: 0;">
+                CURVE and HMAC are enabled. Ensure agents have matching <code>zmq_sub_curve_*</code> and <code>server_hmac_enabled</code>.
+            </p>
+        }
+    </div>
+
     <div class="cards">
         <a class="card card-link" href="/agents">
             <span>Agents Online</span>
