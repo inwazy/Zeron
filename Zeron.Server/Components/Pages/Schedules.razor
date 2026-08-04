@@ -57,12 +57,3 @@
         </table>
     }
 </div>
-
-@code {
-    private List<TaskScheduleInfoType> m_Schedules = [];
-
-    protected override async Task OnInitializedAsync()
-    {
-        m_Schedules = await TaskScheduleServer.GetSchedulesAsync();
-    }
-}

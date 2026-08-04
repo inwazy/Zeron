@@ -33,15 +33,3 @@
         }
     </div>
 </div>
-
-@code {
-    [SupplyParameterFromQuery(Name = "failed")]
-    public string? Failed { get; set; }
-
-    private bool m_ShowError;
-
-    protected override void OnInitialized()
-    {
-        m_ShowError = Failed == "1";
-    }
-}

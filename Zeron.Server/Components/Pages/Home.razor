@@ -85,9 +85,9 @@ else
                         <strong>@alert.Title</strong>
                         <small>
                             <span class="status @alert.Severity">@alert.Severity</span>
-                            @(alert.AgentKey ?? "system") · @FormatTime(alert.CreatedAt)
+                            @(alert.AgentKey ?? "system") · @UiFormatServer.FormatTime(alert.CreatedAt)
                         </small>
-                        <div>@Truncate(alert.Message, 140)</div>
+                        <div>@UiFormatServer.Truncate(alert.Message, 140)</div>
                     </div>
                 }
             }
@@ -120,7 +120,7 @@ else
                                 <td><a href="@($"/tasks/{task.Id}")">@task.Name</a></td>
                                 <td>@task.TargetApi</td>
                                 <td><span class="status @task.Status">@task.Status</span></td>
-                                <td>@FormatTime(task.CreatedAt)</td>
+                                <td>@UiFormatServer.FormatTime(task.CreatedAt)</td>
                             </tr>
                         }
                     </tbody>
@@ -159,7 +159,7 @@ else
                                 <td>@(agent.MachineName ?? "-")</td>
                                 <td><span class="status @agent.Status">@agent.Status</span></td>
                                 <td><span class="status @agent.ConnectionState">@agent.ConnectionState</span></td>
-                                <td>@FormatHeartbeat(agent.LastHeartbeatAt)</td>
+                                <td>@UiFormatServer.FormatHeartbeat(agent.LastHeartbeatAt)</td>
                             </tr>
                         }
                     </tbody>
@@ -182,147 +182,13 @@ else
                 {
                     <div class="timeline-item">
                         <strong>@evt.Topic</strong>
-                        <small>@(evt.AgentKey ?? "-") · @FormatTime(evt.ReceivedAt)</small>
-                        <div>@Truncate(evt.Payload, 120)</div>
+                        <small>@(evt.AgentKey ?? "-") · @UiFormatServer.FormatTime(evt.ReceivedAt)</small>
+                        <div>@UiFormatServer.Truncate(evt.Payload, 120)</div>
                     </div>
                 }
             }
         </div>
     </div>
 
-    <p class="muted"><small>Updated @FormatTime(m_Summary.GeneratedAtUtc)</small></p>
-}
-
-@code {
-    private DashboardSummaryType? m_Summary;
-    private HubConnection? m_HubConnection;
-    private PeriodicTimer? m_RefreshTimer;
-    private CancellationTokenSource? m_RefreshCts;
-    private bool m_IsLoading;
-    private bool m_PasswordChanged;
-
-    [SupplyParameterFromQuery(Name = "passwordChanged")]
-    public string? PasswordChanged { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        m_PasswordChanged = PasswordChanged == "1";
-        await ReloadAsync();
-        await ConnectHubAsync();
-        StartRefreshTimer();
-    }
-
-    private async Task ReloadAsync()
-    {
-        m_IsLoading = true;
-
-        try
-        {
-            m_Summary = await DashboardSummaryServer.GetSummaryAsync();
-        }
-        finally
-        {
-            m_IsLoading = false;
-        }
-    }
-
-    private void StartRefreshTimer()
-    {
-        m_RefreshCts = new CancellationTokenSource();
-        m_RefreshTimer = new PeriodicTimer(TimeSpan.FromSeconds(15));
-        _ = RunRefreshLoopAsync(m_RefreshCts.Token);
-    }
-
-    private async Task RunRefreshLoopAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            while (await m_RefreshTimer!.WaitForNextTickAsync(cancellationToken))
-            {
-                await ReloadAsync();
-                await InvokeAsync(StateHasChanged);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    private async Task ConnectHubAsync()
-    {
-        m_HubConnection = DashboardHubClient.Create(Navigation, HttpContextAccessor);
-
-        m_HubConnection.On<object>("AgentStatusChanged", async _ => await RefreshFromHubAsync());
-        m_HubConnection.On<object>("AlertReceived", async _ => await RefreshFromHubAsync());
-        m_HubConnection.On<object>("EventReceived", async _ => await RefreshFromHubAsync());
-
-        await DashboardHubClient.TryStartAsync(m_HubConnection);
-    }
-
-    private async Task RefreshFromHubAsync()
-    {
-        await ReloadAsync();
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private static string FormatHeartbeat(DateTime? lastHeartbeatAt)
-    {
-        if (lastHeartbeatAt == null || lastHeartbeatAt == default)
-        {
-            return "Never";
-        }
-
-        return FormatTime(lastHeartbeatAt.Value);
-    }
-
-    private static string FormatTime(DateTime value)
-    {
-        DateTime utc = value.Kind switch
-        {
-            DateTimeKind.Utc => value,
-            DateTimeKind.Local => value.ToUniversalTime(),
-            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
-        };
-
-        TimeSpan ago = DateTime.UtcNow - utc;
-
-        if (ago.TotalSeconds < 60)
-        {
-            return $"{Math.Max(0, (int)ago.TotalSeconds)}s ago";
-        }
-
-        if (ago.TotalMinutes < 60)
-        {
-            return $"{(int)ago.TotalMinutes}m ago";
-        }
-
-        if (ago.TotalHours < 24)
-        {
-            return $"{(int)ago.TotalHours}h ago";
-        }
-
-        return utc.ToLocalTime().ToString("g");
-    }
-
-    private static string Truncate(string text, int maxLength)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            return "";
-        }
-
-        return text.Length <= maxLength ? text : text[..maxLength] + "...";
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        m_RefreshCts?.Cancel();
-        m_RefreshTimer?.Dispose();
-        m_RefreshCts?.Dispose();
-
-        if (m_HubConnection != null)
-        {
-            await m_HubConnection.DisposeAsync();
-        }
-    }
+    <p class="muted"><small>Updated @UiFormatServer.FormatTime(m_Summary.GeneratedAtUtc)</small></p>
 }

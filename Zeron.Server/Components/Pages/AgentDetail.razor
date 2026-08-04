@@ -104,31 +104,3 @@ else
         }
     </div>
 }
-
-@code {
-    [Parameter]
-    public string AgentKey { get; set; } = "";
-
-    private AgentEntity? m_Agent;
-    private AgentDiagnosticType? m_Diagnostic;
-    private List<EventEntity> m_Events = [];
-    private List<AgentHeartbeatEntity> m_Heartbeats = [];
-
-    protected override async Task OnParametersSetAsync()
-    {
-        m_Agent = await AgentManager.GetAgentByKeyAsync(AgentKey);
-        m_Diagnostic = await AgentDiagnosticServer.GetDiagnosticAsync(AgentKey);
-        m_Events = await EventIngestor.GetEventsAsync(AgentKey, null, 20);
-        m_Heartbeats = await AgentManager.GetAgentHeartbeatsAsync(AgentKey, 30);
-    }
-
-    private async Task DisableAgentAsync()
-    {
-        m_Agent = await AgentManager.UpdateAgentAsync(AgentKey, new AgentUpdateRequestType { Status = "disabled" });
-    }
-
-    private async Task EnableAgentAsync()
-    {
-        m_Agent = await AgentManager.UpdateAgentAsync(AgentKey, new AgentUpdateRequestType { Status = "online" });
-    }
-}

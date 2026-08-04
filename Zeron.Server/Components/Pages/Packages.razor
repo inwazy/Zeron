@@ -88,28 +88,3 @@
         }
     }
 </div>
-
-@code {
-    private List<TaskEntity> m_Deploys = [];
-    private List<EventEntity> m_InstallEvents = [];
-
-    protected override async Task OnInitializedAsync()
-    {
-        await ReloadAsync();
-    }
-
-    private async Task ReloadAsync()
-    {
-        m_Deploys = await PackageDeployServer.GetRecentDeploysAsync(20);
-        m_InstallEvents = await PackageDeployServer.GetInstallEventsAsync(limit: 15);
-    }
-
-    private static string FormatAssignmentOutcome(TaskEntity task)
-    {
-        int completed = task.Assignments.Count(item => item.Status == "completed");
-        int failed = task.Assignments.Count(item => item.Status == "failed");
-        int running = task.Assignments.Count(item => item.Status is "running" or "dispatched" or "pending");
-
-        return $"{completed} ok / {failed} failed / {running} in progress";
-    }
-}

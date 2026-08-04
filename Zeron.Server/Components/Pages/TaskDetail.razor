@@ -76,21 +76,3 @@ else
         </table>
     </div>
 }
-
-@code {
-    [Parameter]
-    public Guid TaskId { get; set; }
-
-    private TaskEntity? m_Task;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        m_Task = await TaskDispatcher.GetTaskAsync(TaskId);
-    }
-
-    private async Task CancelTaskAsync()
-    {
-        await TaskDispatcher.CancelTaskAsync(TaskId);
-        m_Task = await TaskDispatcher.GetTaskAsync(TaskId);
-    }
-}

@@ -44,12 +44,3 @@
         </tbody>
     </table>
 </div>
-
-@code {
-    private List<TaskEntity> m_Tasks = [];
-
-    protected override async Task OnInitializedAsync()
-    {
-        m_Tasks = await TaskDispatcher.GetTasksAsync();
-    }
-}
