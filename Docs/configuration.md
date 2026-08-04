@@ -152,10 +152,12 @@ uninstall <packageName> [extraArgs]
 
 Package names must exist in each agent's local SQLite `managed_packages` catalog (`status=1`).
 
-Task assignment success means **queued on agent**. Final outcome is reported as:
+Package deploy assignment lifecycle:
 
-- `install.started` / `install.uninstall`
-- `install.completed`
-- `install.failed`
+1. `dispatched` → agent receives RemoteCommand  
+2. `running` → package accepted into agent install queue (`queued: true`)  
+3. `completed` / `failed` → `install.completed` / `install.failed` (payload includes `assignmentId`)
+
+Related events: `install.started` / `install.uninstall` / `install.completed` / `install.failed`.
 
 Dashboard pages: `/packages`, `/packages/deploy`. Events shortcut: `/events?topic=install.`.

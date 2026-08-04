@@ -36,14 +36,15 @@ else
     @if (string.Equals(m_Task.TargetApi, "ManagedPackage", StringComparison.OrdinalIgnoreCase))
     {
         <div class="panel">
-            <h2>Package Deploy Note</h2>
+            <h2>Package Deploy Progress</h2>
             <p class="muted">
-                Assignment success means the agent <strong>queued</strong> the package.
-                Watch
-                <a href="/events?topic=install.">install.* events</a>
-                or the
+                Assignments move to <strong>running</strong> when the agent queues the package, then
+                <strong>completed</strong> / <strong>failed</strong> when install finishes
+                (<code>install.completed</code> / <code>install.failed</code>).
+                Related events:
+                <a href="/events?topic=install.">install.*</a>
+                ·
                 <a href="/packages">Packages</a>
-                page for <code>install.completed</code> / <code>install.failed</code>.
             </p>
         </div>
     }

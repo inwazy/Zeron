@@ -39,6 +39,7 @@
                     <th>Command</th>
                     <th>Status</th>
                     <th>Assignments</th>
+                    <th>Outcome</th>
                     <th>Created</th>
                     <th></th>
                 </tr>
@@ -51,6 +52,7 @@
                         <td><code>@task.Command</code></td>
                         <td><span class="status @task.Status">@task.Status</span></td>
                         <td>@task.Assignments.Count</td>
+                        <td>@FormatAssignmentOutcome(task)</td>
                         <td>@task.CreatedAt.ToLocalTime()</td>
                         <td><a href="@($"/tasks/{task.Id}")">Details</a></td>
                     </tr>
@@ -58,8 +60,8 @@
             </tbody>
         </table>
         <p class="muted" style="margin-top: 1rem;">
-            Task status reflects queue acceptance on the agent. Final install outcome appears under
-            <a href="/events?topic=install.">install.* events</a>.
+            Status becomes <code>running</code> when the agent queues the package, then
+            <code>completed</code> / <code>failed</code> when <code>install.*</code> finishes.
         </p>
     }
 </div>
@@ -100,5 +102,14 @@
     {
         m_Deploys = await PackageDeployServer.GetRecentDeploysAsync(20);
         m_InstallEvents = await PackageDeployServer.GetInstallEventsAsync(limit: 15);
+    }
+
+    private static string FormatAssignmentOutcome(TaskEntity task)
+    {
+        int completed = task.Assignments.Count(item => item.Status == "completed");
+        int failed = task.Assignments.Count(item => item.Status == "failed");
+        int running = task.Assignments.Count(item => item.Status is "running" or "dispatched" or "pending");
+
+        return $"{completed} ok / {failed} failed / {running} in progress";
     }
 }

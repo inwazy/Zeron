@@ -88,7 +88,7 @@ namespace Zeron.Server.ZServers.Tests
             AgentManagerServer agentManager = new(dbContext);
             AgentDiagnosticServer diagnosticServer = new(dbContext, settings);
             TaskDispatcherServer taskDispatcher = new(dbContext, new CommandPublisherServer(settings));
-            EventIngestorServer eventIngestor = new(dbContext);
+            EventIngestorServer eventIngestor = new(dbContext, taskDispatcher);
             AlertNotifierServer alertNotifier = new(settings);
             AlertRuleServer alertRuleServer = new(dbContext, alertNotifier);
 
