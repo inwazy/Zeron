@@ -110,7 +110,11 @@ namespace Zeron.Server.Components.Pages
             m_RefreshCts?.Cancel();
             m_RefreshTimer?.Dispose();
             m_RefreshCts?.Dispose();
-            await m_HubConnection?.DisposeAsync();
+
+            if (m_HubConnection != null)
+            {
+                await m_HubConnection.DisposeAsync();
+            }
         }
     }
 }

@@ -2,8 +2,6 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.Components;
-using Zeron.Server.ZServers;
-using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
 {
@@ -12,7 +10,9 @@ namespace Zeron.Server.Components.Pages
     /// </summary>
     public partial class Login
     {
-        // Failed query.
+        /// <summary>
+        /// Failed
+        /// </summary>
         [SupplyParameterFromQuery(Name = "failed")]
         public string? Failed { get; set; }
 
@@ -22,9 +22,10 @@ namespace Zeron.Server.Components.Pages
         /// <summary>
         /// OnInitialized
         /// </summary>
-        /// <returns>Returns void.</returns>    
+        /// <returns>Returns void.</returns>
         protected override void OnInitialized()
         {
             m_ShowError = Failed == "1";
+        }
     }
 }
