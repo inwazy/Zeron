@@ -39,6 +39,7 @@
                     <th>Command</th>
                     <th>Status</th>
                     <th>Assignments</th>
+                    <th>Outcome</th>
                     <th>Created</th>
                     <th></th>
                 </tr>
@@ -51,6 +52,7 @@
                         <td><code>@task.Command</code></td>
                         <td><span class="status @task.Status">@task.Status</span></td>
                         <td>@task.Assignments.Count</td>
+                        <td>@FormatAssignmentOutcome(task)</td>
                         <td>@task.CreatedAt.ToLocalTime()</td>
                         <td><a href="@($"/tasks/{task.Id}")">Details</a></td>
                     </tr>
@@ -58,8 +60,8 @@
             </tbody>
         </table>
         <p class="muted" style="margin-top: 1rem;">
-            Task status reflects queue acceptance on the agent. Final install outcome appears under
-            <a href="/events?topic=install.">install.* events</a>.
+            Status becomes <code>running</code> when the agent queues the package, then
+            <code>completed</code> / <code>failed</code> when <code>install.*</code> finishes.
         </p>
     }
 </div>
@@ -86,19 +88,3 @@
         }
     }
 </div>
-
-@code {
-    private List<TaskEntity> m_Deploys = [];
-    private List<EventEntity> m_InstallEvents = [];
-
-    protected override async Task OnInitializedAsync()
-    {
-        await ReloadAsync();
-    }
-
-    private async Task ReloadAsync()
-    {
-        m_Deploys = await PackageDeployServer.GetRecentDeploysAsync(20);
-        m_InstallEvents = await PackageDeployServer.GetInstallEventsAsync(limit: 15);
-    }
-}

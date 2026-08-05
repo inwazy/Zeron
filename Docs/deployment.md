@@ -108,7 +108,7 @@ sc start ZeronDemand
 5. Create a test task (e.g. `HealthCheck`) targeting the agent.
 6. Check **Events** and **Alerts** for operational data.
 7. On **Users**, create Operator/Viewer accounts as needed.
-8. For package deploy: ensure each agent has a populated `managed_packages` SQLite catalog, then use Dashboard **Packages → Deploy Package**.
+8. For package deploy: ensure each agent has a populated `managed_packages` SQLite catalog, then use Dashboard **Packages → Deploy Package**. Task status should go `running` then `completed`/`failed` after install finishes.
 
 See [Agent Connection Guide](./agent-connection.md) if agents stay offline or stale.
 
@@ -152,3 +152,6 @@ Local Agent REP/PUB ports remain plaintext for `Zeron.Client` and local tooling.
 - Prefer HTTPS reverse proxy (IIS, nginx, Caddy) in production
 - Restrict NetMQ PUB port to agent subnet only
 - Enable alert email (`Zeron:AlertEmailEnabled`) for offline notifications
+- Confirm Dashboard **Transport Security** shows `hardened` after production config
+
+The home Dashboard panel reads server settings only; agents still need matching CURVE/HMAC keys.

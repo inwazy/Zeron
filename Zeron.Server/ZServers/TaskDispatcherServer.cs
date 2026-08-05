@@ -149,32 +149,66 @@ namespace Zeron.Server.ZServers
 
             TaskAssignmentEntity? assignment = await m_DbContext.TaskAssignments
                 .Include(item => item.Task)
+                .Include(item => item.Result)
                 .FirstOrDefaultAsync(item => item.Id == assignmentId, cancellationToken);
 
-            if (assignment == null)
+            if (assignment == null || assignment.Status == "cancelled")
             {
                 return false;
+            }
+
+            // ManagedPackage queue acceptance: keep assignment running until install.* completes.
+            if (IsManagedPackageQueued(assignment, report))
+            {
+                if (assignment.Status is "completed" or "failed")
+                {
+                    return true;
+                }
+
+                assignment.Status = "running";
+
+                if (assignment.Task != null && assignment.Task.Status != "cancelled")
+                {
+                    assignment.Task.Status = "running";
+                }
+
+                await m_DbContext.SaveChangesAsync(cancellationToken);
+
+                return true;
             }
 
             assignment.Status = report.Success ? "completed" : "failed";
             assignment.CompletedAt = DateTime.UtcNow;
 
-            m_DbContext.TaskResults.Add(new TaskResultEntity
+            if (assignment.Result == null)
             {
-                Id = Guid.NewGuid(),
-                AssignmentId = assignment.Id,
-                Success = report.Success,
-                ResponseJson = report.ResponseJson,
-                ErrorMessage = report.ErrorMessage,
-                CompletedAt = DateTime.UtcNow
-            });
+                m_DbContext.TaskResults.Add(new TaskResultEntity
+                {
+                    Id = Guid.NewGuid(),
+                    AssignmentId = assignment.Id,
+                    Success = report.Success,
+                    ResponseJson = report.ResponseJson,
+                    ErrorMessage = report.ErrorMessage,
+                    CompletedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                assignment.Result.Success = report.Success;
+                assignment.Result.ResponseJson = report.ResponseJson;
+                assignment.Result.ErrorMessage = report.ErrorMessage;
+                assignment.Result.CompletedAt = DateTime.UtcNow;
+            }
 
-            if (assignment.Task != null)
+            if (assignment.Task != null && assignment.Task.Status != "cancelled")
             {
+                await m_DbContext.SaveChangesAsync(cancellationToken);
+
                 bool anyPending = await m_DbContext.TaskAssignments
                     .AnyAsync(item => item.TaskId == assignment.TaskId
                         && item.Status != "completed"
-                        && item.Status != "failed", cancellationToken);
+                        && item.Status != "failed"
+                        && item.Status != "cancelled", cancellationToken);
 
                 assignment.Task.Status = anyPending ? "running" : (report.Success ? "completed" : "failed");
             }
@@ -182,6 +216,30 @@ namespace Zeron.Server.ZServers
             await m_DbContext.SaveChangesAsync(cancellationToken);
 
             return true;
+        }
+
+        /// <summary>
+        /// IsManagedPackageQueued
+        /// </summary>
+        /// <param name="assignment"></param>
+        /// <param name="report"></param>
+        /// <returns>Returns bool.</returns>
+        private static bool IsManagedPackageQueued(
+            TaskAssignmentEntity assignment,
+            TaskResultReportType report)
+        {
+            if (!report.Success
+                || string.IsNullOrWhiteSpace(report.ResponseJson)
+                || assignment.Task == null
+                || !string.Equals(assignment.Task.TargetApi, "ManagedPackage", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            string json = report.ResponseJson;
+
+            return json.Contains("\"queued\":true", StringComparison.OrdinalIgnoreCase)
+                || json.Contains("\"queued\": true", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

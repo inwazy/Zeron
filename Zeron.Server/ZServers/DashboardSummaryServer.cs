@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore;
 using Zeron.Server.ZCore.Type;
 using Zeron.ZCore.Type;
 
@@ -27,6 +28,9 @@ namespace Zeron.Server.ZServers
         // Service Rules
         private readonly AlertRuleServer m_AlertRuleServer;
 
+        // Settings
+        private readonly ServerSettings m_Settings;
+
         /// <summary>
         /// DashboardSummaryServer
         /// </summary>
@@ -35,19 +39,22 @@ namespace Zeron.Server.ZServers
         /// <param name="taskDispatcher"></param>
         /// <param name="eventIngestor"></param>
         /// <param name="alertRuleServer"></param>
+        /// <param name="settings"></param>
         /// <returns>Returns void.</returns>
         public DashboardSummaryServer(
             AgentManagerServer agentManager,
             AgentDiagnosticServer agentDiagnosticServer,
             TaskDispatcherServer taskDispatcher,
             EventIngestorServer eventIngestor,
-            AlertRuleServer alertRuleServer)
+            AlertRuleServer alertRuleServer,
+            ServerSettings settings)
         {
             m_AgentManager = agentManager;
             m_AgentDiagnosticServer = agentDiagnosticServer;
             m_TaskDispatcher = taskDispatcher;
             m_EventIngestor = eventIngestor;
             m_AlertRuleServer = alertRuleServer;
+            m_Settings = settings;
         }
 
         /// <summary>
@@ -132,8 +139,74 @@ namespace Zeron.Server.ZServers
                         ReceivedAt = evt.ReceivedAt
                     })
                     .ToList(),
+                Security = BuildSecurityStatus(),
                 GeneratedAtUtc = DateTime.UtcNow
             };
+        }
+
+        /// <summary>
+        /// BuildSecurityStatus
+        /// </summary>
+        /// <returns>Returns DashboardSecurityStatusType.</returns>
+        public static DashboardSecurityStatusType BuildSecurityStatus(
+            ServerSettings settings)
+        {
+            bool curvePublicKeyPresent = !string.IsNullOrWhiteSpace(settings.CurvePublicKeyPath)
+                && File.Exists(settings.CurvePublicKeyPath);
+
+            string overallStatus;
+            List<string> recommendations = [];
+
+            if (settings.CurveEnabled && settings.AgentHmacRequired)
+            {
+                overallStatus = "hardened";
+            }
+            else if (settings.CurveEnabled || settings.AgentHmacRequired)
+            {
+                overallStatus = "partial";
+            }
+            else
+            {
+                overallStatus = "insecure";
+            }
+
+            if (!settings.CurveEnabled)
+            {
+                recommendations.Add("Enable Zeron:CurveEnabled and distribute curve-server.public to agents (zmq_sub_curve_enabled).");
+            }
+            else if (!curvePublicKeyPresent)
+            {
+                recommendations.Add("CURVE is enabled but the public key file is missing — restart the server to generate keys, then copy the .public file to agents.");
+            }
+
+            if (!settings.AgentHmacRequired)
+            {
+                recommendations.Add("Enable Zeron:AgentHmacRequired and set agent server_hmac_enabled=true.");
+            }
+
+            if (!settings.RequireHttpsAgents)
+            {
+                recommendations.Add("Prefer HTTPS (reverse proxy) and set Zeron:RequireHttpsAgents=true when agents call HTTPS or X-Forwarded-Proto is set.");
+            }
+
+            return new DashboardSecurityStatusType
+            {
+                CurveEnabled = settings.CurveEnabled,
+                CurvePublicKeyPresent = curvePublicKeyPresent,
+                AgentHmacRequired = settings.AgentHmacRequired,
+                RequireHttpsAgents = settings.RequireHttpsAgents,
+                OverallStatus = overallStatus,
+                Recommendations = recommendations
+            };
+        }
+
+        /// <summary>
+        /// BuildSecurityStatus
+        /// </summary>
+        /// <returns>Returns DashboardSecurityStatusType.</returns>
+        private DashboardSecurityStatusType BuildSecurityStatus()
+        {
+            return BuildSecurityStatus(m_Settings);
         }
     }
 }

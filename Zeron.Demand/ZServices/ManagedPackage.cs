@@ -4,6 +4,7 @@
 using Newtonsoft.Json;
 using System.Dynamic;
 using System.Globalization;
+using Zeron.Demand.ZCore;
 using Zeron.Demand.ZCore.Type;
 using Zeron.Demand.ZServers;
 using Zeron.ZAttribute;
@@ -113,7 +114,8 @@ namespace Zeron.Demand.ZServices
                     PackageName = repo.Name,
                     Operation = commands.Option,
                     ScriptBefore = scriptBefore,
-                    ScriptAfter = scriptAfter
+                    ScriptAfter = scriptAfter,
+                    AssignmentId = RemoteCommandContext.AssignmentId
                 };
 
                 if (InstallServer.AddQueues(commands.Option, installQueuesTypeRepo) > 0)
@@ -124,6 +126,7 @@ namespace Zeron.Demand.ZServices
                         queued = true,
                         package = repo.Name,
                         operation = commands.Option,
+                        assignmentId = installQueuesTypeRepo.AssignmentId,
                         queueCount = InstallServer.GetQueueCount()
                     };
                 }

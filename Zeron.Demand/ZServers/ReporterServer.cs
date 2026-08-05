@@ -75,6 +75,9 @@ namespace Zeron.Demand.ZServers
                 return;
             }
 
+            InstallServer.AssignmentCompletedHandler = (assignmentId, success, responseJson, errorMessage) =>
+                ReportTaskResult(assignmentId, success, responseJson, errorMessage);
+
             s_HeartbeatTimer.Elapsed += OnHeartbeatTimer;
             s_HeartbeatTimer.Interval = HeartbeatIntervalMs;
             s_HeartbeatTimer.AutoReset = true;
@@ -92,6 +95,8 @@ namespace Zeron.Demand.ZServers
         /// <returns>Returns void.</returns>
         public void Stop()
         {
+            InstallServer.AssignmentCompletedHandler = null;
+
             s_HeartbeatTimer.Stop();
             s_HeartbeatTimer.Dispose();
 

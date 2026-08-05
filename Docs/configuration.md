@@ -111,9 +111,24 @@ Use `/ready` for load balancer / process manager health checks.
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| `GET /api/dashboard/summary` | Viewer+ | Aggregated online/offline agents, stale connections, active tasks, open alerts, recent lists |
+| `GET /api/dashboard/summary` | Viewer+ | Aggregated online/offline agents, stale connections, active tasks, open alerts, recent lists, transport security |
 
 The Dashboard home page (`/`) uses this summary and refreshes every 15 seconds (plus SignalR updates).
+
+### Transport security panel
+
+Summary field `security` reports server-side posture:
+
+| Field | Meaning |
+|-------|---------|
+| `curveEnabled` | `Zeron:CurveEnabled` |
+| `curvePublicKeyPresent` | Public key file exists at `CurvePublicKeyPath` |
+| `agentHmacRequired` | `Zeron:AgentHmacRequired` |
+| `requireHttpsAgents` | `Zeron:RequireHttpsAgents` |
+| `overallStatus` | `hardened` (CURVE+HMAC), `partial` (one of them), or `insecure` |
+| `recommendations` | Operator tips when controls are off / misconfigured |
+
+Agents must still enable matching `zmq_sub_curve_*` and `server_hmac_enabled` — the panel reflects **server** configuration only.
 
 ## Task Schedules
 
@@ -152,10 +167,12 @@ uninstall <packageName> [extraArgs]
 
 Package names must exist in each agent's local SQLite `managed_packages` catalog (`status=1`).
 
-Task assignment success means **queued on agent**. Final outcome is reported as:
+Package deploy assignment lifecycle:
 
-- `install.started` / `install.uninstall`
-- `install.completed`
-- `install.failed`
+1. `dispatched` → agent receives RemoteCommand  
+2. `running` → package accepted into agent install queue (`queued: true`)  
+3. `completed` / `failed` → `install.completed` / `install.failed` (payload includes `assignmentId`)
+
+Related events: `install.started` / `install.uninstall` / `install.completed` / `install.failed`.
 
 Dashboard pages: `/packages`, `/packages/deploy`. Events shortcut: `/events?topic=install.`.

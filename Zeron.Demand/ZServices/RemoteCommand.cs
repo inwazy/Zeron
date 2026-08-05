@@ -47,25 +47,37 @@ namespace Zeron.Demand.ZServices
                 }
 
                 string? assignmentId = Convert.ToString(aJson["AssignmentId"]);
-                string response = InternalServiceInvoker.Invoke(targetApi, command);
-                bool success = response.Contains("\"success\":true", StringComparison.OrdinalIgnoreCase)
-                    || response.Contains("\"success\": true", StringComparison.OrdinalIgnoreCase);
+                RemoteCommandContext.AssignmentId = assignmentId;
 
-                AuditServer.Log(targetApi, command, success, success ? "Remote command executed" : response, "sub");
-
-                ReporterServer.ReportTaskResult(assignmentId, success, response, success ? null : response);
-
-                InstallEventPublisher.PublishObject("remotecommand.executed", new
+                try
                 {
-                    targetApi,
-                    command,
-                    success
-                });
+                    string response = InternalServiceInvoker.Invoke(targetApi, command);
+                    bool success = response.Contains("\"success\":true", StringComparison.OrdinalIgnoreCase)
+                        || response.Contains("\"success\": true", StringComparison.OrdinalIgnoreCase);
 
-                return response;
+                    AuditServer.Log(targetApi, command, success, success ? "Remote command executed" : response, "sub");
+
+                    // ManagedPackage queue success reports interim result; final status comes from install.* completion.
+                    ReporterServer.ReportTaskResult(assignmentId, success, response, success ? null : response);
+
+                    InstallEventPublisher.PublishObject("remotecommand.executed", new
+                    {
+                        targetApi,
+                        command,
+                        success,
+                        assignmentId
+                    });
+
+                    return response;
+                }
+                finally
+                {
+                    RemoteCommandContext.AssignmentId = null;
+                }
             }
             catch (Exception e)
             {
+                RemoteCommandContext.AssignmentId = null;
                 ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "RemoteCommand Error:{0}\n{1}", e.Message, e.StackTrace));
                 AuditServer.Log("RemoteCommand", "", false, e.Message, "sub");
 

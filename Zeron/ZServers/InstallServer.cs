@@ -48,6 +48,16 @@ namespace Zeron.ZServers
         private static int m_RunningProcId = 0;
 
         /// <summary>
+        /// AssignmentCompletedHandler - notified when an assignment-linked install finishes.
+        /// Args: assignmentId, success, responseJson, errorMessage.
+        /// </summary>
+        public static Action<string, bool, string?, string?>? AssignmentCompletedHandler
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// TimerQueuesTriggerInterval
         /// </summary>
         public static int TimerQueuesTriggerInterval
@@ -287,6 +297,7 @@ namespace Zeron.ZServers
             {
                 InstallJobTracker.MarkCompleted(queuesType.PackageName, operation, false, -1);
                 PublishInstallEvent("install.failed", queuesType, operation, false, -1);
+                NotifyAssignmentCompleted(queuesType, operation, false, -1);
 
                 return false;
             }
@@ -298,6 +309,7 @@ namespace Zeron.ZServers
             {
                 InstallJobTracker.MarkCompleted(queuesType.PackageName, operation, false, exitCode);
                 PublishInstallEvent("install.failed", queuesType, operation, false, exitCode);
+                NotifyAssignmentCompleted(queuesType, operation, false, exitCode);
 
                 return false;
             }
@@ -352,6 +364,7 @@ namespace Zeron.ZServers
 
             InstallJobTracker.MarkCompleted(queuesType.PackageName, operation, result, exitCode);
             PublishInstallEvent(result ? "install.completed" : "install.failed", queuesType, operation, result, exitCode);
+            NotifyAssignmentCompleted(queuesType, operation, result, exitCode);
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "InstallServer {0} {1}: success={2}, exitCode={3}",
@@ -395,10 +408,58 @@ namespace Zeron.ZServers
                 operation,
                 success,
                 exitCode,
+                assignmentId = queuesType.AssignmentId,
                 timestamp = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)
             };
 
             InstallEventPublisher.Publish(topic, JsonSerializer.Serialize(payload));
+        }
+
+        /// <summary>
+        /// NotifyAssignmentCompleted
+        /// </summary>
+        /// <param name="queuesType"></param>
+        /// <param name="operation"></param>
+        /// <param name="success"></param>
+        /// <param name="exitCode"></param>
+        /// <returns>Returns void.</returns>
+        private static void NotifyAssignmentCompleted(
+            InstallQueuesType queuesType,
+            string operation,
+            bool success,
+            int exitCode)
+        {
+            if (string.IsNullOrWhiteSpace(queuesType.AssignmentId) || AssignmentCompletedHandler == null)
+            {
+                return;
+            }
+
+            string responseJson = JsonSerializer.Serialize(new
+            {
+                success,
+                completed = true,
+                package = queuesType.PackageName,
+                operation,
+                exitCode
+            });
+
+            string? errorMessage = success
+                ? null
+                : string.Format(CultureInfo.InvariantCulture,
+                    "Install {0} failed for '{1}' (exitCode={2}).",
+                    operation,
+                    queuesType.PackageName,
+                    exitCode);
+
+            try
+            {
+                AssignmentCompletedHandler(queuesType.AssignmentId, success, responseJson, errorMessage);
+            }
+            catch (Exception e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
+                    "InstallServer AssignmentCompletedHandler Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
         }
 
         /// <summary>

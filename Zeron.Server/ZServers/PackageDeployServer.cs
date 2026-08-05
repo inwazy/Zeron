@@ -79,7 +79,7 @@ namespace Zeron.Server.ZServers
             return new PackageDeployResponseType
             {
                 Success = true,
-                Message = "Deploy task created. Task success means the package was queued on the agent; watch install.* events for completion.",
+                Message = "Deploy task created. Assignment status becomes running when queued, then completed/failed when install finishes.",
                 TaskId = task.Id,
                 Command = command,
                 Operation = operation,

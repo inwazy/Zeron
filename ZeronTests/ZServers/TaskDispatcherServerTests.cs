@@ -109,6 +109,93 @@ namespace Zeron.Server.ZServers.Tests
             Assert.IsTrue(assignment.Result!.Success);
         }
 
+        /// <summary>
+        /// ManagedPackage queued result keeps assignment running until install completes.
+        /// </summary>
+        [TestMethod()]
+        public async Task ReportResultAsyncManagedPackageQueuedThenCompletedTest()
+        {
+            string dbName = Guid.NewGuid().ToString();
+            await using ZeronServerDbContext dbContext = CreateContext(dbName);
+            Guid assignmentId = Guid.NewGuid();
+            Guid taskId = Guid.NewGuid();
+            Guid agentId = Guid.NewGuid();
+
+            dbContext.Agents.Add(new AgentEntity
+            {
+                Id = agentId,
+                AgentKey = "pkg-agent",
+                Status = "online",
+                RegisteredAt = DateTime.UtcNow
+            });
+
+            dbContext.Tasks.Add(new TaskEntity
+            {
+                Id = taskId,
+                Name = "deploy-ccleaner",
+                TargetApi = "ManagedPackage",
+                Command = "install ccleaner",
+                Status = "pending",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            dbContext.TaskAssignments.Add(new TaskAssignmentEntity
+            {
+                Id = assignmentId,
+                TaskId = taskId,
+                AgentId = agentId,
+                Status = "dispatched",
+                AssignedAt = DateTime.UtcNow
+            });
+
+            await dbContext.SaveChangesAsync();
+
+            TaskDispatcherServer taskDispatcher = new(dbContext, new CommandPublisherServer(new ServerSettings()));
+
+            bool queued = await taskDispatcher.ReportResultAsync(new TaskResultReportType
+            {
+                AssignmentId = assignmentId.ToString(),
+                AgentId = "pkg-agent",
+                Success = true,
+                ResponseJson = "{\"success\":true,\"result\":{\"queued\":true,\"package\":\"ccleaner\"}}"
+            });
+
+            Assert.IsTrue(queued);
+
+            TaskAssignmentEntity? runningAssignment = await dbContext.TaskAssignments
+                .Include(item => item.Task)
+                .Include(item => item.Result)
+                .FirstOrDefaultAsync(item => item.Id == assignmentId);
+
+            Assert.IsNotNull(runningAssignment);
+            Assert.AreEqual("running", runningAssignment!.Status);
+            Assert.AreEqual("running", runningAssignment.Task!.Status);
+            Assert.IsNull(runningAssignment.Result);
+            Assert.IsNull(runningAssignment.CompletedAt);
+
+            bool completed = await taskDispatcher.ReportResultAsync(new TaskResultReportType
+            {
+                AssignmentId = assignmentId.ToString(),
+                AgentId = "pkg-agent",
+                Success = true,
+                ResponseJson = "{\"success\":true,\"completed\":true,\"package\":\"ccleaner\",\"exitCode\":0}"
+            });
+
+            Assert.IsTrue(completed);
+
+            TaskAssignmentEntity? finalAssignment = await dbContext.TaskAssignments
+                .Include(item => item.Task)
+                .Include(item => item.Result)
+                .FirstOrDefaultAsync(item => item.Id == assignmentId);
+
+            Assert.IsNotNull(finalAssignment);
+            Assert.AreEqual("completed", finalAssignment!.Status);
+            Assert.AreEqual("completed", finalAssignment.Task!.Status);
+            Assert.IsNotNull(finalAssignment.Result);
+            Assert.IsTrue(finalAssignment.Result!.Success);
+            Assert.IsNotNull(finalAssignment.CompletedAt);
+        }
+
         private static ZeronServerDbContext CreateContext(string dbName)
         {
             DbContextOptions<ZeronServerDbContext> options = new DbContextOptionsBuilder<ZeronServerDbContext>()

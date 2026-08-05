@@ -108,6 +108,15 @@ namespace Zeron.ZCore.Type
         } = [];
 
         /// <summary>
+        /// Security
+        /// </summary>
+        public DashboardSecurityStatusType Security
+        {
+            get;
+            set;
+        } = new();
+
+        /// <summary>
         /// GeneratedAtUtc
         /// </summary>
         public DateTime GeneratedAtUtc
@@ -115,6 +124,66 @@ namespace Zeron.ZCore.Type
             get;
             set;
         }
+    }
+
+    /// <summary>
+    /// DashboardSecurityStatusType - server transport security posture for Dashboard.
+    /// </summary>
+    public class DashboardSecurityStatusType
+    {
+        /// <summary>
+        /// CurveEnabled
+        /// </summary>
+        public bool CurveEnabled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// CurvePublicKeyPresent
+        /// </summary>
+        public bool CurvePublicKeyPresent
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// AgentHmacRequired
+        /// </summary>
+        public bool AgentHmacRequired
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// RequireHttpsAgents
+        /// </summary>
+        public bool RequireHttpsAgents
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// OverallStatus - hardened | partial | insecure
+        /// </summary>
+        public string OverallStatus
+        {
+            get;
+            set;
+        } = "insecure";
+
+        /// <summary>
+        /// Recommendations
+        /// </summary>
+        public List<string> Recommendations
+        {
+            get;
+            set;
+        } = [];
     }
 
     /// <summary>

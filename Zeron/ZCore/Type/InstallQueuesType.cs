@@ -81,6 +81,15 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
+        /// AssignmentId - optional Zeron.Server task assignment for completion tracking.
+        /// </summary>
+        public string? AssignmentId
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// InstallQueuesType
         /// </summary>
         /// <returns>Returns void.</returns>
@@ -94,6 +103,7 @@ namespace Zeron.ZCore.Type
             Operation = "";
             ScriptBefore = "";
             ScriptAfter = "";
+            AssignmentId = null;
         }
     }
 }
