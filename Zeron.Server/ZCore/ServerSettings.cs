@@ -237,5 +237,23 @@ namespace Zeron.Server.ZCore
             get;
             set;
         } = true;
+
+        /// <summary>
+        /// EncryptionSaltKey - AES salt for agent API key obfuscation (NetMQ payloads).
+        /// </summary>
+        public string? EncryptionSaltKey
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// EncryptionIvKey - AES IV source for agent API key obfuscation.
+        /// </summary>
+        public string? EncryptionIvKey
+        {
+            get;
+            set;
+        }
     }
 }

@@ -18,6 +18,7 @@ using Zeron.Server.Middleware;
 using Zeron.Server.ZCore;
 using Zeron.Server.ZInterfaces;
 using Zeron.Server.ZServers;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server
 {
@@ -43,6 +44,9 @@ namespace Zeron.Server
             ServerSettings serverSettings = builder.Configuration
                 .GetSection(ServerSettings.SectionName)
                 .Get<ServerSettings>() ?? new ServerSettings();
+
+            EncryptionProvider.Configure(serverSettings.EncryptionSaltKey, serverSettings.EncryptionIvKey);
+            EncryptionProvider.ConfigureFromEnvironment();
 
             string dbPath = ResolveDatabasePath(serverSettings.DatabasePath);
 

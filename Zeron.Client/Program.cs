@@ -16,9 +16,10 @@ namespace Zeron.Client
     /// </summary>
     public class Program
     {
-        private static readonly string m_ClientRequestKey = EncryptionProvider.Encrypt(
-            Environment.GetEnvironmentVariable("ZERON_API_KEY") ?? "zeron.testkey");
+        // ClientRequestKey
+        private static string m_ClientRequestKey = "";
 
+        // Options
         private static readonly List<OptionAttribute> m_Options = new();
 
         /// <summary>
@@ -29,6 +30,10 @@ namespace Zeron.Client
         public static void Main(
             string[] args)
         {
+            EncryptionProvider.ConfigureFromEnvironment();
+            m_ClientRequestKey = EncryptionProvider.Encrypt(
+                Environment.GetEnvironmentVariable("ZERON_API_KEY") ?? "zeron.testkey");
+
             m_Options.Add(new OptionAttribute("Run HealthCheckRequest", () => RunCommandRequest(new HealthCheckImpl(), null)));
             m_Options.Add(new OptionAttribute("Run ServerInfoRequest", () => RunCommandRequest(new ServerInfoImpl(), null)));
             m_Options.Add(new OptionAttribute("Run ProcessInfoRequest", () => RunCommandRequest(new ProcessInfoImpl(), null)));

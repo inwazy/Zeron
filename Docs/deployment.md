@@ -45,6 +45,9 @@ Target machines need the [.NET 10 Windows runtime](https://dotnet.microsoft.com/
 | `Zeron:AgentApiKey` | Shared secret for agent HTTP API (`X-Zeron-Agent-Key` header) |
 | `Zeron:JwtSecret` | JWT signing key (minimum 32 characters) |
 | `Zeron:DefaultAdminPassword` | Initial dashboard admin password (change after first login) |
+| `Zeron:EncryptionSaltKey` / `EncryptionIvKey` | Shared AES material for NetMQ API-key obfuscation (must match agents) |
+| `Zeron:CurveEnabled` / `AgentHmacRequired` | On in Production template — enable matching agent keys |
+| `Zeron:AlertEmailEnabled` + SMTP | Optional server alert email |
 
 Example environment variables (PowerShell):
 
@@ -52,6 +55,10 @@ Example environment variables (PowerShell):
 $env:Zeron__AgentApiKey = "your-secure-agent-key"
 $env:Zeron__JwtSecret = "your-secure-jwt-secret-min-32-chars"
 $env:Zeron__DefaultAdminPassword = "ChangeMeNow!"
+$env:Zeron__EncryptionSaltKey = "your-shared-crypt-salt"
+$env:Zeron__EncryptionIvKey = "your-shared-crypt-iv-16+"
+$env:ZERON_CRYPT_SALT = "your-shared-crypt-salt"   # optional; overrides file config
+$env:ZERON_CRYPT_IV = "your-shared-crypt-iv-16+"
 $env:ASPNETCORE_ENVIRONMENT = "Production"
 ```
 
@@ -84,13 +91,23 @@ For production, run behind IIS, Windows Service wrapper, or a process manager. O
 
 ## 4. Configure Zeron.Demand (Agent)
 
-Edit `App.config` in the agent publish folder:
+Copy `App.Sample.config` to `App.config` (already done in the local publish steps above) and replace `CHANGE_ME` values so they match the Server Production template:
 
 ```xml
 <add key="server_enabled" value="true" />
-<add key="server_url" value="http://your-server:5000" />
-<add key="server_api_key" value="your-secure-agent-key" />
+<add key="server_url" value="https://your-server:5000" />
+<add key="server_api_key" value="same-as-Zeron-AgentApiKey" />
+<add key="server_hmac_enabled" value="true" />
+<add key="zmq_sub_enabled" value="true" />
+<add key="zmq_sub_addr" value="tcp://your-server:6000" />
+<add key="zmq_sub_api_key" value="same-as-Zeron-AgentApiKey" />
+<add key="zmq_sub_curve_enabled" value="true" />
+<add key="zmq_sub_curve_server_public_key_file" value="Resource/curve-server.public" />
+<add key="encryption_salt_key" value="same-as-Zeron-EncryptionSaltKey" />
+<add key="encryption_iv_key" value="same-as-Zeron-EncryptionIvKey" />
 ```
+
+Optional agent SMTP (`MailerServer`): set `mail_enabled=true` plus `mail_host`, `mail_sender_address`, and `mail_recipients_administrator`. Server alert email uses `Zeron:AlertEmail*` / `Smtp*` separately.
 
 Install and start the Windows Service:
 
@@ -152,6 +169,7 @@ Local Agent REP/PUB ports remain plaintext for `Zeron.Client` and local tooling.
 - Prefer HTTPS reverse proxy (IIS, nginx, Caddy) in production
 - Restrict NetMQ PUB port to agent subnet only
 - Enable alert email (`Zeron:AlertEmailEnabled`) for offline notifications
+- Set matching `EncryptionSaltKey` / `EncryptionIvKey` on Server and agents (do not leave production on legacy defaults)
 - Confirm Dashboard **Transport Security** shows `hardened` after production config
 
-The home Dashboard panel reads server settings only; agents still need matching CURVE/HMAC keys.
+The home Dashboard panel reads server settings only; agents still need matching CURVE/HMAC keys and shared encryption material.

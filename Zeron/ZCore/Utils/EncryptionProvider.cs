@@ -7,15 +7,106 @@ using System.Text;
 namespace Zeron.ZCore.Utils
 {
     /// <summary>
-    /// EncryptionProvider
+    /// EncryptionProvider - AES helpers with configurable key material.
     /// </summary>
     public static class EncryptionProvider
     {
-        // Crypt Salt key.
-        private const string m_CryptSaltKey = "YRjo1*9!";
+        // Default salt (legacy / development only).
+        public const string DefaultSaltKey = "YRjo1*9!";
 
-        // Crypt IV key.
-        private const string m_CryptIVKey = "cdTeAV#$^YiuDamK";
+        // Default IV source (legacy / development only).
+        public const string DefaultIvKey = "cdTeAV#$^YiuDamK";
+
+        // Environment variable names.
+        public const string EnvSaltKey = "ZERON_CRYPT_SALT";
+
+        // Environment variable name for IV key.
+        public const string EnvIvKey = "ZERON_CRYPT_IV";
+
+        // Active Crypt Salt key.
+        private static string s_CryptSaltKey = DefaultSaltKey;
+
+        // Active Crypt IV key.
+        private static string s_CryptIvKey = DefaultIvKey;
+
+        // Sync lock for configuration.
+        private static readonly object s_ConfigLock = new();
+
+        /// <summary>
+        /// SaltKey
+        /// </summary>
+        public static string SaltKey
+        {
+            get
+            {
+                lock (s_ConfigLock)
+                {
+                    return s_CryptSaltKey;
+                }
+            }
+        }
+
+        /// <summary>
+        /// IvKey
+        /// </summary>
+        public static string IvKey
+        {
+            get
+            {
+                lock (s_ConfigLock)
+                {
+                    return s_CryptIvKey;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Configure - empty / whitespace values keep the current setting.
+        /// </summary>
+        /// <param name="saltKey"></param>
+        /// <param name="ivKey"></param>
+        /// <returns>Returns void.</returns>
+        public static void Configure(
+            string? saltKey,
+            string? ivKey)
+        {
+            lock (s_ConfigLock)
+            {
+                if (!string.IsNullOrWhiteSpace(saltKey))
+                {
+                    s_CryptSaltKey = saltKey.Trim();
+                }
+
+                if (!string.IsNullOrWhiteSpace(ivKey))
+                {
+                    s_CryptIvKey = ivKey.Trim();
+                }
+            }
+        }
+
+        /// <summary>
+        /// ConfigureFromEnvironment - applies ZERON_CRYPT_SALT / ZERON_CRYPT_IV when set.
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        public static void ConfigureFromEnvironment()
+        {
+            Configure(
+                Environment.GetEnvironmentVariable(EnvSaltKey),
+                Environment.GetEnvironmentVariable(EnvIvKey));
+        }
+
+        /// <summary>
+        /// ResetToDefaults
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        public static void ResetToDefaults()
+        {
+            lock (s_ConfigLock)
+            {
+                s_CryptSaltKey = DefaultSaltKey;
+                s_CryptIvKey = DefaultIvKey;
+            }
+        }
 
         /// <summary>
         /// Encrypt
@@ -32,9 +123,18 @@ namespace Zeron.ZCore.Utils
                 return "";
             }
 
+            string saltKey;
+            string defaultIv;
+
+            lock (s_ConfigLock)
+            {
+                saltKey = s_CryptSaltKey;
+                defaultIv = s_CryptIvKey;
+            }
+
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-            byte[] keyBytes = DeriveKeyBytes(m_CryptSaltKey);
-            byte[] ivBytes = DeriveIvBytes(string.IsNullOrEmpty(iv) ? m_CryptIVKey : iv);
+            byte[] keyBytes = DeriveKeyBytes(saltKey);
+            byte[] ivBytes = DeriveIvBytes(string.IsNullOrEmpty(iv) ? defaultIv : iv);
 
             using Aes aesProvider = Aes.Create();
             aesProvider.Mode = CipherMode.CBC;
@@ -90,11 +190,20 @@ namespace Zeron.ZCore.Utils
                 return false;
             }
 
+            string saltKey;
+            string defaultIv;
+
+            lock (s_ConfigLock)
+            {
+                saltKey = s_CryptSaltKey;
+                defaultIv = s_CryptIvKey;
+            }
+
             try
             {
                 byte[] cipherTextBytes = Convert.FromBase64String(cipherText);
-                byte[] keyBytes = DeriveKeyBytes(m_CryptSaltKey);
-                byte[] ivBytes = DeriveIvBytes(string.IsNullOrEmpty(iv) ? m_CryptIVKey : iv);
+                byte[] keyBytes = DeriveKeyBytes(saltKey);
+                byte[] ivBytes = DeriveIvBytes(string.IsNullOrEmpty(iv) ? defaultIv : iv);
 
                 using Aes aesProvider = Aes.Create();
                 aesProvider.Mode = CipherMode.CBC;
