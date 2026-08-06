@@ -4,6 +4,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.IdentityModel.Tokens;
 using NLog;
 using NLog.Extensions.Logging;
@@ -35,7 +36,15 @@ namespace Zeron.Server
         public static WebApplication BuildApplication(
             string[] args)
         {
-            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            WebApplicationOptions options = new()
+            {
+                Args = args,
+                ContentRootPath = WindowsServiceHelpers.IsWindowsService()
+                    ? AppContext.BaseDirectory
+                    : default
+            };
+
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(options);
 
             LogManager.Setup().LoadConfigurationFromFile("NLog.config");
             builder.Logging.ClearProviders();
@@ -44,6 +53,15 @@ namespace Zeron.Server
             ServerSettings serverSettings = builder.Configuration
                 .GetSection(ServerSettings.SectionName)
                 .Get<ServerSettings>() ?? new ServerSettings();
+
+            string serviceName = string.IsNullOrWhiteSpace(serverSettings.WindowsServiceName)
+                ? "Zeron.Server"
+                : serverSettings.WindowsServiceName.Trim();
+
+            builder.Host.UseWindowsService(windowsService =>
+            {
+                windowsService.ServiceName = serviceName;
+            });
 
             EncryptionProvider.Configure(serverSettings.EncryptionSaltKey, serverSettings.EncryptionIvKey);
             EncryptionProvider.ConfigureFromEnvironment();

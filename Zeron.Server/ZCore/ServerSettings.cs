@@ -255,5 +255,14 @@ namespace Zeron.Server.ZCore
             get;
             set;
         }
+
+        /// <summary>
+        /// WindowsServiceName - SCM service name when hosted as a Windows Service.
+        /// </summary>
+        public string WindowsServiceName
+        {
+            get;
+            set;
+        } = "Zeron.Server";
     }
 }

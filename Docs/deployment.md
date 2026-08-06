@@ -40,6 +40,7 @@ dotnet test Zeron.sln -c Release
 dotnet publish Zeron.Server/Zeron.Server.csproj -c Release -r win-x64 --self-contained false -o ./publish/server
 dotnet publish Zeron.Demand/Zeron.Demand.csproj -c Release -r win-x64 --self-contained false -o ./publish/agent
 Copy-Item ./Zeron.Demand/App.Sample.config ./publish/agent/App.config -Force
+Copy-Item ./Zeron.Server/scripts/*.ps1 ./publish/server/ -Force
 ```
 
 Target machines need the [.NET 10 Windows runtime](https://dotnet.microsoft.com/download/dotnet/10.0) (framework-dependent packages).
@@ -86,12 +87,46 @@ Design-time factory: `ZeronServerDbContextFactory` reads `Zeron:DatabasePath` fr
 
 ## 3. Run Zeron.Server
 
+### Console (dev / smoke test)
+
 ```powershell
 cd publish/server
 dotnet Zeron.Server.dll --urls "http://0.0.0.0:5000"
+# or: .\Zeron.Server.exe
 ```
 
-For production, run behind IIS, Windows Service wrapper, or a process manager. Open firewall ports:
+### Windows Service (recommended for production)
+
+`Zeron.Server` supports SCM hosting via `UseWindowsService`. Publish output includes install scripts.
+
+1. Configure `appsettings.Production.json` (or environment variables) in the publish folder.
+2. Open an elevated PowerShell in the publish folder:
+
+```powershell
+cd C:\path\to\publish\server
+.\install-windows-service.ps1 -Urls "http://0.0.0.0:5000"
+# optional: -ServiceName "Zeron.Server" -DisplayName "Zeron Server"
+```
+
+The script registers the service, sets `ASPNETCORE_ENVIRONMENT=Production` and `ASPNETCORE_URLS`, then starts it. Service name defaults to `Zeron:WindowsServiceName` / `Zeron.Server`.
+
+```powershell
+.\uninstall-windows-service.ps1
+# or: Stop-Service Zeron.Server; sc.exe delete Zeron.Server
+```
+
+Manual install (equivalent):
+
+```powershell
+New-Service -Name "Zeron.Server" -BinaryPathName '"C:\path\to\publish\server\Zeron.Server.exe"' `
+  -DisplayName "Zeron Server" -StartupType Automatic
+# Set Environment (REG_MULTI_SZ) under HKLM:\SYSTEM\CurrentControlSet\Services\Zeron.Server:
+#   ASPNETCORE_ENVIRONMENT=Production
+#   ASPNETCORE_URLS=http://0.0.0.0:5000
+Start-Service Zeron.Server
+```
+
+You may still place a reverse proxy (IIS / nginx / Caddy) in front for TLS. Open firewall ports:
 
 | Port | Purpose |
 |------|---------|

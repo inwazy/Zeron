@@ -16,6 +16,8 @@ namespace Zeron.Server
         public static void Main(
             string[] args)
         {
+            // Ensure relative paths (Data/, NLog.config) resolve next to the binary when run as a service.
+            Environment.CurrentDirectory = AppContext.BaseDirectory;
             CreateApp(args).Run();
         }
 

@@ -31,6 +31,7 @@
 | `SmtpEnableSsl` | `true` | Use TLS for SMTP |
 | `EncryptionSaltKey` | (legacy default) | AES salt for NetMQ API-key obfuscation; must match agents |
 | `EncryptionIvKey` | (legacy default) | AES IV source for NetMQ API-key obfuscation; must match agents |
+| `WindowsServiceName` | `Zeron.Server` | SCM service name when hosted with `UseWindowsService` |
 
 Environment variable override uses double underscore: `Zeron__AgentApiKey`.
 

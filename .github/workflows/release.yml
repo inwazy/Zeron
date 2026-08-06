@@ -81,6 +81,9 @@ jobs:
           $buildInfo | Set-Content -Path ./publish/server/BUILD.txt
           Copy-Item ./publish/server/BUILD.txt ./publish/agent/BUILD.txt -Force
 
+          Copy-Item ./Zeron.Server/scripts/install-windows-service.ps1 ./publish/server/ -Force
+          Copy-Item ./Zeron.Server/scripts/uninstall-windows-service.ps1 ./publish/server/ -Force
+
           Compress-Archive -Path ./publish/server/* -DestinationPath ./artifacts/zeron-server-win-x64.zip -Force
           Compress-Archive -Path ./publish/agent/* -DestinationPath ./artifacts/zeron-agent-win-x64.zip -Force
 

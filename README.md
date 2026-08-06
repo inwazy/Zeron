@@ -48,6 +48,7 @@ Driven by NetMQ (ZeroMQ), Zeron empowers SMB IT teams and developers to control 
 - **Task Schedules** — Central cron schedules that dispatch remote APIs to agents
 - **Package Deploy** — Central ManagedPackage install/uninstall to selected agents
 - **Health Probes** — `/health` and `/ready` for deployment monitoring
+- **Windows Service** — `Zeron.Server` and `Zeron.Demand` can run as Windows Services
 
 ## How to Build
 
