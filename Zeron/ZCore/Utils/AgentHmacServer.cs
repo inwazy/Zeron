@@ -146,7 +146,7 @@ namespace Zeron.ZCore.Utils
             string bodyHash = ComputeBodySha256Hex(body);
             string expected = CreateSignature(secret, method, path, timestampUnix, bodyHash);
 
-            if (!FixedTimeEqualsHex(expected, signatureHeader.Trim()))
+            if (!SecureCompareServer.FixedTimeEqualsHex(expected, signatureHeader))
             {
                 error = "Invalid request signature.";
 
@@ -198,27 +198,6 @@ namespace Zeron.ZCore.Utils
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// FixedTimeEqualsHex
-        /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns>Returns bool.</returns>
-        private static bool FixedTimeEqualsHex(
-            string left,
-            string right)
-        {
-            byte[] leftBytes = Encoding.UTF8.GetBytes(left.ToLowerInvariant());
-            byte[] rightBytes = Encoding.UTF8.GetBytes(right.ToLowerInvariant());
-
-            if (leftBytes.Length != rightBytes.Length)
-            {
-                return false;
-            }
-
-            return CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
         }
     }
 }

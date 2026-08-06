@@ -2,12 +2,12 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using System.Globalization;
-using System.Net;
-using System.Net.Mail;
 using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore;
 using Zeron.Server.ZInterfaces;
 using Zeron.ZCore;
+using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server.ZServers
 {
@@ -63,43 +63,45 @@ namespace Zeron.Server.ZServers
         public async Task TrySendEmailAsync(
             AlertEntity alert)
         {
-            if (string.IsNullOrWhiteSpace(m_Settings.SmtpHost)
+            SmtpMailOptions options = new()
+            {
+                Host = m_Settings.SmtpHost,
+                Port = m_Settings.SmtpPort,
+                EnableSsl = m_Settings.SmtpEnableSsl,
+                UserName = m_Settings.SmtpUser,
+                Password = m_Settings.SmtpPassword,
+                FromAddress = string.IsNullOrWhiteSpace(m_Settings.SmtpFrom)
+                    ? "zeron@localhost"
+                    : m_Settings.SmtpFrom,
+                FromDisplayName = "Zeron"
+            };
+
+            if (!SmtpMailServer.HasConnection(options)
                 || string.IsNullOrWhiteSpace(m_Settings.AlertEmailTo))
             {
                 return;
             }
 
-            try
+            (bool ok, Exception? error) = await SmtpMailServer.TrySendAsync(
+                options,
+                m_Settings.AlertEmailTo,
+                "[Zeron Alert] " + alert.Title,
+                alert.Message,
+                isBodyHtml: false);
+
+            if (ok)
             {
-                using SmtpClient client = new(m_Settings.SmtpHost, m_Settings.SmtpPort)
-                {
-                    EnableSsl = m_Settings.SmtpEnableSsl
-                };
-
-                if (!string.IsNullOrWhiteSpace(m_Settings.SmtpUser))
-                {
-                    client.Credentials = new NetworkCredential(m_Settings.SmtpUser, m_Settings.SmtpPassword);
-                }
-
-                string fromAddress = m_Settings.SmtpFrom ?? "zeron@localhost";
-                using MailMessage message = new(fromAddress, m_Settings.AlertEmailTo)
-                {
-                    Subject = "[Zeron Alert] " + alert.Title,
-                    Body = alert.Message,
-                    IsBodyHtml = false
-                };
-
-                await client.SendMailAsync(message);
                 alert.NotifiedAt = DateTime.UtcNow;
-
                 ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                     "AlertNotifierServer emailed alert {0} to {1}", alert.Id, m_Settings.AlertEmailTo));
+
+                return;
             }
-            catch (Exception e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
-                    "AlertNotifierServer TrySendEmailAsync Error:{0}\n{1}", e.Message, e.StackTrace));
-            }
+
+            ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
+                "AlertNotifierServer TrySendEmailAsync Error:{0}\n{1}",
+                error?.Message,
+                error?.StackTrace));
         }
     }
 }

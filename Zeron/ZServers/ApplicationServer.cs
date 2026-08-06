@@ -6,6 +6,7 @@ using System.Globalization;
 using Zeron.ZCore;
 using Zeron.ZCore.Container;
 using Zeron.ZCore.Foundation;
+using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
 
 namespace Zeron.ZServers
@@ -42,6 +43,10 @@ namespace Zeron.ZServers
             try
             {
                 ApiKey = aConfig["app_api_key"];
+                EncryptionProvider.Configure(
+                    aConfig["encryption_salt_key"],
+                    aConfig["encryption_iv_key"]);
+                EncryptionProvider.ConfigureFromEnvironment();
             }
             catch (Exception e)
             {

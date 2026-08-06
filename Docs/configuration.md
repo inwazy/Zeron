@@ -29,25 +29,31 @@
 | `SmtpPassword` | — | SMTP password |
 | `SmtpFrom` | — | From address |
 | `SmtpEnableSsl` | `true` | Use TLS for SMTP |
+| `EncryptionSaltKey` | (legacy default) | AES salt for NetMQ API-key obfuscation; must match agents |
+| `EncryptionIvKey` | (legacy default) | AES IV source for NetMQ API-key obfuscation; must match agents |
 
 Environment variable override uses double underscore: `Zeron__AgentApiKey`.
 
+Crypto env overrides (applied after config): `ZERON_CRYPT_SALT`, `ZERON_CRYPT_IV`.
+
 ### Production Template
 
-Copy `appsettings.Production.template.json` to `appsettings.Production.json` and replace all `CHANGE_ME` placeholders. The template is included in publish output for reference.
+Copy `appsettings.Production.template.json` to `appsettings.Production.json` and replace all `CHANGE_ME` placeholders. The template enables CURVE, HMAC, HTTPS URLs, shared encryption keys, and SMTP placeholders. It is included in publish output for reference.
 
 ```powershell
 copy appsettings.Production.template.json appsettings.Production.json
 ```
 
-Set `ASPNETCORE_ENVIRONMENT=Production` to load production settings.
+Set `ASPNETCORE_ENVIRONMENT=Production` to load production settings. Align agent `App.config` with the same template values using `Zeron.Demand/App.Sample.config`.
 
 ## Zeron.Demand (`App.config`)
+
+Start from `App.Sample.config` (production-shaped) or the published sample next to the agent binary.
 
 | Key | Description |
 |-----|-------------|
 | `server_enabled` | `true` to report heartbeat/events to Zeron.Server |
-| `server_url` | Base URL of Zeron.Server (e.g. `http://192.168.1.10:5000`) |
+| `server_url` | Base URL of Zeron.Server (e.g. `https://192.168.1.10:5000`) |
 | `server_api_key` | Must match server `Zeron:AgentApiKey` (supports `old\|new`) |
 | `server_hmac_enabled` | `true` to sign agent HTTP requests with HMAC-SHA256 |
 | `zmq_sub_enabled` | Connect to Server command PUB |
@@ -58,6 +64,14 @@ Set `ASPNETCORE_ENVIRONMENT=Production` to load production settings.
 | `zmq_sub_curve_client_secret_file` | Agent client secret (auto-created if missing) |
 | `zmq_rep_addr` | Local REQ/REP bind (plaintext; for `Zeron.Client`) |
 | `zmq_pub_addr` | Local event PUB bind (plaintext) |
+| `encryption_salt_key` | Must match Server `EncryptionSaltKey` (or `ZERON_CRYPT_SALT`) |
+| `encryption_iv_key` | Must match Server `EncryptionIvKey` (or `ZERON_CRYPT_IV`) |
+| `mail_enabled` | `true` to enable agent-side SMTP (`MailerServer`) |
+| `mail_host` / `mail_port` | SMTP server |
+| `mail_user_login` / `mail_user_password` | SMTP credentials (optional if relay allows anonymous) |
+| `mail_sender_name` / `mail_sender_address` | From identity |
+| `mail_recipients_administrator` | Comma/space-separated admin recipients |
+| `mail_enable_ssl` | Use TLS for SMTP (`true` default) |
 
 Agent identity is persisted under `Resource/agent.id`. The agent sends heartbeats every 30 seconds when `server_enabled=true`.
 

@@ -107,7 +107,8 @@ namespace Zeron.ZServers
                 AppTitle = aConfig["deploy_app_title"];
                 AppDebug = bool.Parse(aConfig["deploy_app_debug"] ?? "false");
 
-                ServiceName = aConfig["deploy_srvice_name"];
+                // Prefer corrected key; fall back to legacy typo for existing App.config files.
+                ServiceName = aConfig["deploy_service_name"] ?? aConfig["deploy_srvice_name"];
                 ServiceDescription = aConfig["deploy_service_description"];
                 ServiceDisplayName = aConfig["deploy_service_displayname"];
                 ServiceInstanceName = aConfig["deploy_service_instancename"];

@@ -7,8 +7,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Timers;
 using System.Text.Json;
+using System.Timers;
 using Zeron.ZCore;
 using Zeron.ZCore.Container;
 using Zeron.ZCore.Foundation;
@@ -112,7 +112,7 @@ namespace Zeron.ZServers
                 m_TimerQueues.AutoReset = true;
                 m_TimerQueues.Enabled = true;
 
-                m_TimerWatcher.Elapsed += QatcherProc;
+                m_TimerWatcher.Elapsed += WatcherProc;
                 m_TimerWatcher.Interval = TimerQueuesTriggerInterval;
                 m_TimerWatcher.AutoReset = true;
                 m_TimerWatcher.Enabled = true;
@@ -212,12 +212,7 @@ namespace Zeron.ZServers
             object? source, 
             ElapsedEventArgs args)
         {
-            if (m_InstallQueues.Count == 0)
-            {
-                return;
-            }
-
-            if (m_EnableInstallQueue)
+            if (m_InstallQueues.Count == 0 || m_EnableInstallQueue)
             {
                 return;
             }
@@ -241,12 +236,12 @@ namespace Zeron.ZServers
         }
 
         /// <summary>
-        /// QatcherProc
+        /// WatcherProc
         /// </summary>
         /// <param name="source"></param>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        private static void QatcherProc(
+        private static void WatcherProc(
             object? source, 
             ElapsedEventArgs args)
         {
@@ -265,7 +260,7 @@ namespace Zeron.ZServers
             }
             catch (InvalidOperationException e)
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer QatcherProc InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer WatcherProc InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
             }
         }
 
@@ -285,92 +280,32 @@ namespace Zeron.ZServers
                 return false;
             }
 
-            string eventTopic = operation.Contains("uninstall", StringComparison.OrdinalIgnoreCase)
-                ? "install.uninstall"
-                : "install.started";
+            BeginInstall(operation, queuesType);
 
-            PublishInstallEvent(eventTopic, queuesType, operation, null, null);
-
-            InstallJobTracker.MarkRunning(queuesType.PackageName, operation);
-
-            if (!ScriptExecutor.Execute(queuesType.ScriptBefore))
+            if (!RunBeforeScript(queuesType))
             {
-                InstallJobTracker.MarkCompleted(queuesType.PackageName, operation, false, -1);
-                PublishInstallEvent("install.failed", queuesType, operation, false, -1);
-                NotifyAssignmentCompleted(queuesType, operation, false, -1);
-
-                return false;
+                return FinishFailed(queuesType, operation, -1);
             }
 
-            bool result = false;
-            int exitCode = -1;
-
-            if (!GetBinaryFileFromUrl(queuesType))
+            if (!EnsureBinary(queuesType))
             {
-                InstallJobTracker.MarkCompleted(queuesType.PackageName, operation, false, exitCode);
-                PublishInstallEvent("install.failed", queuesType, operation, false, exitCode);
-                NotifyAssignmentCompleted(queuesType, operation, false, exitCode);
-
-                return false;
+                return FinishFailed(queuesType, operation, -1);
             }
 
-            m_EnableInstallQueue = true;
-            m_TimerQueues.Stop();
-            m_TimerWatcher.Start();
+            EnterInstallLock();
 
             try
             {
-                if (File.Exists(queuesType.FilePath))
-                {
-                    ProcessStartInfo startInfo = new()
-                    {
-                        FileName = queuesType.FilePath,
-                        Arguments = queuesType.Arguments ?? "",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
+                (bool processOk, int exitCode) = RunInstallerProcess(queuesType);
+                bool scriptAfterOk = RunAfterScript(queuesType);
+                bool result = processOk && scriptAfterOk;
 
-                    using Process? procStart = Process.Start(startInfo);
-
-                    if (procStart != null)
-                    {
-                        m_RunningProcId = procStart.Id;
-                        procStart.WaitForExit();
-                        exitCode = procStart.ExitCode;
-                        m_RunningProcId = 0;
-                        result = exitCode == 0;
-                    }
-                }
+                return FinishInstall(queuesType, operation, result, exitCode);
             }
-            catch (InvalidOperationException e)
+            finally
             {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer ExecuteQueues InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
+                LeaveInstallLock();
             }
-            catch (Win32Exception e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer ExecuteQueues Win32Exception:{0}\n{1}", e.Message, e.StackTrace));
-            }
-            catch (FileNotFoundException e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer ExecuteQueues FileNotFoundException:{0}\n{1}", e.Message, e.StackTrace));
-            }
-
-            bool scriptAfterOk = ScriptExecutor.Execute(queuesType.ScriptAfter);
-            result = result && scriptAfterOk;
-
-            m_EnableInstallQueue = false;
-            m_TimerQueues.Start();
-            m_TimerWatcher.Stop();
-
-            InstallJobTracker.MarkCompleted(queuesType.PackageName, operation, result, exitCode);
-            PublishInstallEvent(result ? "install.completed" : "install.failed", queuesType, operation, result, exitCode);
-            NotifyAssignmentCompleted(queuesType, operation, result, exitCode);
-
-            ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
-                "InstallServer {0} {1}: success={2}, exitCode={3}",
-                operation, queuesType.PackageName, result, exitCode));
-
-            return result;
         }
 
         /// <summary>
@@ -383,6 +318,174 @@ namespace Zeron.ZServers
             InstallQueuesType? queuesType)
         {
             return ExecuteQueues("install", queuesType);
+        }
+
+        /// <summary>
+        /// BeginInstall
+        /// </summary>
+        /// <param name="operation"></param>
+        /// <param name="queuesType"></param>
+        /// <returns>Returns void.</returns>
+        private static void BeginInstall(
+            string operation,
+            InstallQueuesType queuesType)
+        {
+            string eventTopic = operation.Contains("uninstall", StringComparison.OrdinalIgnoreCase)
+                ? "install.uninstall"
+                : "install.started";
+
+            PublishInstallEvent(eventTopic, queuesType, operation, null, null);
+            InstallJobTracker.MarkRunning(queuesType.PackageName, operation);
+        }
+
+        /// <summary>
+        /// RunBeforeScript
+        /// </summary>
+        /// <param name="queuesType"></param>
+        /// <returns>Returns bool.</returns>
+        private static bool RunBeforeScript(
+            InstallQueuesType queuesType)
+        {
+            return ScriptExecutor.Execute(queuesType.ScriptBefore);
+        }
+
+        /// <summary>
+        /// EnsureBinary
+        /// </summary>
+        /// <param name="queuesType"></param>
+        /// <returns>Returns bool.</returns>
+        private static bool EnsureBinary(
+            InstallQueuesType queuesType)
+        {
+            return InstallBinaryServer.TryDownload(queuesType);
+        }
+
+        /// <summary>
+        /// RunAfterScript
+        /// </summary>
+        /// <param name="queuesType"></param>
+        /// <returns>Returns bool.</returns>
+        private static bool RunAfterScript(
+            InstallQueuesType queuesType)
+        {
+            return ScriptExecutor.Execute(queuesType.ScriptAfter);
+        }
+
+        /// <summary>
+        /// EnterInstallLock
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private static void EnterInstallLock()
+        {
+            m_EnableInstallQueue = true;
+            m_TimerQueues.Stop();
+            m_TimerWatcher.Start();
+        }
+
+        /// <summary>
+        /// LeaveInstallLock
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private static void LeaveInstallLock()
+        {
+            m_EnableInstallQueue = false;
+            m_TimerQueues.Start();
+            m_TimerWatcher.Stop();
+        }
+
+        /// <summary>
+        /// RunInstallerProcess
+        /// </summary>
+        /// <param name="queuesType"></param>
+        /// <returns>Returns (success, exitCode).</returns>
+        private static (bool Success, int ExitCode) RunInstallerProcess(
+            InstallQueuesType queuesType)
+        {
+            bool result = false;
+            int exitCode = -1;
+
+            try
+            {
+                if (string.IsNullOrEmpty(queuesType.FilePath) || !File.Exists(queuesType.FilePath))
+                {
+                    return (false, exitCode);
+                }
+
+                ProcessStartInfo startInfo = new()
+                {
+                    FileName = queuesType.FilePath,
+                    Arguments = queuesType.Arguments ?? "",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using Process? procStart = Process.Start(startInfo);
+
+                if (procStart == null)
+                {
+                    return (false, exitCode);
+                }
+
+                m_RunningProcId = procStart.Id;
+                procStart.WaitForExit();
+                exitCode = procStart.ExitCode;
+                m_RunningProcId = 0;
+                result = exitCode == 0;
+            }
+            catch (InvalidOperationException e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer RunInstallerProcess InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
+            }
+            catch (Win32Exception e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer RunInstallerProcess Win32Exception:{0}\n{1}", e.Message, e.StackTrace));
+            }
+            catch (FileNotFoundException e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer RunInstallerProcess FileNotFoundException:{0}\n{1}", e.Message, e.StackTrace));
+            }
+
+            return (result, exitCode);
+        }
+
+        /// <summary>
+        /// FinishFailed
+        /// </summary>
+        /// <param name="queuesType"></param>
+        /// <param name="operation"></param>
+        /// <param name="exitCode"></param>
+        /// <returns>Returns false.</returns>
+        private static bool FinishFailed(
+            InstallQueuesType queuesType,
+            string operation,
+            int exitCode)
+        {
+            return FinishInstall(queuesType, operation, success: false, exitCode);
+        }
+
+        /// <summary>
+        /// FinishInstall
+        /// </summary>
+        /// <param name="queuesType"></param>
+        /// <param name="operation"></param>
+        /// <param name="success"></param>
+        /// <param name="exitCode"></param>
+        /// <returns>Returns bool.</returns>
+        private static bool FinishInstall(
+            InstallQueuesType queuesType,
+            string operation,
+            bool success,
+            int exitCode)
+        {
+            InstallJobTracker.MarkCompleted(queuesType.PackageName, operation, success, exitCode);
+            PublishInstallEvent(success ? "install.completed" : "install.failed", queuesType, operation, success, exitCode);
+            NotifyAssignmentCompleted(queuesType, operation, success, exitCode);
+
+            ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                "InstallServer {0} {1}: success={2}, exitCode={3}",
+                operation, queuesType.PackageName, success, exitCode));
+
+            return success;
         }
 
         /// <summary>
@@ -499,87 +602,7 @@ namespace Zeron.ZServers
         public static bool GetBinaryFileFromUrl(
             InstallQueuesType? queuesType)
         {
-            bool result = false;
-
-            if (queuesType == null)
-            {
-                return result;
-            }
-
-            if (queuesType.RepoUrl == null || string.IsNullOrEmpty(queuesType.RepoUrl)
-                || queuesType.FilePath == null || string.IsNullOrEmpty(queuesType.FilePath))
-            {
-                return result;
-            }
-
-            if (File.Exists(queuesType.FilePath))
-            {
-                return true;
-            }
-
-            using HttpClient httpClient = new();
-
-            try
-            {
-                using Task<HttpResponseMessage> httpResponse = httpClient.GetAsync(queuesType.RepoUrl);
-                httpResponse.Wait();
-
-                if (httpResponse.IsCompletedSuccessfully)
-                {
-                    try
-                    {
-                        string? directory = Path.GetDirectoryName(queuesType.FilePath);
-
-                        if (!string.IsNullOrEmpty(directory))
-                        {
-                            Directory.CreateDirectory(directory);
-                        }
-
-                        using FileStream fileStream = File.Create(queuesType.FilePath);
-                        httpResponse.Result.Content.CopyToAsync(fileStream).Wait();
-
-                        result = true;
-                    }
-                    catch (UnauthorizedAccessException e)
-                    {
-                        ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl UnauthorizedAccessException:{0}\n{1}", e.Message, e.StackTrace));
-                    }
-                    catch (ArgumentException e)
-                    {
-                        ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl ArgumentException:{0}\n{1}", e.Message, e.StackTrace));
-                    }
-                    catch (PathTooLongException e)
-                    {
-                        ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl PathTooLongException:{0}\n{1}", e.Message, e.StackTrace));
-                    }
-                    catch (DirectoryNotFoundException e)
-                    {
-                        ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl DirectoryNotFoundException:{0}\n{1}", e.Message, e.StackTrace));
-                    }
-                    catch (IOException e)
-                    {
-                        ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl IOException:{0}\n{1}", e.Message, e.StackTrace));
-                    }
-                    catch (NotSupportedException e)
-                    {
-                        ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl NotSupportedException:{0}\n{1}", e.Message, e.StackTrace));
-                    }
-                }
-            }
-            catch (InvalidOperationException e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl InvalidOperationException:{0}\n{1}", e.Message, e.StackTrace));
-            }
-            catch (HttpRequestException e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl HttpRequestException:{0}\n{1}", e.Message, e.StackTrace));
-            }
-            catch (TaskCanceledException e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer GetBinaryFileFromUrl TaskCanceledException:{0}\n{1}", e.Message, e.StackTrace));
-            }
-
-            return result;
+            return InstallBinaryServer.TryDownload(queuesType);
         }
     }
 }
