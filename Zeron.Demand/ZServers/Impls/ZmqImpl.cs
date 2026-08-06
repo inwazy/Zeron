@@ -17,54 +17,73 @@ using Zeron.ZServers;
 namespace Zeron.Demand.ZServers.Impls
 {
     /// <summary>
-    /// ZmqImpl
+    /// ZmqImpl - NetMQ pub/sub/rep runtime (instance state + Current facade).
     /// </summary>
     internal class ZmqImpl : IImpl
     {
+        // Active runtime instance.
+        public static ZmqImpl? Current
+        {
+            get;
+            private set;
+        }
+
         // Publisher thread.
-        private static readonly Thread m_PublisherThread = new(PublisherSocketProc);
+        private Thread? m_PublisherThread;
 
         // Subscriber thread.
-        private static readonly Thread m_SubscriberThread = new(SubscriberSocketProc);
+        private Thread? m_SubscriberThread;
 
         // Response thread.
-        private static readonly Thread m_ResponseThread = new(ResponseSocketProc);
+        private Thread? m_ResponseThread;
 
         // Publisher socket.
-        private static readonly PublisherSocket m_PublisherSocket = new();
+        private readonly PublisherSocket m_PublisherSocket = new();
 
         // Subscriber socket.
-        private static readonly SubscriberSocket m_SubscriberSocket = new();
+        private readonly SubscriberSocket m_SubscriberSocket = new();
 
         // Response socket.
-        private static readonly ResponseSocket m_ResponseSocket = new();
+        private readonly ResponseSocket m_ResponseSocket = new();
 
         // Publisher signal.
-        private static readonly Semaphore m_PublisherSignal = new(0, 20000);
+        private readonly Semaphore m_PublisherSignal = new(0, 20000);
 
         // Publisher API queue messages.
-        private static readonly ConcurrentQueue<Tuple<string, byte[]>> m_PubAPIQueueMessages = new();
+        private readonly ConcurrentQueue<Tuple<string, byte[]>> m_PubAPIQueueMessages = new();
 
         // Enable publisher process.
-        private static bool m_EnablePublisherProc = true;
+        private bool m_EnablePublisherProc = true;
 
         // Enable subscriber process.
-        private static bool m_EnableSubscriberProc = true;
+        private bool m_EnableSubscriberProc = true;
 
         // Enable response process.
-        private static bool m_EnableResponseProc = true;
+        private bool m_EnableResponseProc = true;
+
+        // Whether publisher socket was prepared.
+        private bool m_PublisherPrepared;
 
         // Subscriber API key.
-        private static string m_SubscriberApiKey = "";
+        private string m_SubscriberApiKey = "";
 
         // Response API key.
-        private static string m_ResponseApiKey = "";
+        private string m_ResponseApiKey = "";
 
         // Response API scopes.
-        private static string m_RepApiScopes = "*";
+        private string m_RepApiScopes = "*";
 
         // Subscriber API scopes.
-        private static string m_SubApiScopes = "*";
+        private string m_SubApiScopes = "*";
+
+        /// <summary>
+        /// ActivateAsCurrent
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        public void ActivateAsCurrent()
+        {
+            Current = this;
+        }
 
         /// <summary>
         /// Dispose
@@ -75,6 +94,7 @@ namespace Zeron.Demand.ZServers.Impls
             m_EnablePublisherProc = false;
             m_EnableSubscriberProc = false;
             m_EnableResponseProc = false;
+            m_PublisherPrepared = false;
 
             try
             {
@@ -83,11 +103,25 @@ namespace Zeron.Demand.ZServers.Impls
             catch (SemaphoreFullException)
             {
             }
+            catch (ObjectDisposedException)
+            {
+            }
 
-            m_PublisherSocket.Dispose();
-            m_SubscriberSocket.Dispose();
-            m_ResponseSocket.Dispose();
-            m_PublisherSignal.Dispose();
+            try
+            {
+                m_PublisherSocket.Dispose();
+                m_SubscriberSocket.Dispose();
+                m_ResponseSocket.Dispose();
+                m_PublisherSignal.Dispose();
+            }
+            catch (Exception)
+            {
+            }
+
+            if (ReferenceEquals(Current, this))
+            {
+                Current = null;
+            }
         }
 
         /// <summary>
@@ -145,8 +179,13 @@ namespace Zeron.Demand.ZServers.Impls
             m_PublisherSocket.Options.TcpKeepalive = true;
             m_PublisherSocket.Options.SendHighWatermark = 1000;
             m_PublisherSocket.Bind(addr);
+            m_PublisherPrepared = true;
 
-            m_PublisherThread.IsBackground = true;
+            m_PublisherThread = new Thread(PublisherSocketProc)
+            {
+                IsBackground = true,
+                Name = "ZmqImpl.Publisher"
+            };
             m_PublisherThread.Start();
         }
 
@@ -196,7 +235,11 @@ namespace Zeron.Demand.ZServers.Impls
             m_SubscriberSocket.Connect(addr);
             m_SubscriberSocket.Subscribe("");
 
-            m_SubscriberThread.IsBackground = true;
+            m_SubscriberThread = new Thread(SubscriberSocketProc)
+            {
+                IsBackground = true,
+                Name = "ZmqImpl.Subscriber"
+            };
             m_SubscriberThread.Start();
         }
 
@@ -215,7 +258,11 @@ namespace Zeron.Demand.ZServers.Impls
 
             m_ResponseSocket.Bind(addr);
 
-            m_ResponseThread.IsBackground = true;
+            m_ResponseThread = new Thread(ResponseSocketProc)
+            {
+                IsBackground = true,
+                Name = "ZmqImpl.Response"
+            };
             m_ResponseThread.Start();
         }
 
@@ -230,13 +277,36 @@ namespace Zeron.Demand.ZServers.Impls
             string aTopic, 
             byte[] aMessage)
         {
-            if (!m_EnablePublisherProc || m_PublisherSocket == null)
+            Current?.EnqueuePublish(aTopic, aMessage);
+        }
+
+        /// <summary>
+        /// EnqueuePublish
+        /// </summary>
+        /// <param name="aTopic"></param>
+        /// <param name="aMessage"></param>
+        /// <returns>Returns void.</returns>
+        private void EnqueuePublish(
+            string aTopic,
+            byte[] aMessage)
+        {
+            if (!m_EnablePublisherProc || !m_PublisherPrepared)
             {
                 return;
             }
 
             m_PubAPIQueueMessages.Enqueue(new Tuple<string, byte[]>(aTopic, aMessage));
-            m_PublisherSignal.Release();
+
+            try
+            {
+                m_PublisherSignal.Release();
+            }
+            catch (SemaphoreFullException)
+            {
+            }
+            catch (ObjectDisposedException)
+            {
+            }
         }
 
         /// <summary>
@@ -244,7 +314,7 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
-        private static void PublisherSocketProc(
+        private void PublisherSocketProc(
             object? aArg)
         {
             while (m_EnablePublisherProc)
@@ -276,7 +346,7 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
-        private static void SubscriberSocketProc(
+        private void SubscriberSocketProc(
             object? aArg)
         {
             while (m_EnableSubscriberProc)
@@ -375,7 +445,7 @@ namespace Zeron.Demand.ZServers.Impls
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
-        private static void ResponseSocketProc(
+        private void ResponseSocketProc(
             object? aArg)
         {
             while (m_EnableResponseProc)
@@ -443,7 +513,13 @@ namespace Zeron.Demand.ZServers.Impls
                 }
                 catch (Exception e)
                 {
-                    m_ResponseSocket.SendFrameEmpty();
+                    try
+                    {
+                        m_ResponseSocket.SendFrameEmpty();
+                    }
+                    catch (Exception)
+                    {
+                    }
 
                     if (DeployServer.AppDebug)
                     {

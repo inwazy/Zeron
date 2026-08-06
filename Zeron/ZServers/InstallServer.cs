@@ -19,33 +19,46 @@ using Zeron.ZInterfaces;
 namespace Zeron.ZServers
 {
     /// <summary>
-    /// InstallServer
+    /// InstallServer - install queue runtime (instance state + Current facade).
     /// </summary>
     public class InstallServer : ConfigurationTable, IServer
     {
+        // Active runtime instance.
+        public static InstallServer? Current
+        {
+            get;
+            private set;
+        }
+
+        // Pending assignment handler if set before Initialize.
+        private static Action<string, bool, string?, string?>? s_PendingAssignmentHandler;
+
         // Subscriber background threading.
-        private static readonly Thread m_QueuesThread = new(QueuesProc);
+        private Thread? m_QueuesThread;
 
         // Signal Queues.
-        private static readonly Semaphore m_QueuesSignal = new(0, 1000);
+        private readonly Semaphore m_QueuesSignal = new(0, 1000);
 
         // ConcurrentDictionary Install Queues.
-        private static readonly ConcurrentQueue<Tuple<string?, InstallQueuesType?>> m_InstallQueues = new();
+        private readonly ConcurrentQueue<Tuple<string?, InstallQueuesType?>> m_InstallQueues = new();
 
         // Timer Install Queues.
-        private static readonly System.Timers.Timer m_TimerQueues = new();
+        private readonly System.Timers.Timer m_TimerQueues = new();
 
         // Timer Install Watcher Queues.
-        private static readonly System.Timers.Timer m_TimerWatcher = new();
+        private readonly System.Timers.Timer m_TimerWatcher = new();
 
         // Enable Queues trigger.
-        private static bool m_EnableQueuesProc = true;
+        private bool m_EnableQueuesProc = true;
 
         // Enable Queue Install.
-        private static bool m_EnableInstallQueue = false;
+        private bool m_EnableInstallQueue;
 
         // Running Proc Id.
-        private static int m_RunningProcId = 0;
+        private int m_RunningProcId;
+
+        // Assignment completed handler for this instance.
+        private Action<string, bool, string?, string?>? m_AssignmentCompletedHandler;
 
         /// <summary>
         /// AssignmentCompletedHandler - notified when an assignment-linked install finishes.
@@ -53,8 +66,18 @@ namespace Zeron.ZServers
         /// </summary>
         public static Action<string, bool, string?, string?>? AssignmentCompletedHandler
         {
-            get;
-            set;
+            get => Current?.m_AssignmentCompletedHandler ?? s_PendingAssignmentHandler;
+            set
+            {
+                if (Current != null)
+                {
+                    Current.m_AssignmentCompletedHandler = value;
+                }
+                else
+                {
+                    s_PendingAssignmentHandler = value;
+                }
+            }
         }
 
         /// <summary>
@@ -100,20 +123,28 @@ namespace Zeron.ZServers
         /// <returns>Returns void.</returns>
         public void Initialize()
         {
-            InstallJobTracker.QueueCountProvider = () => m_InstallQueues.Count;
+            Current = this;
+            m_AssignmentCompletedHandler = s_PendingAssignmentHandler;
+            s_PendingAssignmentHandler = null;
+
+            InstallJobTracker.QueueCountProvider = () => Current?.m_InstallQueues.Count ?? 0;
 
             try
             {
-                m_QueuesThread.IsBackground = true;
+                m_QueuesThread = new Thread(QueuesProc)
+                {
+                    IsBackground = true,
+                    Name = "InstallServer.Queues"
+                };
                 m_QueuesThread.Start();
 
                 m_TimerQueues.Elapsed += TimerProc;
-                m_TimerQueues.Interval = TimerQueuesTriggerInterval;
+                m_TimerQueues.Interval = TimerQueuesTriggerInterval > 0 ? TimerQueuesTriggerInterval : 50000;
                 m_TimerQueues.AutoReset = true;
                 m_TimerQueues.Enabled = true;
 
                 m_TimerWatcher.Elapsed += WatcherProc;
-                m_TimerWatcher.Interval = TimerQueuesTriggerInterval;
+                m_TimerWatcher.Interval = TimerQueuesTriggerInterval > 0 ? TimerQueuesTriggerInterval : 50000;
                 m_TimerWatcher.AutoReset = true;
                 m_TimerWatcher.Enabled = true;
 
@@ -135,10 +166,18 @@ namespace Zeron.ZServers
         /// <returns>Returns void.</returns>
         public void Stop()
         {
-            m_TimerQueues.Dispose();
-            m_TimerWatcher.Dispose();
             m_EnableQueuesProc = false;
             m_EnableInstallQueue = false;
+            m_AssignmentCompletedHandler = null;
+
+            try
+            {
+                m_TimerQueues.Dispose();
+                m_TimerWatcher.Dispose();
+            }
+            catch (Exception)
+            {
+            }
 
             try
             {
@@ -147,8 +186,22 @@ namespace Zeron.ZServers
             catch (SemaphoreFullException)
             {
             }
+            catch (ObjectDisposedException)
+            {
+            }
 
-            m_QueuesSignal.Dispose();
+            try
+            {
+                m_QueuesSignal.Dispose();
+            }
+            catch (Exception)
+            {
+            }
+
+            if (ReferenceEquals(Current, this))
+            {
+                Current = null;
+            }
 
             ZNLogger.Common.Info("InstallServer stopped.");
 
@@ -161,7 +214,7 @@ namespace Zeron.ZServers
         /// <returns>Returns int.</returns>
         public static int GetQueueCount()
         {
-            return m_InstallQueues.Count;
+            return Current?.m_InstallQueues.Count ?? 0;
         }
 
         /// <summary>
@@ -169,7 +222,7 @@ namespace Zeron.ZServers
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
-        private static void QueuesProc(
+        private void QueuesProc(
             object? aArg)
         {
             while (m_EnableQueuesProc)
@@ -197,7 +250,7 @@ namespace Zeron.ZServers
                 if (operation.Contains("install", StringComparison.OrdinalIgnoreCase)
                     || operation.Contains("uninstall", StringComparison.OrdinalIgnoreCase))
                 {
-                    ExecuteQueues(operation, queuesType);
+                    ExecuteQueuesCore(operation, queuesType);
                 }
             }
         }
@@ -208,7 +261,7 @@ namespace Zeron.ZServers
         /// <param name="source"></param>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        private static void TimerProc(
+        private void TimerProc(
             object? source, 
             ElapsedEventArgs args)
         {
@@ -233,6 +286,9 @@ namespace Zeron.ZServers
             {
                 ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "InstallServer TimerProc UnauthorizedAccessException:{0}\n{1}", e.Message, e.StackTrace));
             }
+            catch (ObjectDisposedException)
+            {
+            }
         }
 
         /// <summary>
@@ -241,7 +297,7 @@ namespace Zeron.ZServers
         /// <param name="source"></param>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        private static void WatcherProc(
+        private void WatcherProc(
             object? source, 
             ElapsedEventArgs args)
         {
@@ -275,6 +331,31 @@ namespace Zeron.ZServers
             string operation, 
             InstallQueuesType? queuesType)
         {
+            return Current?.ExecuteQueuesCore(operation, queuesType) ?? false;
+        }
+
+        /// <summary>
+        /// ExecuteInstallQueues
+        /// </summary>
+        /// <param name="queuesType"></param>
+        /// <returns>Returns bool.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ExecuteInstallQueues(
+            InstallQueuesType? queuesType)
+        {
+            return ExecuteQueues("install", queuesType);
+        }
+
+        /// <summary>
+        /// ExecuteQueuesCore
+        /// </summary>
+        /// <param name="operation"></param>
+        /// <param name="queuesType"></param>
+        /// <returns>Returns bool.</returns>
+        private bool ExecuteQueuesCore(
+            string operation,
+            InstallQueuesType? queuesType)
+        {
             if (queuesType == null)
             {
                 return false;
@@ -306,18 +387,6 @@ namespace Zeron.ZServers
             {
                 LeaveInstallLock();
             }
-        }
-
-        /// <summary>
-        /// ExecuteInstallQueues
-        /// </summary>
-        /// <param name="queuesType"></param>
-        /// <returns>Returns bool.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ExecuteInstallQueues(
-            InstallQueuesType? queuesType)
-        {
-            return ExecuteQueues("install", queuesType);
         }
 
         /// <summary>
@@ -375,7 +444,7 @@ namespace Zeron.ZServers
         /// EnterInstallLock
         /// </summary>
         /// <returns>Returns void.</returns>
-        private static void EnterInstallLock()
+        private void EnterInstallLock()
         {
             m_EnableInstallQueue = true;
             m_TimerQueues.Stop();
@@ -386,7 +455,7 @@ namespace Zeron.ZServers
         /// LeaveInstallLock
         /// </summary>
         /// <returns>Returns void.</returns>
-        private static void LeaveInstallLock()
+        private void LeaveInstallLock()
         {
             m_EnableInstallQueue = false;
             m_TimerQueues.Start();
@@ -398,7 +467,7 @@ namespace Zeron.ZServers
         /// </summary>
         /// <param name="queuesType"></param>
         /// <returns>Returns (success, exitCode).</returns>
-        private static (bool Success, int ExitCode) RunInstallerProcess(
+        private (bool Success, int ExitCode) RunInstallerProcess(
             InstallQueuesType queuesType)
         {
             bool result = false;
@@ -455,7 +524,7 @@ namespace Zeron.ZServers
         /// <param name="operation"></param>
         /// <param name="exitCode"></param>
         /// <returns>Returns false.</returns>
-        private static bool FinishFailed(
+        private bool FinishFailed(
             InstallQueuesType queuesType,
             string operation,
             int exitCode)
@@ -471,7 +540,7 @@ namespace Zeron.ZServers
         /// <param name="success"></param>
         /// <param name="exitCode"></param>
         /// <returns>Returns bool.</returns>
-        private static bool FinishInstall(
+        private bool FinishInstall(
             InstallQueuesType queuesType,
             string operation,
             bool success,
@@ -526,13 +595,13 @@ namespace Zeron.ZServers
         /// <param name="success"></param>
         /// <param name="exitCode"></param>
         /// <returns>Returns void.</returns>
-        private static void NotifyAssignmentCompleted(
+        private void NotifyAssignmentCompleted(
             InstallQueuesType queuesType,
             string operation,
             bool success,
             int exitCode)
         {
-            if (string.IsNullOrWhiteSpace(queuesType.AssignmentId) || AssignmentCompletedHandler == null)
+            if (string.IsNullOrWhiteSpace(queuesType.AssignmentId) || m_AssignmentCompletedHandler == null)
             {
                 return;
             }
@@ -556,7 +625,7 @@ namespace Zeron.ZServers
 
             try
             {
-                AssignmentCompletedHandler(queuesType.AssignmentId, success, responseJson, errorMessage);
+                m_AssignmentCompletedHandler(queuesType.AssignmentId, success, responseJson, errorMessage);
             }
             catch (Exception e)
             {
@@ -574,6 +643,19 @@ namespace Zeron.ZServers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int AddQueues(
             string? token, 
+            InstallQueuesType queuesType)
+        {
+            return Current?.AddQueuesCore(token, queuesType) ?? 0;
+        }
+
+        /// <summary>
+        /// AddQueuesCore
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="queuesType"></param>
+        /// <returns>Returns int.</returns>
+        private int AddQueuesCore(
+            string? token,
             InstallQueuesType queuesType)
         {
             int result = m_InstallQueues.Count;
