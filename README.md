@@ -7,7 +7,7 @@ Driven by NetMQ (ZeroMQ), Zeron empowers SMB IT teams and developers to control 
 ![GitHub](https://img.shields.io/github/license/inwazy/Zeron)
 ![.NET](https://img.shields.io/badge/.NET-10.0-windows)
 ![Travis (.com)](https://img.shields.io/travis/com/jiowcl/Zeron)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/6bf8bdd0b9634cf3b8c50079e6bbbbfd)](https://www.codacy.com/gh/jiowcl/Zeron/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jiowcl/Zeron&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/6bf8bdd0b9634cf3b8c50079e6bbbbfd)](https://app.codacy.com/gh/jiowcl/Zeron/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 ![Screenshot](./Zeron.Server/Screenshot/Dashboard.png?raw=true)
 

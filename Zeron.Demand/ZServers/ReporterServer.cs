@@ -10,6 +10,7 @@ using Zeron.ZCore;
 using Zeron.ZCore.Container;
 using Zeron.ZCore.Foundation;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
 using Zeron.ZServers;
 
@@ -265,7 +266,8 @@ namespace Zeron.Demand.ZServers
                 Version = typeof(ReporterServer).Assembly.GetName().Version?.ToString(),
                 InstallQueueCount = InstallJobTracker.GetStatus().QueueCount,
                 InstallRunning = InstallJobTracker.GetStatus().IsRunning,
-                SchedulerTaskCount = SchedulerServer.GetTasks().Count
+                SchedulerTaskCount = SchedulerServer.GetTasks().Count,
+                SupportedEngines = ScriptHostServer.ListEngines()
             };
 
             AgentHeartbeatResponseType? response = await ReporterImpl.SendHeartbeatAsync(request);

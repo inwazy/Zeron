@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Zeron.Server.Data;
 
@@ -10,9 +11,11 @@ using Zeron.Server.Data;
 namespace Zeron.Server.Data.Migrations
 {
     [DbContext(typeof(ZeronServerDbContext))]
-    partial class ZeronServerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260806103231_AddAgentSupportedEngines")]
+    partial class AddAgentSupportedEngines
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");

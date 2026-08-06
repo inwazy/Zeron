@@ -90,6 +90,15 @@ namespace Zeron.Server.Data.Entities
         }
 
         /// <summary>
+        /// SupportedEnginesJson - serialized ScriptEngineInfoType list from agent heartbeat.
+        /// </summary>
+        public string? SupportedEnginesJson
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Heartbeats
         /// </summary>
         public ICollection<AgentHeartbeatEntity> Heartbeats { get; set; } = [];

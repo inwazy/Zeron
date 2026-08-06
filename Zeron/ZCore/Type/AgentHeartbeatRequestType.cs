@@ -70,5 +70,14 @@ namespace Zeron.ZCore.Type
             get;
             set;
         }
+
+        /// <summary>
+        /// SupportedEngines - Script Host engines reported by the agent.
+        /// </summary>
+        public List<ScriptEngineInfoType> SupportedEngines
+        {
+            get;
+            set;
+        } = [];
     }
 }

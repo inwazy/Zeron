@@ -84,6 +84,7 @@ namespace Zeron.Demand
                 ServerIntegrate.Fork<AgentServer>();
                 ServerIntegrate.Fork<ApplicationServer>();
                 ServerIntegrate.Fork<DeployServer>();
+                ServerIntegrate.Fork<ScriptHostBootstrapServer>();
                 ServerIntegrate.Fork<InstallServer>();
                 ServerIntegrate.Fork<MailerServer>();
                 ServerIntegrate.Fork<SchedulerServer>();

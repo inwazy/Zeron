@@ -67,12 +67,17 @@ Start from `App.Sample.config` (production-shaped) or the published sample next 
 | `zmq_pub_addr` | Local event PUB bind (plaintext) |
 | `encryption_salt_key` | Must match Server `EncryptionSaltKey` (or `ZERON_CRYPT_SALT`) |
 | `encryption_iv_key` | Must match Server `EncryptionIvKey` (or `ZERON_CRYPT_IV`) |
+| `script_powershell_enabled` | Enable built-in PowerShell script engine (`true` default) |
+| `script_powershell_exe` | PowerShell executable (`powershell.exe` default) |
+| `script_default_timeout_ms` | Default script timeout in ms (`300000`) |
 | `mail_enabled` | `true` to enable agent-side SMTP (`MailerServer`) |
 | `mail_host` / `mail_port` | SMTP server |
 | `mail_user_login` / `mail_user_password` | SMTP credentials (optional if relay allows anonymous) |
 | `mail_sender_name` / `mail_sender_address` | From identity |
 | `mail_recipients_administrator` | Comma/space-separated admin recipients |
 | `mail_enable_ssl` | Use TLS for SMTP (`true` default) |
+
+Script engines: see [Script Host](./script-host.md) for engine IDs, Pipeline `powershell` vs `script`, and capability reporting.
 
 Agent identity is persisted under `Resource/agent.id`. The agent sends heartbeats every 30 seconds when `server_enabled=true`.
 

@@ -6,6 +6,7 @@ using Zeron.Demand.ZCore;
 using Zeron.ZAttribute;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
 using Zeron.ZServers;
 
@@ -39,7 +40,8 @@ namespace Zeron.Demand.ZServices
                     version = typeof(HealthCheck).Assembly.GetName().Version?.ToString(),
                     installQueueCount = installStatus.QueueCount,
                     installRunning = installStatus.IsRunning,
-                    schedulerTaskCount = SchedulerServer.GetTasks().Count
+                    schedulerTaskCount = SchedulerServer.GetTasks().Count,
+                    scriptEngines = ScriptHostServer.ListEngines()
                 };
 
                 return ServiceResponse.SerializeSuccess(result);

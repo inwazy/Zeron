@@ -100,6 +100,45 @@ namespace Zeron.Server.ZServers.Tests
             Assert.AreEqual("offline", agent!.Status);
         }
 
+        /// <summary>
+        /// ProcessHeartbeatAsync persists supportedEngines JSON from the agent.
+        /// </summary>
+        [TestMethod()]
+        public async Task ProcessHeartbeatAsyncStoresSupportedEnginesTest()
+        {
+            string dbName = Guid.NewGuid().ToString();
+            await using ZeronServerDbContext dbContext = CreateContext(dbName);
+            AgentManagerServer agentManager = new(dbContext);
+
+            AgentHeartbeatResponseType response = await agentManager.ProcessHeartbeatAsync(
+                new AgentHeartbeatRequestType
+                {
+                    AgentId = "agent-engines-001",
+                    MachineName = "ENGINEHOST",
+                    UptimeSeconds = 10,
+                    Version = "1.0.0",
+                    SupportedEngines =
+                    [
+                        new ScriptEngineInfoType
+                        {
+                            Id = "powershell",
+                            DisplayName = "PowerShell",
+                            Platforms = ["windows"],
+                            Available = true
+                        }
+                    ]
+                },
+                "127.0.0.1");
+
+            Assert.IsTrue(response.Success);
+
+            AgentEntity? agent = await agentManager.GetAgentByKeyAsync("agent-engines-001");
+
+            Assert.IsNotNull(agent);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(agent!.SupportedEnginesJson));
+            Assert.IsTrue(agent.SupportedEnginesJson!.Contains("powershell", StringComparison.OrdinalIgnoreCase));
+        }
+
         private static ZeronServerDbContext CreateContext(string dbName)
         {
             DbContextOptions<ZeronServerDbContext> options = new DbContextOptionsBuilder<ZeronServerDbContext>()
