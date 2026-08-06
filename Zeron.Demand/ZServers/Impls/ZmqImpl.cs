@@ -58,7 +58,7 @@ namespace Zeron.Demand.ZServers.Impls
         private static string m_SubscriberApiKey = "";
 
         // Response API key.
-        private static string m_ResponsetApiKey = "";
+        private static string m_ResponseApiKey = "";
 
         // Response API scopes.
         private static string m_RepApiScopes = "*";
@@ -125,7 +125,7 @@ namespace Zeron.Demand.ZServers.Impls
             string? apiKey, 
             string? apiScopes)
         {
-            m_ResponsetApiKey = apiKey ?? "";
+            m_ResponseApiKey = apiKey ?? "";
             m_RepApiScopes = string.IsNullOrWhiteSpace(apiScopes) ? "*" : apiScopes;
         }
 
@@ -409,7 +409,7 @@ namespace Zeron.Demand.ZServers.Impls
                         continue;
                     }
 
-                    if (!ApiKeyValidator.Validate(m_ResponsetApiKey, apiKey))
+                    if (!ApiKeyValidator.Validate(m_ResponseApiKey, apiKey))
                     {
                         ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture, "ZmqImpl rejected API request (key): {0}", apiName));
                         AuditServer.Log(apiName, command, false, "Invalid API key", "rep");
