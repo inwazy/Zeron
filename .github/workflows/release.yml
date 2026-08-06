@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore App.config for CI
+        shell: pwsh
+        run: Copy-Item ./Zeron.Demand/App.Sample.config ./Zeron.Demand/App.config -Force
+
+      - name: Restore
+        run: dotnet restore Zeron.sln
+
+      - name: Build
+        run: dotnet build Zeron.sln -c ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Test
+        run: dotnet test Zeron.sln -c ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+      - name: Restore (win-x64)
+        run: dotnet restore Zeron.sln -r win-x64
+
+      - name: Publish Zeron.Server
+        run: >
+          dotnet publish Zeron.Server/Zeron.Server.csproj
+          -c ${{ env.CONFIGURATION }}
+          -r win-x64
+          --self-contained false
+          -o ./publish/server
+          --no-restore
+
+      - name: Publish Zeron.Demand
+        run: >
+          dotnet publish Zeron.Demand/Zeron.Demand.csproj
+          -c ${{ env.CONFIGURATION }}
+          -r win-x64
+          --self-contained false
+          -o ./publish/agent
+          --no-restore
+
+      - name: Prepare release packages
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path ./artifacts | Out-Null
+
+          Copy-Item ./Zeron.Demand/App.Sample.config ./publish/agent/App.Sample.config -Force
+          if (-not (Test-Path ./publish/agent/App.config)) {
+            Copy-Item ./Zeron.Demand/App.Sample.config ./publish/agent/App.config -Force
+          }
+
+          $tag = "${{ github.ref_name }}"
+          $buildInfo = @(
+            "Zeron release package",
+            "Version: $tag",
+            "Commit: ${{ github.sha }}",
+            "Ref: ${{ github.ref }}",
+            "Runtime: win-x64 (framework-dependent, requires .NET 10)",
+            "Built: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')) UTC"
+          )
+          $buildInfo | Set-Content -Path ./publish/server/BUILD.txt
+          Copy-Item ./publish/server/BUILD.txt ./publish/agent/BUILD.txt -Force
+
+          Compress-Archive -Path ./publish/server/* -DestinationPath ./artifacts/zeron-server-win-x64.zip -Force
+          Compress-Archive -Path ./publish/agent/* -DestinationPath ./artifacts/zeron-agent-win-x64.zip -Force
+
+          Get-ChildItem ./artifacts | Format-Table Name, Length
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Zeron ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            artifacts/zeron-server-win-x64.zip
+            artifacts/zeron-agent-win-x64.zip
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

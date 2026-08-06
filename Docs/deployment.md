@@ -10,16 +10,25 @@ This guide covers deploying **Zeron.Server** (central management) and **Zeron.De
 
 ## 1. Build
 
-### From CI artifacts (recommended)
+### From GitHub Release (recommended)
 
-GitHub Actions CI publishes framework-dependent **win-x64** zip packages after tests pass:
+Push a version tag (for example `v1.0.1`) to run the **Release** workflow. After tests and publish succeed, a GitHub Release is created with:
 
-| Artifact | Contents |
-|----------|----------|
-| `zeron-server-win-x64` | `Zeron.Server` publish output |
-| `zeron-agent-win-x64` | `Zeron.Demand` publish output + `App.Sample.config` |
+| Asset | Contents |
+|-------|----------|
+| `zeron-server-win-x64.zip` | `Zeron.Server` publish output |
+| `zeron-agent-win-x64.zip` | `Zeron.Demand` publish output + `App.Sample.config` |
 
-Download from the workflow run → **Artifacts**, extract, then configure before first start. Each zip includes `BUILD.txt` with commit SHA.
+```powershell
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+Download the zips from the Release page, extract, then configure before first start. Each zip includes `BUILD.txt` with version, commit SHA, and build time.
+
+### From CI artifacts
+
+GitHub Actions CI also uploads the same framework-dependent **win-x64** packages as workflow artifacts (retained ~30 days) after tests pass on `main` / `develop` / PRs. Prefer Releases for long-term installs.
 
 ### Local build
 

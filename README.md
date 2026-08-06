@@ -58,7 +58,7 @@ dotnet build Zeron.sln -c Release
 dotnet test Zeron.sln -c Release
 ```
 
-CI on GitHub Actions builds, tests, and publishes deploy zips (`zeron-server-win-x64`, `zeron-agent-win-x64`). See [Docs/deployment.md](./Docs/deployment.md).
+CI on GitHub Actions builds, tests, and publishes deploy zips (`zeron-server-win-x64`, `zeron-agent-win-x64`). Push a `v*` tag to create a [GitHub Release](https://github.com/inwazy/Zeron/releases) with the same packages. See [Docs/deployment.md](./Docs/deployment.md).
 
 Run the agent:
 
