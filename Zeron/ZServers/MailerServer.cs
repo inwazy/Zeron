@@ -4,11 +4,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.Globalization;
-using System.Net;
 using System.Net.Mail;
 using Zeron.ZCore;
 using Zeron.ZCore.Container;
 using Zeron.ZCore.Foundation;
+using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
 
 namespace Zeron.ZServers
@@ -173,7 +174,22 @@ namespace Zeron.ZServers
             m_IsConfigured = false;
             m_AdministratorRecipients.Clear();
 
-            if (!Enabled || string.IsNullOrWhiteSpace(Host) || string.IsNullOrWhiteSpace(SenderAddress))
+            try
+            {
+                m_SmtpClient?.Dispose();
+            }
+            catch (Exception e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
+                    "MailerServer Dispose Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
+
+            m_SmtpClient = null;
+            m_MailSender = null;
+
+            SmtpMailOptions options = BuildOptions();
+
+            if (!Enabled || !SmtpMailServer.HasConnection(options))
             {
                 ZNLogger.Common.Info("MailerServer disabled or incomplete SMTP configuration.");
                 StartQueueThread();
@@ -183,21 +199,12 @@ namespace Zeron.ZServers
 
             try
             {
-                m_SmtpClient = new SmtpClient
-                {
-                    Host = Host,
-                    Port = Port,
-                    EnableSsl = EnableSsl,
-                    DeliveryMethod = SmtpDeliveryMethod.Network
-                };
-
-                if (!string.IsNullOrWhiteSpace(UserLogin))
-                {
-                    m_SmtpClient.Credentials = new NetworkCredential(UserLogin, UserPassword);
-                }
-
-                m_MailSender = new MailAddress(SenderAddress, SenderName ?? "Zeron");
-                ParseAdministratorRecipients(RecipientsAdministrator);
+                m_SmtpClient = SmtpMailServer.CreateClient(options);
+                m_MailSender = SmtpMailServer.CreateFromAddress(options);
+                m_AdministratorRecipients.AddRange(SmtpMailServer.ParseRecipients(
+                    RecipientsAdministrator,
+                    part => ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
+                        "MailerServer skipping invalid recipient '{0}'", part))));
                 m_IsConfigured = m_AdministratorRecipients.Count > 0;
 
                 if (!m_IsConfigured)
@@ -296,6 +303,24 @@ namespace Zeron.ZServers
         }
 
         /// <summary>
+        /// BuildOptions
+        /// </summary>
+        /// <returns>Returns SmtpMailOptions.</returns>
+        private static SmtpMailOptions BuildOptions()
+        {
+            return new SmtpMailOptions
+            {
+                Host = Host,
+                Port = Port,
+                EnableSsl = EnableSsl,
+                UserName = UserLogin,
+                Password = UserPassword,
+                FromAddress = SenderAddress,
+                FromDisplayName = SenderName
+            };
+        }
+
+        /// <summary>
         /// StartQueueThread
         /// </summary>
         /// <returns>Returns void.</returns>
@@ -315,35 +340,6 @@ namespace Zeron.ZServers
             {
                 ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
                     "MailerServer StartQueueThread Error:{0}\n{1}", e.Message, e.StackTrace));
-            }
-        }
-
-        /// <summary>
-        /// ParseAdministratorRecipients
-        /// </summary>
-        /// <param name="recipients"></param>
-        /// <returns>Returns void.</returns>
-        private static void ParseAdministratorRecipients(
-            string? recipients)
-        {
-            m_AdministratorRecipients.Clear();
-
-            if (string.IsNullOrWhiteSpace(recipients))
-            {
-                return;
-            }
-
-            foreach (string part in recipients.Split([';', '|', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            {
-                try
-                {
-                    m_AdministratorRecipients.Add(new MailAddress(part));
-                }
-                catch (FormatException)
-                {
-                    ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
-                        "MailerServer skipping invalid recipient '{0}'", part));
-                }
             }
         }
 
@@ -412,26 +408,17 @@ namespace Zeron.ZServers
                 return false;
             }
 
-            try
+            bool sent = SmtpMailServer.TrySend(
+                m_SmtpClient,
+                m_MailSender,
+                m_AdministratorRecipients,
+                subject,
+                bodyHtml,
+                isBodyHtml: true,
+                out Exception? error);
+
+            if (sent)
             {
-                using MailMessage message = new()
-                {
-                    SubjectEncoding = System.Text.Encoding.UTF8,
-                    BodyEncoding = System.Text.Encoding.UTF8,
-                    Sender = m_MailSender,
-                    From = m_MailSender,
-                    IsBodyHtml = true,
-                    Subject = subject,
-                    Body = bodyHtml
-                };
-
-                foreach (MailAddress recipient in m_AdministratorRecipients)
-                {
-                    message.To.Add(recipient);
-                }
-
-                m_SmtpClient.Send(message);
-
                 ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                     "MailerServer sent '{0}' to {1} recipient(s).",
                     subject,
@@ -439,13 +426,13 @@ namespace Zeron.ZServers
 
                 return true;
             }
-            catch (Exception e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
-                    "MailerServer Send Error:{0}\n{1}", e.Message, e.StackTrace));
 
-                return false;
-            }
+            ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
+                "MailerServer Send Error:{0}\n{1}",
+                error?.Message,
+                error?.StackTrace));
+
+            return false;
         }
     }
 }
