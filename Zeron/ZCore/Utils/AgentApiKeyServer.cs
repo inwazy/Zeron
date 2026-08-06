@@ -1,9 +1,6 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-using System.Security.Cryptography;
-using System.Text;
-
 namespace Zeron.ZCore.Utils
 {
     /// <summary>
@@ -63,34 +60,13 @@ namespace Zeron.ZCore.Utils
 
             foreach (string key in SplitKeys(configuredKeys))
             {
-                if (FixedTimeEquals(presentedKey, key))
+                if (SecureCompareServer.FixedTimeEquals(presentedKey, key))
                 {
                     return true;
                 }
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// FixedTimeEquals
-        /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns>Returns bool.</returns>
-        private static bool FixedTimeEquals(
-            string left,
-            string right)
-        {
-            byte[] leftBytes = Encoding.UTF8.GetBytes(left);
-            byte[] rightBytes = Encoding.UTF8.GetBytes(right);
-
-            if (leftBytes.Length != rightBytes.Length)
-            {
-                return false;
-            }
-
-            return CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
         }
     }
 }

@@ -1,19 +1,13 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-using System.Security.Cryptography;
-using System.Text;
-
 namespace Zeron.ZCore.Utils
 {
     /// <summary>
-    /// ApiKeyValidator
+    /// ApiKeyValidator - validates encrypted NetMQ client API keys.
     /// </summary>
     public static class ApiKeyValidator
     {
-        // Key separators.
-        private static readonly char[] s_KeySeparators = ['|', ',', ';'];
-
         /// <summary>
         /// Validate an encrypted client API key against configured keys.
         /// Configured keys may be plaintext or DPAPI-protected (prefix "dpapi:").
@@ -37,11 +31,11 @@ namespace Zeron.ZCore.Utils
                 return false;
             }
 
-            foreach (string configuredKey in configuredKeys.Split(s_KeySeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            foreach (string configuredKey in AgentApiKeyServer.SplitKeys(configuredKeys))
             {
                 string resolvedKey = ResolveConfiguredKey(configuredKey);
 
-                if (FixedTimeEquals(decryptedKey, resolvedKey))
+                if (SecureCompareServer.FixedTimeEquals(decryptedKey, resolvedKey))
                 {
                     return true;
                 }
@@ -64,27 +58,6 @@ namespace Zeron.ZCore.Utils
             }
 
             return configuredKey;
-        }
-
-        /// <summary>
-        /// FixedTimeEquals
-        /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns>Returns bool.</returns>
-        private static bool FixedTimeEquals(
-            string left, 
-            string right)
-        {
-            byte[] leftBytes = Encoding.UTF8.GetBytes(left);
-            byte[] rightBytes = Encoding.UTF8.GetBytes(right);
-
-            if (leftBytes.Length != rightBytes.Length)
-            {
-                return false;
-            }
-
-            return CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
         }
     }
 }
