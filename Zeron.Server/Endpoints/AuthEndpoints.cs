@@ -49,7 +49,7 @@ namespace Zeron.Server.Endpoints
 
                 return response.User.MustChangePassword
                     ? Results.Redirect("/account/change-password?required=1")
-                    : Results.Redirect("/");
+                    : Results.Redirect(GetHomePath(userEntity.Role));
             }).AllowAnonymous().DisableAntiforgery();
 
             app.MapPost("/api/auth/login", async (
@@ -117,8 +117,10 @@ namespace Zeron.Server.Endpoints
                     await SignInUserAsync(context, userEntity);
                 }
 
-                return Results.Redirect("/?passwordChanged=1");
-            }).RequireAuthorization(ServerPolicies.ViewerOrAbove).DisableAntiforgery();
+                string home = GetHomePath(userEntity?.Role);
+
+                return Results.Redirect(home + (home.Contains('?', StringComparison.Ordinal) ? "&" : "?") + "passwordChanged=1");
+            }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff).DisableAntiforgery();
 
             app.MapPost("/api/auth/change-password", async (
                 ChangePasswordRequestType request,
@@ -149,7 +151,7 @@ namespace Zeron.Server.Endpoints
                 }
 
                 return Results.Ok(new { success = true, user });
-            }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
+            }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
 
             app.MapPost("/account/logout", async (HttpContext context) =>
             {
@@ -170,7 +172,7 @@ namespace Zeron.Server.Endpoints
                 UserInfoType? profile = await authServer.GetUserFromPrincipalAsync(user);
 
                 return profile == null ? Results.Unauthorized() : Results.Ok(profile);
-            }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
+            }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
 
             return app;
         }
@@ -195,6 +197,19 @@ namespace Zeron.Server.Endpoints
                     IsPersistent = true,
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 });
+        }
+
+        /// <summary>
+        /// GetHomePath
+        /// </summary>
+        /// <param name="role"></param>
+        /// <returns>Returns home path for role.</returns>
+        private static string GetHomePath(
+            string? role)
+        {
+            return string.Equals(role, ServerRoles.DeviceOwner, StringComparison.OrdinalIgnoreCase)
+                ? "/my-devices"
+                : "/";
         }
 
         /// <summary>

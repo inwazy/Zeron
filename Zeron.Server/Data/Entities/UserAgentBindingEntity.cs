@@ -4,9 +4,9 @@
 namespace Zeron.Server.Data.Entities
 {
     /// <summary>
-    /// UserEntity
+    /// UserAgentBindingEntity - binds a dashboard user to a Demand agent.
     /// </summary>
-    public class UserEntity
+    public class UserAgentBindingEntity
     {
         /// <summary>
         /// Id
@@ -18,54 +18,36 @@ namespace Zeron.Server.Data.Entities
         }
 
         /// <summary>
-        /// Username
+        /// UserId
         /// </summary>
-        public string Username
-        {
-            get;
-            set;
-        } = "";
-
-        /// <summary>
-        /// PasswordHash
-        /// </summary>
-        public string PasswordHash
-        {
-            get;
-            set;
-        } = "";
-
-        /// <summary>
-        /// Role - Admin, Operator, Viewer, DeviceOwner
-        /// </summary>
-        public string Role
-        {
-            get;
-            set;
-        } = "Viewer";
-
-        /// <summary>
-        /// IsActive
-        /// </summary>
-        public bool IsActive
-        {
-            get;
-            set;
-        } = true;
-
-        /// <summary>
-        /// CreatedAt
-        /// </summary>
-        public DateTime CreatedAt
+        public Guid UserId
         {
             get;
             set;
         }
 
         /// <summary>
-        /// MustChangePassword
+        /// AgentKey - maps to AgentEntity.AgentKey / Demand AgentId.
         /// </summary>
-        public bool MustChangePassword
+        public string AgentKey
+        {
+            get;
+            set;
+        } = "";
+
+        /// <summary>
+        /// BoundAt
+        /// </summary>
+        public DateTime BoundAt
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// User
+        /// </summary>
+        public UserEntity? User
         {
             get;
             set;

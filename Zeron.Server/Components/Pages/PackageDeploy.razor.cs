@@ -15,6 +15,9 @@ namespace Zeron.Server.Components.Pages
         // Model.
         private readonly DeployFormModel m_Model = new();
 
+        // Catalog packages.
+        private List<ManagedPackageInfoType> m_Packages = [];
+
         // Error.
         private string? m_Error;
 
@@ -29,6 +32,15 @@ namespace Zeron.Server.Components.Pages
                     m_Model.Operation,
                     m_Model.PackageName.Trim(),
                     m_Model.ExtraArgs);
+
+        /// <summary>
+        /// OnInitializedAsync
+        /// </summary>
+        /// <returns>Returns Task.</returns>
+        protected override async Task OnInitializedAsync()
+        {
+            m_Packages = await CatalogServer.GetPackagesAsync(enabledOnly: true);
+        }
 
         /// <summary>
         /// HandleDeployAsync
@@ -97,6 +109,5 @@ namespace Zeron.Server.Components.Pages
             // Hostname pattern.
             public string? HostnamePattern { get; set; }
         }
-
     }
 }

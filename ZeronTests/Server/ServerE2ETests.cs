@@ -136,12 +136,36 @@ namespace Zeron.Server.Tests
             await PostHeartbeatAsync(agentClient);
             await LoginAsync(dashboardClient);
 
+            string packageName = "ccleaner-" + Guid.NewGuid().ToString("N")[..8];
+            HttpResponseMessage catalogResponse = await dashboardClient.PostAsJsonAsync(
+                "/api/packages/catalog",
+                new ManagedPackageUpsertRequestType
+                {
+                    Name = packageName,
+                    Urlx64 = "https://example.com/ccleaner.exe",
+                    CmdInstallx64 = "/S",
+                    IsEnabled = true
+                });
+
+            string catalogBody = await catalogResponse.Content.ReadAsStringAsync();
+            Assert.AreEqual(HttpStatusCode.Created, catalogResponse.StatusCode, catalogBody);
+
+            HttpResponseMessage syncResponse = await agentClient.GetAsync("/api/packages/catalog/sync");
+            Assert.AreEqual(HttpStatusCode.OK, syncResponse.StatusCode);
+
+            ManagedPackageCatalogSyncResponseType? sync = await syncResponse.Content
+                .ReadFromJsonAsync<ManagedPackageCatalogSyncResponseType>();
+
+            Assert.IsNotNull(sync);
+            Assert.IsTrue(sync!.Success);
+            Assert.IsTrue(sync.Packages.Any(package => package.Name == packageName));
+
             HttpResponseMessage deployResponse = await dashboardClient.PostAsJsonAsync(
                 "/api/packages/deploy",
                 new PackageDeployRequestType
                 {
                     Operation = "install",
-                    PackageName = "ccleaner",
+                    PackageName = packageName,
                     ExtraArgs = "/S",
                     TargetType = "agent",
                     AgentIds = [TestAgentId]
@@ -154,7 +178,7 @@ namespace Zeron.Server.Tests
 
             Assert.IsNotNull(deploy);
             Assert.IsTrue(deploy!.Success);
-            Assert.AreEqual("install ccleaner /S", deploy.Command);
+            Assert.AreEqual("install " + packageName + " /S", deploy.Command);
             Assert.IsNotNull(deploy.TaskId);
         }
 

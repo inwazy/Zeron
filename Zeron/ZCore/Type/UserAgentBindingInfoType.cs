@@ -1,17 +1,26 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-namespace Zeron.Server.Data.Entities
+namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// UserEntity
+    /// UserAgentBindingInfoType
     /// </summary>
-    public class UserEntity
+    public class UserAgentBindingInfoType
     {
         /// <summary>
         /// Id
         /// </summary>
-        public Guid Id
+        public string? Id
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// UserId
+        /// </summary>
+        public string? UserId
         {
             get;
             set;
@@ -20,52 +29,34 @@ namespace Zeron.Server.Data.Entities
         /// <summary>
         /// Username
         /// </summary>
-        public string Username
-        {
-            get;
-            set;
-        } = "";
-
-        /// <summary>
-        /// PasswordHash
-        /// </summary>
-        public string PasswordHash
-        {
-            get;
-            set;
-        } = "";
-
-        /// <summary>
-        /// Role - Admin, Operator, Viewer, DeviceOwner
-        /// </summary>
-        public string Role
-        {
-            get;
-            set;
-        } = "Viewer";
-
-        /// <summary>
-        /// IsActive
-        /// </summary>
-        public bool IsActive
-        {
-            get;
-            set;
-        } = true;
-
-        /// <summary>
-        /// CreatedAt
-        /// </summary>
-        public DateTime CreatedAt
+        public string? Username
         {
             get;
             set;
         }
 
         /// <summary>
-        /// MustChangePassword
+        /// AgentKey
         /// </summary>
-        public bool MustChangePassword
+        public string? AgentKey
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// MachineName
+        /// </summary>
+        public string? MachineName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// BoundAt
+        /// </summary>
+        public DateTime? BoundAt
         {
             get;
             set;

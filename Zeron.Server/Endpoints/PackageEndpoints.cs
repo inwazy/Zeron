@@ -19,6 +19,83 @@ namespace Zeron.Server.Endpoints
         /// <returns>Returns WebApplication.</returns>
         public static WebApplication MapPackageEndpoints(this WebApplication app)
         {
+            app.MapGet("/api/packages/catalog", async (
+                bool? enabledOnly,
+                ManagedPackageCatalogServer catalogServer) =>
+            {
+                return Results.Ok(await catalogServer.GetPackagesAsync(enabledOnly ?? false));
+            }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
+
+            app.MapGet("/api/packages/catalog/sync", async (
+                HttpContext context,
+                ManagedPackageCatalogServer catalogServer,
+                AuthServer authServer,
+                ServerSettings settings) =>
+            {
+                IResult? authResult = await context.ValidateAgentRequestAsync(authServer, settings);
+
+                if (authResult != null)
+                {
+                    return authResult;
+                }
+
+                return Results.Ok(await catalogServer.GetCatalogSyncAsync());
+            });
+
+            app.MapGet("/api/packages/catalog/{packageId:guid}", async (
+                Guid packageId,
+                ManagedPackageCatalogServer catalogServer) =>
+            {
+                ManagedPackageInfoType? package = await catalogServer.GetPackageAsync(packageId);
+
+                return package == null ? Results.NotFound() : Results.Ok(package);
+            }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
+
+            app.MapPost("/api/packages/catalog", async (
+                ManagedPackageUpsertRequestType request,
+                ManagedPackageCatalogServer catalogServer) =>
+            {
+                (ManagedPackageInfoType? package, string? error) = await catalogServer.CreatePackageAsync(request);
+
+                if (error != null)
+                {
+                    return Results.BadRequest(new { success = false, message = error });
+                }
+
+                return Results.Created($"/api/packages/catalog/{package!.Id}", package);
+            }).RequireAuthorization(ServerPolicies.OperatorOrAbove);
+
+            app.MapPut("/api/packages/catalog/{packageId:guid}", async (
+                Guid packageId,
+                ManagedPackageUpsertRequestType request,
+                ManagedPackageCatalogServer catalogServer) =>
+            {
+                (ManagedPackageInfoType? package, string? error) = await catalogServer.UpdatePackageAsync(packageId, request);
+
+                if (error != null)
+                {
+                    return error == "Package not found."
+                        ? Results.NotFound(new { success = false, message = error })
+                        : Results.BadRequest(new { success = false, message = error });
+                }
+
+                return Results.Ok(package);
+            }).RequireAuthorization(ServerPolicies.OperatorOrAbove);
+
+            app.MapDelete("/api/packages/catalog/{packageId:guid}", async (
+                Guid packageId,
+                ManagedPackageCatalogServer catalogServer) =>
+            {
+                string? error = await catalogServer.DeletePackageAsync(packageId);
+
+                if (error != null)
+                {
+                    return Results.NotFound(new { success = false, message = error });
+                }
+
+                return Results.Ok(new { success = true });
+            }).RequireAuthorization(ServerPolicies.OperatorOrAbove);
+
             app.MapPost("/api/packages/deploy", async (
                 PackageDeployRequestType request,
                 PackageDeployServer packageDeployServer) =>

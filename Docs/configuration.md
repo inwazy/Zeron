@@ -168,15 +168,29 @@ Cron uses 5-field NCrontab expressions evaluated in **server local time**. When 
 
 Dashboard pages: `/schedules`, `/schedules/create`, `/schedules/{id}`.
 
-## ManagedPackage Central Deploy
+## ManagedPackage Catalog and Central Deploy
 
-Central package deploy reuses the task dispatch path (`TargetApi=ManagedPackage`).
+The Server catalog is the central source of ManagedPackage definitions. Demand agents periodically pull `/api/packages/catalog/sync` and upsert rows with `source=server`. Rows marked `source=local` on Demand are never overwritten (standalone Demand or local overrides).
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| `POST /api/packages/deploy` | Operator+ | Create install/uninstall deploy task |
+| `GET /api/packages/catalog` | Viewer+ | List Server catalog |
+| `POST /api/packages/catalog` | Operator+ | Create catalog package |
+| `PUT /api/packages/catalog/{id}` | Operator+ | Update catalog package |
+| `DELETE /api/packages/catalog/{id}` | Operator+ | Delete catalog package |
+| `GET /api/packages/catalog/sync` | Agent API key | Full catalog snapshot for Demand |
+| `POST /api/packages/deploy` | Operator+ | Create install/uninstall deploy task (name must exist and be enabled in Server catalog) |
 | `GET /api/packages/deploys` | Viewer+ | Recent ManagedPackage tasks |
 | `GET /api/packages/install-events` | Viewer+ | Recent `install.*` events |
+
+Demand App.config keys:
+
+| Key | Description |
+|-----|-------------|
+| `mp_db_source_file` | Local SQLite path (created if missing) |
+| `mp_repo_temp_path` | Download temp folder |
+| `mp_catalog_sync_enabled` | Sync from Server when reporter is enabled (default `true`) |
+| `mp_catalog_sync_interval_ms` | Sync interval (default `300000`) |
 
 Command format sent to agents:
 
@@ -184,8 +198,6 @@ Command format sent to agents:
 install <packageName> [extraArgs]
 uninstall <packageName> [extraArgs]
 ```
-
-Package names must exist in each agent's local SQLite `managed_packages` catalog (`status=1`).
 
 Package deploy assignment lifecycle:
 
@@ -195,4 +207,19 @@ Package deploy assignment lifecycle:
 
 Related events: `install.started` / `install.uninstall` / `install.completed` / `install.failed`.
 
-Dashboard pages: `/packages`, `/packages/deploy`. Events shortcut: `/events?topic=install.`.
+Dashboard pages: `/packages`, `/packages/catalog`, `/packages/deploy`. Events shortcut: `/events?topic=install.`.
+
+## Device Owner Self-Service
+
+`DeviceOwner` accounts can log into the Dashboard and view only Demand agents bound to their user (Admin manages bindings).
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/user-agent-bindings` | Admin | List bindings |
+| `POST /api/user-agent-bindings` | Admin | Bind user ↔ AgentKey |
+| `DELETE /api/user-agent-bindings/{id}` | Admin | Remove binding |
+| `GET /api/my/devices` | DeviceOwner or staff | Bound agent status |
+| `GET /api/my/devices/{agentKey}` | DeviceOwner or staff | Single bound agent |
+| `GET /api/my/devices/{agentKey}/install-events` | DeviceOwner or staff | Install events for bound agent |
+
+Dashboard pages: `/my-devices`, `/device-bindings` (Admin).

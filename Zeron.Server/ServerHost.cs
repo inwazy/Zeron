@@ -81,7 +81,10 @@ namespace Zeron.Server
             builder.Services.AddScoped<AgentDiagnosticServer>();
             builder.Services.AddScoped<TaskDispatcherServer>();
             builder.Services.AddScoped<TaskScheduleServer>();
+            builder.Services.AddScoped<ManagedPackageCatalogServer>();
             builder.Services.AddScoped<PackageDeployServer>();
+            builder.Services.AddScoped<UserAgentBindingServer>();
+            builder.Services.AddScoped<DevicePortalServer>();
             builder.Services.AddScoped<EventIngestorServer>();
             builder.Services.AddScoped<AlertNotifierServer>();
             builder.Services.AddScoped<AlertRuleServer>();
@@ -129,6 +132,14 @@ namespace Zeron.Server
                     policy.RequireRole(ServerRoles.Admin, ServerRoles.Operator));
                 options.AddPolicy(ServerPolicies.AdminOnly, policy =>
                     policy.RequireRole(ServerRoles.Admin));
+                options.AddPolicy(ServerPolicies.DeviceOwnerOnly, policy =>
+                    policy.RequireRole(ServerRoles.DeviceOwner));
+                options.AddPolicy(ServerPolicies.DeviceOwnerOrStaff, policy =>
+                    policy.RequireRole(
+                        ServerRoles.Admin,
+                        ServerRoles.Operator,
+                        ServerRoles.Viewer,
+                        ServerRoles.DeviceOwner));
             });
 
             builder.Services.AddCascadingAuthenticationState();
@@ -172,7 +183,8 @@ namespace Zeron.Server
 
                 if (path.StartsWithSegments("/api/agents/heartbeat")
                     || path.StartsWithSegments("/api/events")
-                    || path.Equals("/api/tasks/results", StringComparison.OrdinalIgnoreCase))
+                    || path.Equals("/api/tasks/results", StringComparison.OrdinalIgnoreCase)
+                    || path.Equals("/api/packages/catalog/sync", StringComparison.OrdinalIgnoreCase))
                 {
                     context.Request.EnableBuffering();
                 }
@@ -202,6 +214,8 @@ namespace Zeron.Server
             app.MapEventEndpoints();
             app.MapAlertEndpoints();
             app.MapUserEndpoints();
+            app.MapUserAgentBindingEndpoints();
+            app.MapDevicePortalEndpoints();
             app.MapHub<DashboardHub>("/hubs/dashboard");
 
             app.MapRazorComponents<App>()

@@ -22,5 +22,15 @@ namespace Zeron.Server.ZCore
         /// AdminOnly
         /// </summary>
         public const string AdminOnly = "AdminOnly";
+
+        /// <summary>
+        /// DeviceOwnerOnly - self-service portal access.
+        /// </summary>
+        public const string DeviceOwnerOnly = "DeviceOwnerOnly";
+
+        /// <summary>
+        /// DeviceOwnerOrStaff - DeviceOwner plus staff roles.
+        /// </summary>
+        public const string DeviceOwnerOrStaff = "DeviceOwnerOrStaff";
     }
 }

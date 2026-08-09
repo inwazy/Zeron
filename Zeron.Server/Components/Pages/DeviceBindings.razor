@@ -1,0 +1,88 @@
+@page "/device-bindings"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.AdminOnly)]
+@inject UserAgentBindingServer BindingServer
+@inject UserManagerServer UserManager
+@inject AgentManagerServer AgentManager
+
+<div class="page-header">
+    <div>
+        <h1>Device Bindings</h1>
+        <p>Bind dashboard accounts to Demand agents for self-service status.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Bind User to Agent</h2>
+    <div class="form-grid">
+        <label>
+            User
+            <InputSelect @bind-Value="m_Form.UserId">
+                <option value="">Select user</option>
+                @foreach (UserInfoType user in m_Users)
+                {
+                    <option value="@user.Id">@user.Username (@user.Role)</option>
+                }
+            </InputSelect>
+        </label>
+        <label>
+            Agent
+            <InputSelect @bind-Value="m_Form.AgentKey">
+                <option value="">Select agent</option>
+                @foreach (var agent in m_Agents)
+                {
+                    <option value="@agent.AgentKey">@agent.AgentKey (@agent.MachineName)</option>
+                }
+            </InputSelect>
+        </label>
+        <div class="actions">
+            <button class="btn" @onclick="BindAsync" disabled="@m_IsBusy">Bind</button>
+        </div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(m_Message))
+    {
+        <p class="@(m_Succeeded ? "success-text" : "error")">@m_Message</p>
+    }
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2>Existing Bindings</h2>
+        <button class="btn btn-secondary" @onclick="ReloadAsync">Refresh</button>
+    </div>
+
+    @if (m_Bindings.Count == 0)
+    {
+        <p class="muted">No bindings yet.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Agent</th>
+                    <th>Machine</th>
+                    <th>Bound</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (UserAgentBindingInfoType binding in m_Bindings)
+                {
+                    <tr>
+                        <td>@binding.Username</td>
+                        <td><code>@binding.AgentKey</code></td>
+                        <td>@(binding.MachineName ?? "-")</td>
+                        <td>@(binding.BoundAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                        <td>
+                            <button class="btn btn-danger" @onclick="() => UnbindAsync(binding)" disabled="@m_IsBusy">Unbind</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

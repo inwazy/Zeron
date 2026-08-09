@@ -22,18 +22,24 @@ namespace Zeron.Server.ZServers
         // ZeronServerDbContext is used to get the events.
         private readonly ZeronServerDbContext m_DbContext;
 
+        // Optional catalog for package-name validation.
+        private readonly ManagedPackageCatalogServer? m_CatalogServer;
+
         /// <summary>
         /// PackageDeployServer
         /// </summary>
         /// <param name="taskDispatcher"></param>
         /// <param name="dbContext"></param>
+        /// <param name="catalogServer"></param>
         /// <returns>Returns void.</returns>
         public PackageDeployServer(
-            TaskDispatcherServer taskDispatcher, 
-            ZeronServerDbContext dbContext)
+            TaskDispatcherServer taskDispatcher,
+            ZeronServerDbContext dbContext,
+            ManagedPackageCatalogServer? catalogServer = null)
         {
             m_TaskDispatcher = taskDispatcher;
             m_DbContext = dbContext;
+            m_CatalogServer = catalogServer;
         }
 
         /// <summary>
@@ -55,6 +61,31 @@ namespace Zeron.Server.ZServers
                     Success = false,
                     Message = error
                 };
+            }
+
+            if (m_CatalogServer != null)
+            {
+                ManagedPackageInfoType? catalogPackage = await m_CatalogServer.GetPackageByNameAsync(
+                    packageName,
+                    cancellationToken);
+
+                if (catalogPackage == null)
+                {
+                    return new PackageDeployResponseType
+                    {
+                        Success = false,
+                        Message = $"Package '{packageName}' was not found in the Server catalog."
+                    };
+                }
+
+                if (!catalogPackage.IsEnabled)
+                {
+                    return new PackageDeployResponseType
+                    {
+                        Success = false,
+                        Message = $"Package '{packageName}' is disabled in the Server catalog."
+                    };
+                }
             }
 
             string taskName = string.IsNullOrWhiteSpace(request.Name)
