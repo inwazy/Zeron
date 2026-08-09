@@ -4,6 +4,7 @@
 using System.Security.Claims;
 using Zeron.Server.ZCore;
 using Zeron.Server.ZServers;
+using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Endpoints
 {
@@ -61,6 +62,39 @@ namespace Zeron.Server.Endpoints
                 var events = await portalServer.GetMyInstallEventsAsync(userId, agentKey, limit ?? 20);
 
                 return events == null ? Results.NotFound() : Results.Ok(events);
+            }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
+
+            app.MapPost("/api/my/devices/{agentKey}/deploy", async (
+                string agentKey,
+                DeviceDeployRequestType request,
+                ClaimsPrincipal user,
+                DevicePortalServer portalServer) =>
+            {
+                if (!TryGetUserId(user, out Guid userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                (PackageDeployResponseType? response, string? error) = await portalServer.DeployToMyDeviceAsync(
+                    userId,
+                    agentKey,
+                    request);
+
+                if (error != null && response == null)
+                {
+                    return Results.NotFound(new { success = false, message = error });
+                }
+
+                if (response == null || !response.Success)
+                {
+                    return Results.BadRequest(response ?? new PackageDeployResponseType
+                    {
+                        Success = false,
+                        Message = error ?? "Deploy failed."
+                    });
+                }
+
+                return Results.Created($"/api/tasks/{response.TaskId}", response);
             }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
 
             return app;

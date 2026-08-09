@@ -79,5 +79,14 @@ namespace Zeron.ZCore.Type
             get;
             set;
         } = [];
+
+        /// <summary>
+        /// LastCatalogSyncAt - UTC time of last successful catalog sync on the agent.
+        /// </summary>
+        public DateTime? LastCatalogSyncAt
+        {
+            get;
+            set;
+        }
     }
 }

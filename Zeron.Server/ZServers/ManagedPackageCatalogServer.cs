@@ -18,15 +18,21 @@ namespace Zeron.Server.ZServers
         // Database context.
         private readonly ZeronServerDbContext m_DbContext;
 
+        // Optional publisher for push catalog sync.
+        private readonly CommandPublisherServer? m_CommandPublisher;
+
         /// <summary>
         /// ManagedPackageCatalogServer
         /// </summary>
         /// <param name="dbContext"></param>
+        /// <param name="commandPublisher"></param>
         /// <returns>Returns void.</returns>
         public ManagedPackageCatalogServer(
-            ZeronServerDbContext dbContext)
+            ZeronServerDbContext dbContext,
+            CommandPublisherServer? commandPublisher = null)
         {
             m_DbContext = dbContext;
+            m_CommandPublisher = commandPublisher;
         }
 
         /// <summary>
@@ -130,6 +136,7 @@ namespace Zeron.Server.ZServers
             ApplyFields(package, request);
             m_DbContext.ManagedPackages.Add(package);
             await m_DbContext.SaveChangesAsync(cancellationToken);
+            await NotifyOnlineAgentsToSyncAsync(cancellationToken);
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "ManagedPackageCatalogServer created package '{0}'.", package.Name));
@@ -186,6 +193,7 @@ namespace Zeron.Server.ZServers
 
             package.UpdatedAt = DateTime.UtcNow;
             await m_DbContext.SaveChangesAsync(cancellationToken);
+            await NotifyOnlineAgentsToSyncAsync(cancellationToken);
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "ManagedPackageCatalogServer updated package '{0}'.", package.Name));
@@ -213,6 +221,7 @@ namespace Zeron.Server.ZServers
 
             m_DbContext.ManagedPackages.Remove(package);
             await m_DbContext.SaveChangesAsync(cancellationToken);
+            await NotifyOnlineAgentsToSyncAsync(cancellationToken);
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "ManagedPackageCatalogServer deleted package '{0}'.", package.Name));
@@ -339,6 +348,64 @@ namespace Zeron.Server.ZServers
             {
                 package.ScriptUnInstallAfter = request.ScriptUnInstallAfter;
             }
+
+            if (request.Sha256x86 != null)
+            {
+                package.Sha256x86 = NormalizeSha(request.Sha256x86);
+            }
+
+            if (request.Sha256x64 != null)
+            {
+                package.Sha256x64 = NormalizeSha(request.Sha256x64);
+            }
+        }
+
+        /// <summary>
+        /// NotifyOnlineAgentsToSyncAsync - push ManagedPackage sync to online agents.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns void.</returns>
+        private async Task NotifyOnlineAgentsToSyncAsync(
+            CancellationToken cancellationToken)
+        {
+            if (m_CommandPublisher == null)
+            {
+                return;
+            }
+
+            List<string> agentKeys = await m_DbContext.Agents
+                .Where(agent => agent.Status == "online")
+                .Select(agent => agent.AgentKey)
+                .ToListAsync(cancellationToken);
+
+            foreach (string agentKey in agentKeys)
+            {
+                m_CommandPublisher.PublishRemoteCommand(
+                    agentKey,
+                    Guid.Empty,
+                    "ManagedPackage",
+                    "sync");
+            }
+
+            if (agentKeys.Count > 0)
+            {
+                ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                    "ManagedPackageCatalogServer requested catalog sync on {0} online agent(s).",
+                    agentKeys.Count));
+            }
+        }
+
+        /// <summary>
+        /// NormalizeSha
+        /// </summary>
+        /// <param name="sha"></param>
+        /// <returns>Returns normalized sha or empty.</returns>
+        private static string NormalizeSha(
+            string? sha)
+        {
+            return string.IsNullOrWhiteSpace(sha)
+                ? ""
+                : sha.Trim().ToLowerInvariant();
         }
 
         /// <summary>
@@ -363,6 +430,8 @@ namespace Zeron.Server.ZServers
                 ScriptInstallAfter = package.ScriptInstallAfter,
                 ScriptUnInstallBefore = package.ScriptUnInstallBefore,
                 ScriptUnInstallAfter = package.ScriptUnInstallAfter,
+                Sha256x86 = package.Sha256x86,
+                Sha256x64 = package.Sha256x64,
                 IsEnabled = package.IsEnabled,
                 UpdatedAt = package.UpdatedAt
             };

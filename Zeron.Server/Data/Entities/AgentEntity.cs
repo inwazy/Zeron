@@ -99,6 +99,15 @@ namespace Zeron.Server.Data.Entities
         }
 
         /// <summary>
+        /// LastCatalogSyncAt - last successful ManagedPackage catalog sync reported by Demand.
+        /// </summary>
+        public DateTime? LastCatalogSyncAt
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Heartbeats
         /// </summary>
         public ICollection<AgentHeartbeatEntity> Heartbeats { get; set; } = [];

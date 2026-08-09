@@ -7,6 +7,7 @@ using System.Globalization;
 using Zeron.Demand.ZCore;
 using Zeron.Demand.ZCore.Type;
 using Zeron.Demand.ZServers;
+using Zeron.Demand.ZServers.Impls;
 using Zeron.ZAttribute;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
@@ -59,6 +60,55 @@ namespace Zeron.Demand.ZServices
                     return JsonConvert.SerializeObject(response);
                 }
 
+                if (commands.Option.Equals("list", StringComparison.OrdinalIgnoreCase))
+                {
+                    response.success = true;
+                    response.result = ManagedPackageDbImpl.ListPackages();
+
+                    return JsonConvert.SerializeObject(response);
+                }
+
+                if (commands.Option.Equals("sync", StringComparison.OrdinalIgnoreCase))
+                {
+                    int applied = ManagedPackageServer.SyncCatalogAsync().GetAwaiter().GetResult();
+                    response.success = true;
+                    response.result = new
+                    {
+                        synced = true,
+                        applied,
+                        lastCatalogSyncAt = ManagedPackageServer.LastCatalogSyncUtc
+                    };
+
+                    return JsonConvert.SerializeObject(response);
+                }
+
+                if (commands.Option.Equals("override", StringComparison.OrdinalIgnoreCase))
+                {
+                    bool updated = ManagedPackageDbImpl.MarkLocalOverride(commands.PackageName);
+                    response.success = updated;
+                    response.result = new
+                    {
+                        package = commands.PackageName,
+                        source = ManagedPackageSource.Local,
+                        overridden = updated
+                    };
+
+                    return JsonConvert.SerializeObject(response);
+                }
+
+                if (commands.Option.Equals("clear-override", StringComparison.OrdinalIgnoreCase))
+                {
+                    bool cleared = ManagedPackageDbImpl.ClearLocalOverride(commands.PackageName);
+                    response.success = cleared;
+                    response.result = new
+                    {
+                        package = commands.PackageName,
+                        cleared
+                    };
+
+                    return JsonConvert.SerializeObject(response);
+                }
+
                 ManagedPackageRepoType? repo = ManagedPackageServer.GetRepoByName(commands);
                 string? repoTempPath = ManagedPackageServer.RepoTempPath;
 
@@ -79,10 +129,12 @@ namespace Zeron.Demand.ZServices
                 string? repoArgs = isUninstall ? repo.CmdUnInstallx86 : repo.CmdInstallx86;
                 string? scriptBefore = isUninstall ? repo.ScriptUnInstallBefore : repo.ScriptInstallBefore;
                 string? scriptAfter = isUninstall ? repo.ScriptUnInstallAfter : repo.ScriptInstallAfter;
+                string? expectedSha = repo.Sha256x86;
 
                 if (DeployServer.Is64BitEnv)
                 {
                     repoUrl = !string.IsNullOrEmpty(repo.Urlx64) ? repo.Urlx64 : repoUrl;
+                    expectedSha = !string.IsNullOrEmpty(repo.Sha256x64) ? repo.Sha256x64 : expectedSha;
 
                     if (isUninstall)
                     {
@@ -115,7 +167,8 @@ namespace Zeron.Demand.ZServices
                     Operation = commands.Option,
                     ScriptBefore = scriptBefore,
                     ScriptAfter = scriptAfter,
-                    AssignmentId = RemoteCommandContext.AssignmentId
+                    AssignmentId = RemoteCommandContext.AssignmentId,
+                    ExpectedSha256 = string.IsNullOrWhiteSpace(expectedSha) ? null : expectedSha.Trim().ToLowerInvariant()
                 };
 
                 if (InstallServer.AddQueues(commands.Option, installQueuesTypeRepo) > 0)

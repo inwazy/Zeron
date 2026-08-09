@@ -221,5 +221,18 @@ Dashboard pages: `/packages`, `/packages/catalog`, `/packages/deploy`. Events sh
 | `GET /api/my/devices` | DeviceOwner or staff | Bound agent status |
 | `GET /api/my/devices/{agentKey}` | DeviceOwner or staff | Single bound agent |
 | `GET /api/my/devices/{agentKey}/install-events` | DeviceOwner or staff | Install events for bound agent |
+| `POST /api/my/devices/{agentKey}/deploy` | DeviceOwner or staff | Self-service install/uninstall (bound agent + Server catalog only) |
+
+Demand ManagedPackage local commands (Client / RemoteCommand):
+
+| Command | Description |
+|---------|-------------|
+| `list` | List local catalog (`name`, `source`, `enabled`) |
+| `sync` | Pull Server catalog now |
+| `override <name>` | Mark row `source=local` (sync will not overwrite) |
+| `clear-override <name>` | Delete local-override row so next sync can recreate Server version |
+| `status` / `install` / `uninstall` | Existing install queue commands |
+
+Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
 
 Dashboard pages: `/my-devices`, `/device-bindings` (Admin).

@@ -108,6 +108,24 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
+        /// Sha256x86
+        /// </summary>
+        public string? Sha256x86
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Sha256x64
+        /// </summary>
+        public string? Sha256x64
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// IsEnabled
         /// </summary>
         public bool? IsEnabled

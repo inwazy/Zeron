@@ -37,7 +37,7 @@ namespace Zeron.Client
             m_Options.Add(new OptionAttribute("Run HealthCheckRequest", () => RunCommandRequest(new HealthCheckImpl(), null)));
             m_Options.Add(new OptionAttribute("Run ServerInfoRequest", () => RunCommandRequest(new ServerInfoImpl(), null)));
             m_Options.Add(new OptionAttribute("Run ProcessInfoRequest", () => RunCommandRequest(new ProcessInfoImpl(), null)));
-            m_Options.Add(new OptionAttribute("Run ManagedPackageRequest", () => RunCommandRequest(new ManagedPackageImpl(), "Enter command (e.g. install ccleaner /s | status | uninstall ccleaner):")));
+            m_Options.Add(new OptionAttribute("Run ManagedPackageRequest", () => RunCommandRequest(new ManagedPackageImpl(), "Enter command (e.g. install ccleaner /s | status | list | sync | override ccleaner | clear-override ccleaner | uninstall ccleaner):")));
             m_Options.Add(new OptionAttribute("Run FileSystemRequest", () => RunCommandRequest(new FileSystemImpl(), "Enter command (e.g. list C:\\Logs | exists C:\\Windows):")));
             m_Options.Add(new OptionAttribute("Run ServiceControlRequest", () => RunCommandRequest(new ServiceControlImpl(), "Enter command (e.g. list | status Spooler | start Spooler):")));
             m_Options.Add(new OptionAttribute("Run RegistryRequest", () => RunCommandRequest(new RegistryImpl(), "Enter command (e.g. list HKLM\\SOFTWARE):")));

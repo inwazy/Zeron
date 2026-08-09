@@ -267,7 +267,8 @@ namespace Zeron.Demand.ZServers
                 InstallQueueCount = InstallJobTracker.GetStatus().QueueCount,
                 InstallRunning = InstallJobTracker.GetStatus().IsRunning,
                 SchedulerTaskCount = SchedulerServer.GetTasks().Count,
-                SupportedEngines = ScriptHostServer.ListEngines()
+                SupportedEngines = ScriptHostServer.ListEngines(),
+                LastCatalogSyncAt = ManagedPackageServer.LastCatalogSyncUtc
             };
 
             AgentHeartbeatResponseType? response = await ReporterImpl.SendHeartbeatAsync(request);

@@ -67,6 +67,8 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdInstallx64 = package.CmdInstallx64 ?? "";
             m_Form.CmdUnInstallx86 = package.CmdUnInstallx86 ?? "";
             m_Form.CmdUnInstallx64 = package.CmdUnInstallx64 ?? "";
+            m_Form.Sha256x86 = package.Sha256x86 ?? "";
+            m_Form.Sha256x64 = package.Sha256x64 ?? "";
             m_Form.IsEnabled = package.IsEnabled;
             m_Message = null;
         }
@@ -102,6 +104,8 @@ namespace Zeron.Server.Components.Pages
                     CmdInstallx64 = m_Form.CmdInstallx64,
                     CmdUnInstallx86 = m_Form.CmdUnInstallx86,
                     CmdUnInstallx64 = m_Form.CmdUnInstallx64,
+                    Sha256x86 = m_Form.Sha256x86,
+                    Sha256x64 = m_Form.Sha256x64,
                     IsEnabled = m_Form.IsEnabled
                 };
 
@@ -201,6 +205,8 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdInstallx64 = "";
             m_Form.CmdUnInstallx86 = "";
             m_Form.CmdUnInstallx64 = "";
+            m_Form.Sha256x86 = "";
+            m_Form.Sha256x64 = "";
             m_Form.IsEnabled = true;
         }
 
@@ -209,13 +215,34 @@ namespace Zeron.Server.Components.Pages
         /// </summary>
         private sealed class PackageFormModel
         {
+            // Name.
             public string Name { get; set; } = "";
+
+            // URL x86.
             public string Urlx86 { get; set; } = "";
+
+            // URL x64.            
             public string Urlx64 { get; set; } = "";
+
+            // Command install x86.
             public string CmdInstallx86 { get; set; } = "";
+
+            // Command install x64.
             public string CmdInstallx64 { get; set; } = "";
+
+            // Command uninstall x86.
             public string CmdUnInstallx86 { get; set; } = "";
+
+            // Command uninstall x64.
             public string CmdUnInstallx64 { get; set; } = "";
+
+            // SHA256 x86.
+            public string Sha256x86 { get; set; } = "";
+
+            // SHA256 x64.
+            public string Sha256x64 { get; set; } = "";
+
+            // Enabled.
             public bool IsEnabled { get; set; } = true;
         }
     }

@@ -97,5 +97,14 @@ namespace Zeron.ZCore.Type
             get;
             set;
         }
+
+        /// <summary>
+        /// LastCatalogSyncAt
+        /// </summary>
+        public DateTime? LastCatalogSyncAt
+        {
+            get;
+            set;
+        }
     }
 }

@@ -36,6 +36,7 @@ else
                     <th>Agent</th>
                     <th>Status</th>
                     <th>Install</th>
+                    <th>Catalog Sync</th>
                     <th>Last Heartbeat</th>
                     <th></th>
                 </tr>
@@ -61,6 +62,7 @@ else
                                 <span class="status healthy">idle</span>
                             }
                         </td>
+                        <td>@(device.LastCatalogSyncAt?.ToLocalTime().ToString("g") ?? "-")</td>
                         <td>@(device.LastHeartbeatAt?.ToLocalTime().ToString("g") ?? "-")</td>
                         <td><a href="@($"/my-devices/{device.AgentKey}")">Details</a></td>
                     </tr>

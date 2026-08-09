@@ -136,6 +136,40 @@ namespace Zeron.Server.ZServers
         }
 
         /// <summary>
+        /// DeployToMyDeviceAsync - self-service install/uninstall for a bound agent.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="agentKey"></param>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns deploy response or authorization error.</returns>
+        public async Task<(PackageDeployResponseType? Response, string? Error)> DeployToMyDeviceAsync(
+            Guid userId,
+            string agentKey,
+            DeviceDeployRequestType request,
+            CancellationToken cancellationToken = default)
+        {
+            if (!await m_BindingServer.IsUserBoundToAgentAsync(userId, agentKey, cancellationToken))
+            {
+                return (null, "Device is not bound to your account.");
+            }
+
+            PackageDeployResponseType response = await m_PackageDeployServer.DeployAsync(new PackageDeployRequestType
+            {
+                Operation = request.Operation,
+                PackageName = request.PackageName,
+                ExtraArgs = request.ExtraArgs,
+                TargetType = "agent",
+                AgentIds = [agentKey],
+                Name = $"self-{request.Operation}-{request.PackageName}-{DateTime.UtcNow:yyyyMMddHHmmss}"
+            }, cancellationToken);
+
+            return response.Success
+                ? (response, null)
+                : (response, response.Message);
+        }
+
+        /// <summary>
         /// BuildStatusAsync
         /// </summary>
         /// <param name="agentKey"></param>
@@ -169,7 +203,8 @@ namespace Zeron.Server.ZServers
                 InstallQueueCount = heartbeat?.InstallQueueCount ?? 0,
                 InstallRunning = heartbeat?.InstallRunning ?? false,
                 SchedulerTaskCount = heartbeat?.SchedulerTaskCount ?? 0,
-                UptimeSeconds = heartbeat?.UptimeSeconds ?? 0
+                UptimeSeconds = heartbeat?.UptimeSeconds ?? 0,
+                LastCatalogSyncAt = agent.LastCatalogSyncAt
             };
         }
     }

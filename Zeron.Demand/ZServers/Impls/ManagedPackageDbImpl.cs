@@ -119,17 +119,7 @@ namespace Zeron.Demand.ZServers.Impls
                                     return result;
                                 }
 
-                                result.Name = ReadString(reader, "name");
-                                result.Urlx86 = ReadString(reader, "url_x86");
-                                result.Urlx64 = ReadString(reader, "url_x64");
-                                result.CmdInstallx86 = ReadString(reader, "cmd_install_x86");
-                                result.CmdInstallx64 = ReadString(reader, "cmd_install_x64");
-                                result.CmdUnInstallx86 = ReadString(reader, "cmd_uninstall_x86");
-                                result.CmdUnInstallx64 = ReadString(reader, "cmd_uninstall_x64");
-                                result.ScriptInstallBefore = ReadString(reader, "script_install_before");
-                                result.ScriptInstallAfter = ReadString(reader, "script_install_after");
-                                result.ScriptUnInstallBefore = ReadString(reader, "script_uninstall_before");
-                                result.ScriptUnInstallAfter = ReadString(reader, "script_uninstall_after");
+                                MapReaderToRepo(reader, result);
                             }
                         }
                         catch (SqliteException e)
@@ -154,6 +144,92 @@ namespace Zeron.Demand.ZServers.Impls
         }
 
         /// <summary>
+        /// ListPackages
+        /// </summary>
+        /// <returns>Returns local catalog rows.</returns>
+        public static List<ManagedPackageLocalInfoType> ListPackages()
+        {
+            List<ManagedPackageLocalInfoType> result = [];
+
+            if (m_DbConnection == null)
+            {
+                return result;
+            }
+
+            lock (s_SyncRoot)
+            {
+                using SqliteCommand cmd = m_DbConnection.CreateCommand();
+                cmd.CommandText = "SELECT `name`, `source`, `status` FROM `" + m_DbTableName + "` ORDER BY `name`;";
+
+                using SqliteDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    result.Add(new ManagedPackageLocalInfoType
+                    {
+                        Name = ReadString(reader, "name"),
+                        Source = ReadString(reader, "source"),
+                        Enabled = ReadInt(reader, "status") == 1
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// MarkLocalOverride - protect package from Server sync overwrites.
+        /// </summary>
+        /// <param name="packageName"></param>
+        /// <returns>Returns true when updated.</returns>
+        public static bool MarkLocalOverride(
+            string? packageName)
+        {
+            string name = NormalizeName(packageName);
+
+            if (name.Length == 0 || m_DbConnection == null)
+            {
+                return false;
+            }
+
+            lock (s_SyncRoot)
+            {
+                using SqliteCommand cmd = m_DbConnection.CreateCommand();
+                cmd.CommandText = "UPDATE `" + m_DbTableName + "` SET `source` = @source WHERE `name` = @name;";
+                cmd.Parameters.AddWithValue("@source", ManagedPackageSource.Local);
+                cmd.Parameters.AddWithValue("@name", name);
+
+                return cmd.ExecuteNonQuery() > 0;
+            }
+        }
+
+        /// <summary>
+        /// ClearLocalOverride - delete local-override row so Server sync can recreate it.
+        /// </summary>
+        /// <param name="packageName"></param>
+        /// <returns>Returns true when deleted.</returns>
+        public static bool ClearLocalOverride(
+            string? packageName)
+        {
+            string name = NormalizeName(packageName);
+
+            if (name.Length == 0 || m_DbConnection == null)
+            {
+                return false;
+            }
+
+            lock (s_SyncRoot)
+            {
+                using SqliteCommand cmd = m_DbConnection.CreateCommand();
+                cmd.CommandText = "DELETE FROM `" + m_DbTableName + "` WHERE `name` = @name AND `source` = @source;";
+                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@source", ManagedPackageSource.Local);
+
+                return cmd.ExecuteNonQuery() > 0;
+            }
+        }
+
+        /// <summary>
         /// ApplyServerCatalog - upsert server rows; never overwrite local overrides.
         /// </summary>
         /// <param name="packages"></param>
@@ -173,7 +249,7 @@ namespace Zeron.Demand.ZServers.Impls
             {
                 foreach (ManagedPackageInfoType package in packages)
                 {
-                    string name = (package.Name ?? "").Trim().ToLowerInvariant();
+                    string name = NormalizeName(package.Name);
 
                     if (name.Length == 0)
                     {
@@ -224,18 +300,37 @@ namespace Zeron.Demand.ZServers.Impls
                     "`script_install_after` TEXT, " +
                     "`script_uninstall_before` TEXT, " +
                     "`script_uninstall_after` TEXT, " +
+                    "`sha256_x86` TEXT, " +
+                    "`sha256_x64` TEXT, " +
                     "`status` INTEGER NOT NULL DEFAULT 1, " +
                     "`source` TEXT NOT NULL DEFAULT 'local'" +
                     ");";
                 create.ExecuteNonQuery();
             }
 
-            if (!ColumnExists("source"))
+            EnsureColumn("source", "TEXT NOT NULL DEFAULT 'local'");
+            EnsureColumn("sha256_x86", "TEXT");
+            EnsureColumn("sha256_x64", "TEXT");
+        }
+
+        /// <summary>
+        /// EnsureColumn
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <param name="columnDef"></param>
+        /// <returns>Returns void.</returns>
+        private static void EnsureColumn(
+            string columnName,
+            string columnDef)
+        {
+            if (m_DbConnection == null || ColumnExists(columnName))
             {
-                using SqliteCommand alter = m_DbConnection.CreateCommand();
-                alter.CommandText = "ALTER TABLE `" + m_DbTableName + "` ADD COLUMN `source` TEXT NOT NULL DEFAULT 'local';";
-                alter.ExecuteNonQuery();
+                return;
             }
+
+            using SqliteCommand alter = m_DbConnection.CreateCommand();
+            alter.CommandText = "ALTER TABLE `" + m_DbTableName + "` ADD COLUMN `" + columnName + "` " + columnDef + ";";
+            alter.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -311,11 +406,11 @@ namespace Zeron.Demand.ZServers.Impls
                 "INSERT INTO `" + m_DbTableName + "` (" +
                 "`name`, `url_x86`, `url_x64`, `cmd_install_x86`, `cmd_install_x64`, " +
                 "`cmd_uninstall_x86`, `cmd_uninstall_x64`, `script_install_before`, `script_install_after`, " +
-                "`script_uninstall_before`, `script_uninstall_after`, `status`, `source`) " +
+                "`script_uninstall_before`, `script_uninstall_after`, `sha256_x86`, `sha256_x64`, `status`, `source`) " +
                 "VALUES (" +
                 "@name, @url_x86, @url_x64, @cmd_install_x86, @cmd_install_x64, " +
                 "@cmd_uninstall_x86, @cmd_uninstall_x64, @script_install_before, @script_install_after, " +
-                "@script_uninstall_before, @script_uninstall_after, @status, @source) " +
+                "@script_uninstall_before, @script_uninstall_after, @sha256_x86, @sha256_x64, @status, @source) " +
                 "ON CONFLICT(`name`) DO UPDATE SET " +
                 "`url_x86`=excluded.`url_x86`, " +
                 "`url_x64`=excluded.`url_x64`, " +
@@ -327,6 +422,8 @@ namespace Zeron.Demand.ZServers.Impls
                 "`script_install_after`=excluded.`script_install_after`, " +
                 "`script_uninstall_before`=excluded.`script_uninstall_before`, " +
                 "`script_uninstall_after`=excluded.`script_uninstall_after`, " +
+                "`sha256_x86`=excluded.`sha256_x86`, " +
+                "`sha256_x64`=excluded.`sha256_x64`, " +
                 "`status`=excluded.`status`, " +
                 "`source`=excluded.`source` " +
                 "WHERE `" + m_DbTableName + "`.`source` != 'local';";
@@ -342,13 +439,15 @@ namespace Zeron.Demand.ZServers.Impls
             cmd.Parameters.AddWithValue("@script_install_after", package.ScriptInstallAfter ?? "");
             cmd.Parameters.AddWithValue("@script_uninstall_before", package.ScriptUnInstallBefore ?? "");
             cmd.Parameters.AddWithValue("@script_uninstall_after", package.ScriptUnInstallAfter ?? "");
+            cmd.Parameters.AddWithValue("@sha256_x86", NormalizeSha(package.Sha256x86));
+            cmd.Parameters.AddWithValue("@sha256_x64", NormalizeSha(package.Sha256x64));
             cmd.Parameters.AddWithValue("@status", package.IsEnabled ? 1 : 0);
             cmd.Parameters.AddWithValue("@source", ManagedPackageSource.Server);
             cmd.ExecuteNonQuery();
         }
 
         /// <summary>
-        /// DisableMissingServerPackages - disable server-sourced rows removed from catalog.
+        /// DisableMissingServerPackages
         /// </summary>
         /// <param name="serverNames"></param>
         /// <returns>Returns void.</returns>
@@ -371,7 +470,7 @@ namespace Zeron.Demand.ZServers.Impls
 
                 while (reader.Read())
                 {
-                    string name = ReadString(reader, "name") ?? "";
+                    string name = ReadString(reader, "name");
 
                     if (name.Length > 0 && !serverNames.Contains(name))
                     {
@@ -391,6 +490,79 @@ namespace Zeron.Demand.ZServers.Impls
         }
 
         /// <summary>
+        /// MapReaderToRepo
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="result"></param>
+        /// <returns>Returns void.</returns>
+        private static void MapReaderToRepo(
+            SqliteDataReader reader,
+            ManagedPackageRepoType result)
+        {
+            result.Name = ReadString(reader, "name");
+            result.Urlx86 = ReadString(reader, "url_x86");
+            result.Urlx64 = ReadString(reader, "url_x64");
+            result.CmdInstallx86 = ReadString(reader, "cmd_install_x86");
+            result.CmdInstallx64 = ReadString(reader, "cmd_install_x64");
+            result.CmdUnInstallx86 = ReadString(reader, "cmd_uninstall_x86");
+            result.CmdUnInstallx64 = ReadString(reader, "cmd_uninstall_x64");
+            result.ScriptInstallBefore = ReadString(reader, "script_install_before");
+            result.ScriptInstallAfter = ReadString(reader, "script_install_after");
+            result.ScriptUnInstallBefore = ReadString(reader, "script_uninstall_before");
+            result.ScriptUnInstallAfter = ReadString(reader, "script_uninstall_after");
+            result.Sha256x86 = HasColumn(reader, "sha256_x86") ? ReadString(reader, "sha256_x86") : "";
+            result.Sha256x64 = HasColumn(reader, "sha256_x64") ? ReadString(reader, "sha256_x64") : "";
+            result.Source = HasColumn(reader, "source") ? ReadString(reader, "source") : "";
+        }
+
+        /// <summary>
+        /// HasColumn
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="column"></param>
+        /// <returns>Returns bool.</returns>
+        private static bool HasColumn(
+            SqliteDataReader reader,
+            string column)
+        {
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                if (string.Equals(reader.GetName(i), column, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// NormalizeName
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>Returns normalized name.</returns>
+        private static string NormalizeName(
+            string? name)
+        {
+            return string.IsNullOrWhiteSpace(name)
+                ? ""
+                : name.Trim().ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// NormalizeSha
+        /// </summary>
+        /// <param name="sha"></param>
+        /// <returns>Returns lowercase hex or empty.</returns>
+        private static string NormalizeSha(
+            string? sha)
+        {
+            return string.IsNullOrWhiteSpace(sha)
+                ? ""
+                : sha.Trim().ToLowerInvariant();
+        }
+
+        /// <summary>
         /// ReadString
         /// </summary>
         /// <param name="reader"></param>
@@ -403,6 +575,21 @@ namespace Zeron.Demand.ZServers.Impls
             return reader[column] != DBNull.Value
                 ? Convert.ToString(reader[column], CultureInfo.InvariantCulture) ?? ""
                 : "";
+        }
+
+        /// <summary>
+        /// ReadInt
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="column"></param>
+        /// <returns>Returns int.</returns>
+        private static int ReadInt(
+            SqliteDataReader reader,
+            string column)
+        {
+            return reader[column] != DBNull.Value
+                ? Convert.ToInt32(reader[column], CultureInfo.InvariantCulture)
+                : 0;
         }
     }
 }

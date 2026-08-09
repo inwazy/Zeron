@@ -88,6 +88,11 @@ namespace Zeron.Server.ZServers
                 ? agent.SupportedEnginesJson
                 : JsonSerializer.Serialize(request.SupportedEngines);
 
+            if (request.LastCatalogSyncAt.HasValue)
+            {
+                agent.LastCatalogSyncAt = request.LastCatalogSyncAt;
+            }
+
             m_DbContext.AgentHeartbeats.Add(new AgentHeartbeatEntity
             {
                 AgentId = agent.Id,

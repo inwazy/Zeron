@@ -233,6 +233,13 @@ namespace Zeron.Demand.ZServers.Impls
             }
 
             m_SubscriberSocket.Connect(addr);
+
+            // Prefer agent-specific topic; keep empty-prefix subscription for legacy publishers.
+            if (!string.IsNullOrWhiteSpace(AgentServer.AgentId))
+            {
+                m_SubscriberSocket.Subscribe("remotecommand." + AgentServer.AgentId);
+            }
+
             m_SubscriberSocket.Subscribe("");
 
             m_SubscriberThread = new Thread(SubscriberSocketProc)

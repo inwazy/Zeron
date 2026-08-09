@@ -36,6 +36,15 @@ namespace Zeron.Demand.ZServers
         private static int s_ConfigSyncIntervalMs = 300000;
 
         /// <summary>
+        /// LastCatalogSyncUtc - last successful sync timestamp.
+        /// </summary>
+        public static DateTime? LastCatalogSyncUtc
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// DbSourceFile
         /// </summary>
         public static string? DbSourceFile
@@ -159,12 +168,12 @@ namespace Zeron.Demand.ZServers
         /// <summary>
         /// SyncCatalogAsync
         /// </summary>
-        /// <returns>Returns Task.</returns>
-        public static async Task SyncCatalogAsync()
+        /// <returns>Returns applied package count (-1 on failure).</returns>
+        public static async Task<int> SyncCatalogAsync()
         {
             if (string.IsNullOrWhiteSpace(ReporterImpl.ServerUrl))
             {
-                return;
+                return -1;
             }
 
             try
@@ -175,20 +184,25 @@ namespace Zeron.Demand.ZServers
                 {
                     ZNLogger.Common.Warn("ManagedPackageServer catalog sync failed.");
 
-                    return;
+                    return -1;
                 }
 
                 int applied = ManagedPackageDbImpl.ApplyServerCatalog(response.Packages);
+                LastCatalogSyncUtc = DateTime.UtcNow;
 
                 ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                     "ManagedPackageServer catalog sync applied {0} package(s) (server total {1}).",
                     applied,
                     response.Packages.Count));
+
+                return applied;
             }
             catch (Exception e)
             {
                 ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
                     "ManagedPackageServer SyncCatalogAsync Error:{0}\n{1}", e.Message, e.StackTrace));
+
+                return -1;
             }
         }
 
@@ -244,6 +258,9 @@ namespace Zeron.Demand.ZServers
                     result.ScriptInstallAfter = repoResult.ScriptInstallAfter;
                     result.ScriptUnInstallBefore = repoResult.ScriptUnInstallBefore;
                     result.ScriptUnInstallAfter = repoResult.ScriptUnInstallAfter;
+                    result.Sha256x86 = repoResult.Sha256x86;
+                    result.Sha256x64 = repoResult.Sha256x64;
+                    result.Source = repoResult.Source;
                 }
             }
 

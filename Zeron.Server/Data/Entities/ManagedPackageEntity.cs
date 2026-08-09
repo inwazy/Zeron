@@ -117,6 +117,24 @@ namespace Zeron.Server.Data.Entities
         }
 
         /// <summary>
+        /// Sha256x86 - optional SHA-256 hex for x86 installer.
+        /// </summary>
+        public string? Sha256x86
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Sha256x64 - optional SHA-256 hex for x64 installer.
+        /// </summary>
+        public string? Sha256x64
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// IsEnabled - maps to Demand status=1 when synced.
         /// </summary>
         public bool IsEnabled

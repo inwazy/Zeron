@@ -57,6 +57,15 @@
                     Uninstall Cmd x64
                     <InputText @bind-Value="m_Form.CmdUnInstallx64" />
                 </label>
+                <label>
+                    SHA-256 x86
+                    <InputText @bind-Value="m_Form.Sha256x86" />
+                    <small class="muted">Optional. Lowercase hex digest verified after download.</small>
+                </label>
+                <label>
+                    SHA-256 x64
+                    <InputText @bind-Value="m_Form.Sha256x64" />
+                </label>
                 <div class="actions">
                     <button class="btn" @onclick="SaveAsync" disabled="@m_IsBusy">@(m_EditId == null ? "Create" : "Save")</button>
                     @if (m_EditId != null)

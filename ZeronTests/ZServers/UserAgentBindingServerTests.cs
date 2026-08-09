@@ -108,6 +108,45 @@ namespace Zeron.Server.ZServers.Tests
             Assert.AreEqual(1, devices.Count);
             Assert.AreEqual("bound-agent", devices[0].AgentKey);
             Assert.IsNull(await portal.GetMyDeviceAsync(Guid.Parse(user.Id!), "other-agent"));
+
+            ManagedPackageCatalogServer catalog = new(dbContext);
+            await catalog.CreatePackageAsync(new ManagedPackageUpsertRequestType
+            {
+                Name = "selfpkg",
+                Urlx64 = "https://example.com/self.exe",
+                IsEnabled = true
+            });
+
+            PackageDeployServer deployWithCatalog = new(
+                new TaskDispatcherServer(dbContext, new CommandPublisherServer(new ServerSettings())),
+                dbContext,
+                catalog);
+            DevicePortalServer portalWithCatalog = new(dbContext, bindingServer, deployWithCatalog);
+
+            (PackageDeployResponseType? deploy, string? deployError) = await portalWithCatalog.DeployToMyDeviceAsync(
+                Guid.Parse(user.Id!),
+                "bound-agent",
+                new DeviceDeployRequestType
+                {
+                    Operation = "install",
+                    PackageName = "selfpkg"
+                });
+
+            Assert.IsNull(deployError);
+            Assert.IsNotNull(deploy);
+            Assert.IsTrue(deploy!.Success);
+
+            (PackageDeployResponseType? denied, string? deniedError) = await portalWithCatalog.DeployToMyDeviceAsync(
+                Guid.Parse(user.Id!),
+                "other-agent",
+                new DeviceDeployRequestType
+                {
+                    Operation = "install",
+                    PackageName = "selfpkg"
+                });
+
+            Assert.IsNull(denied);
+            Assert.AreEqual("Device is not bound to your account.", deniedError);
         }
 
         /// <summary>
