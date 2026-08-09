@@ -4,6 +4,7 @@
 using Microsoft.EntityFrameworkCore;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore;
 using Zeron.ZCore.Type;
 
 namespace Zeron.Server.ZServers
@@ -22,21 +23,27 @@ namespace Zeron.Server.ZServers
         // Package deploy server (install events).
         private readonly PackageDeployServer m_PackageDeployServer;
 
+        // Audit log.
+        private readonly AuditLogServer? m_AuditLogServer;
+
         /// <summary>
         /// DevicePortalServer
         /// </summary>
         /// <param name="dbContext"></param>
         /// <param name="bindingServer"></param>
         /// <param name="packageDeployServer"></param>
+        /// <param name="auditLogServer"></param>
         /// <returns>Returns void.</returns>
         public DevicePortalServer(
             ZeronServerDbContext dbContext,
             UserAgentBindingServer bindingServer,
-            PackageDeployServer packageDeployServer)
+            PackageDeployServer packageDeployServer,
+            AuditLogServer? auditLogServer = null)
         {
             m_DbContext = dbContext;
             m_BindingServer = bindingServer;
             m_PackageDeployServer = packageDeployServer;
+            m_AuditLogServer = auditLogServer;
         }
 
         /// <summary>
@@ -149,20 +156,41 @@ namespace Zeron.Server.ZServers
             DeviceDeployRequestType request,
             CancellationToken cancellationToken = default)
         {
+            AuditActorType? actor = m_AuditLogServer == null
+                ? null
+                : await m_AuditLogServer.ResolveUserActorAsync(userId, cancellationToken);
+
             if (!await m_BindingServer.IsUserBoundToAgentAsync(userId, agentKey, cancellationToken))
             {
+                if (m_AuditLogServer != null && actor != null)
+                {
+                    await m_AuditLogServer.WriteAsync(
+                        AuditActions.PackageSelfDeploy,
+                        false,
+                        "Device is not bound to your account.",
+                        actor,
+                        targetType: "agent",
+                        targetKey: agentKey,
+                        details: request,
+                        cancellationToken: cancellationToken);
+                }
+
                 return (null, "Device is not bound to your account.");
             }
 
-            PackageDeployResponseType response = await m_PackageDeployServer.DeployAsync(new PackageDeployRequestType
-            {
-                Operation = request.Operation,
-                PackageName = request.PackageName,
-                ExtraArgs = request.ExtraArgs,
-                TargetType = "agent",
-                AgentIds = [agentKey],
-                Name = $"self-{request.Operation}-{request.PackageName}-{DateTime.UtcNow:yyyyMMddHHmmss}"
-            }, cancellationToken);
+            PackageDeployResponseType response = await m_PackageDeployServer.DeployAsync(
+                new PackageDeployRequestType
+                {
+                    Operation = request.Operation,
+                    PackageName = request.PackageName,
+                    ExtraArgs = request.ExtraArgs,
+                    TargetType = "agent",
+                    AgentIds = [agentKey],
+                    Name = $"self-{request.Operation}-{request.PackageName}-{DateTime.UtcNow:yyyyMMddHHmmss}"
+                },
+                cancellationToken,
+                actor,
+                AuditActions.PackageSelfDeploy);
 
             return response.Success
                 ? (response, null)

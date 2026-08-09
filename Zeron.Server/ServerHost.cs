@@ -81,6 +81,7 @@ namespace Zeron.Server
             builder.Services.AddScoped<AgentDiagnosticServer>();
             builder.Services.AddScoped<TaskDispatcherServer>();
             builder.Services.AddScoped<TaskScheduleServer>();
+            builder.Services.AddScoped<AuditLogServer>();
             builder.Services.AddScoped<ManagedPackageCatalogServer>();
             builder.Services.AddScoped<PackageDeployServer>();
             builder.Services.AddScoped<UserAgentBindingServer>();
@@ -216,6 +217,7 @@ namespace Zeron.Server
             app.MapUserEndpoints();
             app.MapUserAgentBindingEndpoints();
             app.MapDevicePortalEndpoints();
+            app.MapAuditEndpoints();
             app.MapHub<DashboardHub>("/hubs/dashboard");
 
             app.MapRazorComponents<App>()

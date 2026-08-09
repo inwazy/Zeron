@@ -71,13 +71,22 @@ namespace Zeron.Demand.ZServices
                 if (commands.Option.Equals("sync", StringComparison.OrdinalIgnoreCase))
                 {
                     int applied = ManagedPackageServer.SyncCatalogAsync().GetAwaiter().GetResult();
-                    response.success = true;
+                    bool synced = applied >= 0;
+                    response.success = synced;
                     response.result = new
                     {
-                        synced = true,
+                        synced,
                         applied,
                         lastCatalogSyncAt = ManagedPackageServer.LastCatalogSyncUtc
                     };
+
+                    InstallEventPublisher.PublishObject("package.catalog.sync", new
+                    {
+                        success = synced,
+                        synced,
+                        applied,
+                        lastCatalogSyncAt = ManagedPackageServer.LastCatalogSyncUtc
+                    });
 
                     return JsonConvert.SerializeObject(response);
                 }
@@ -93,6 +102,14 @@ namespace Zeron.Demand.ZServices
                         overridden = updated
                     };
 
+                    InstallEventPublisher.PublishObject("package.override", new
+                    {
+                        success = updated,
+                        package = commands.PackageName,
+                        source = ManagedPackageSource.Local,
+                        overridden = updated
+                    });
+
                     return JsonConvert.SerializeObject(response);
                 }
 
@@ -105,6 +122,13 @@ namespace Zeron.Demand.ZServices
                         package = commands.PackageName,
                         cleared
                     };
+
+                    InstallEventPublisher.PublishObject("package.clear-override", new
+                    {
+                        success = cleared,
+                        package = commands.PackageName,
+                        cleared
+                    });
 
                     return JsonConvert.SerializeObject(response);
                 }

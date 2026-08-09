@@ -4,6 +4,7 @@
 @using Zeron.ZCore.Type
 @attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
 @inject ManagedPackageCatalogServer CatalogServer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="page-header">
     <div>

@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -53,16 +54,19 @@ namespace Zeron.Server.Components.Pages
 
             try
             {
-                PackageDeployResponseType response = await PackageDeployServer.DeployAsync(new PackageDeployRequestType
-                {
-                    Operation = m_Model.Operation,
-                    PackageName = m_Model.PackageName,
-                    ExtraArgs = m_Model.ExtraArgs,
-                    Name = string.IsNullOrWhiteSpace(m_Model.Name) ? null : m_Model.Name,
-                    TargetType = m_Model.TargetType,
-                    AgentIds = string.IsNullOrWhiteSpace(m_Model.AgentId) ? null : [m_Model.AgentId],
-                    HostnamePattern = m_Model.HostnamePattern
-                });
+                AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                PackageDeployResponseType response = await PackageDeployServer.DeployAsync(
+                    new PackageDeployRequestType
+                    {
+                        Operation = m_Model.Operation,
+                        PackageName = m_Model.PackageName,
+                        ExtraArgs = m_Model.ExtraArgs,
+                        Name = string.IsNullOrWhiteSpace(m_Model.Name) ? null : m_Model.Name,
+                        TargetType = m_Model.TargetType,
+                        AgentIds = string.IsNullOrWhiteSpace(m_Model.AgentId) ? null : [m_Model.AgentId],
+                        HostnamePattern = m_Model.HostnamePattern
+                    },
+                    actor: AuditLogServer.FromPrincipal(authState.User));
 
                 if (!response.Success || response.TaskId == null)
                 {

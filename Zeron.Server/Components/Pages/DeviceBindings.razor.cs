@@ -1,7 +1,9 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
+using Microsoft.AspNetCore.Components.Authorization;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
@@ -63,11 +65,14 @@ namespace Zeron.Server.Components.Pages
 
             try
             {
-                (UserAgentBindingInfoType? binding, string? error) = await BindingServer.CreateBindingAsync(new UserAgentBindingRequestType
-                {
-                    UserId = m_Form.UserId,
-                    AgentKey = m_Form.AgentKey
-                });
+                AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                (UserAgentBindingInfoType? binding, string? error) = await BindingServer.CreateBindingAsync(
+                    new UserAgentBindingRequestType
+                    {
+                        UserId = m_Form.UserId,
+                        AgentKey = m_Form.AgentKey
+                    },
+                    actor: AuditLogServer.FromPrincipal(authState.User));
 
                 if (error != null)
                 {
@@ -106,7 +111,10 @@ namespace Zeron.Server.Components.Pages
 
             try
             {
-                string? error = await BindingServer.UnbindAsync(bindingId);
+                AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                string? error = await BindingServer.UnbindAsync(
+                    bindingId,
+                    actor: AuditLogServer.FromPrincipal(authState.User));
 
                 if (error != null)
                 {

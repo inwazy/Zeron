@@ -77,6 +77,11 @@ namespace Zeron.Server.Data
         public DbSet<UserAgentBindingEntity> UserAgentBindings => Set<UserAgentBindingEntity>();
 
         /// <summary>
+        /// AuditLogs
+        /// </summary>
+        public DbSet<AuditLogEntity> AuditLogs => Set<AuditLogEntity>();
+
+        /// <summary>
         /// OnModelCreating
         /// </summary>
         /// <param name="modelBuilder"></param>
@@ -138,6 +143,15 @@ namespace Zeron.Server.Data
                     .WithMany()
                     .HasForeignKey(binding => binding.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<AuditLogEntity>(entity =>
+            {
+                entity.HasIndex(log => log.OccurredAt);
+                entity.HasIndex(log => log.Action);
+                entity.HasIndex(log => log.ActorUsername);
+                entity.HasIndex(log => log.TargetKey);
+                entity.HasIndex(log => log.Source);
             });
         }
     }

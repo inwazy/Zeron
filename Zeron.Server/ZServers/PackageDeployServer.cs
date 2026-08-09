@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Text.Json;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
 
@@ -25,21 +26,27 @@ namespace Zeron.Server.ZServers
         // Optional catalog for package-name validation.
         private readonly ManagedPackageCatalogServer? m_CatalogServer;
 
+        // Optional audit log.
+        private readonly AuditLogServer? m_AuditLogServer;
+
         /// <summary>
         /// PackageDeployServer
         /// </summary>
         /// <param name="taskDispatcher"></param>
         /// <param name="dbContext"></param>
         /// <param name="catalogServer"></param>
+        /// <param name="auditLogServer"></param>
         /// <returns>Returns void.</returns>
         public PackageDeployServer(
             TaskDispatcherServer taskDispatcher,
             ZeronServerDbContext dbContext,
-            ManagedPackageCatalogServer? catalogServer = null)
+            ManagedPackageCatalogServer? catalogServer = null,
+            AuditLogServer? auditLogServer = null)
         {
             m_TaskDispatcher = taskDispatcher;
             m_DbContext = dbContext;
             m_CatalogServer = catalogServer;
+            m_AuditLogServer = auditLogServer;
         }
 
         /// <summary>
@@ -47,15 +54,31 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
+        /// <param name="actor"></param>
+        /// <param name="auditAction"></param>
         /// <returns>Returns deploy response.</returns>
         public async Task<PackageDeployResponseType> DeployAsync(
             PackageDeployRequestType request,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            AuditActorType? actor = null,
+            string? auditAction = null)
         {
             string? error = ValidateRequest(request, out string operation, out string packageName, out string command);
 
             if (error != null)
             {
+                await WriteDeployAuditAsync(
+                    actor,
+                    auditAction,
+                    false,
+                    error,
+                    packageName,
+                    operation,
+                    command,
+                    null,
+                    request,
+                    cancellationToken);
+
                 return new PackageDeployResponseType
                 {
                     Success = false,
@@ -71,19 +94,45 @@ namespace Zeron.Server.ZServers
 
                 if (catalogPackage == null)
                 {
+                    string missing = $"Package '{packageName}' was not found in the Server catalog.";
+                    await WriteDeployAuditAsync(
+                        actor,
+                        auditAction,
+                        false,
+                        missing,
+                        packageName,
+                        operation,
+                        command,
+                        null,
+                        request,
+                        cancellationToken);
+
                     return new PackageDeployResponseType
                     {
                         Success = false,
-                        Message = $"Package '{packageName}' was not found in the Server catalog."
+                        Message = missing
                     };
                 }
 
                 if (!catalogPackage.IsEnabled)
                 {
+                    string disabled = $"Package '{packageName}' is disabled in the Server catalog.";
+                    await WriteDeployAuditAsync(
+                        actor,
+                        auditAction,
+                        false,
+                        disabled,
+                        packageName,
+                        operation,
+                        command,
+                        null,
+                        request,
+                        cancellationToken);
+
                     return new PackageDeployResponseType
                     {
                         Success = false,
-                        Message = $"Package '{packageName}' is disabled in the Server catalog."
+                        Message = disabled
                     };
                 }
             }
@@ -107,6 +156,18 @@ namespace Zeron.Server.ZServers
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "PackageDeployServer created task '{0}' for {1} {2}.", task.Name, operation, packageName));
 
+            await WriteDeployAuditAsync(
+                actor,
+                auditAction,
+                true,
+                $"Deployed {operation} '{packageName}' as task '{task.Name}'.",
+                packageName,
+                operation,
+                command,
+                task.Id,
+                request,
+                cancellationToken);
+
             return new PackageDeployResponseType
             {
                 Success = true,
@@ -116,6 +177,51 @@ namespace Zeron.Server.ZServers
                 Operation = operation,
                 PackageName = packageName
             };
+        }
+
+        /// <summary>
+        /// WriteDeployAuditAsync
+        /// </summary>
+        private async Task WriteDeployAuditAsync(
+            AuditActorType? actor,
+            string? auditAction,
+            bool success,
+            string summary,
+            string packageName,
+            string operation,
+            string command,
+            Guid? taskId,
+            PackageDeployRequestType request,
+            CancellationToken cancellationToken)
+        {
+            if (m_AuditLogServer == null || actor == null)
+            {
+                return;
+            }
+
+            string targetKey = packageName;
+            if (request.AgentIds != null && request.AgentIds.Count == 1)
+            {
+                targetKey = packageName + "@" + request.AgentIds[0];
+            }
+
+            await m_AuditLogServer.WriteAsync(
+                auditAction ?? AuditActions.PackageDeploy,
+                success,
+                summary,
+                actor,
+                targetType: "package",
+                targetKey: targetKey,
+                details: new
+                {
+                    operation,
+                    command,
+                    taskId,
+                    request.TargetType,
+                    request.AgentIds,
+                    request.HostnamePattern
+                },
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>

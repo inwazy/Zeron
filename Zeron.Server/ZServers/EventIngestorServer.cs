@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Text.Json;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore;
 using Zeron.Server.ZInterfaces;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
@@ -26,21 +27,27 @@ namespace Zeron.Server.ZServers
         // DashboardNotifier
         private readonly IDashboardNotifier? m_DashboardNotifier;
 
+        // Optional audit log for agent-originated package ops.
+        private readonly AuditLogServer? m_AuditLogServer;
+
         /// <summary>
         /// EventIngestorServer
         /// </summary>
         /// <param name="dbContext"></param>
         /// <param name="taskDispatcher"></param>
         /// <param name="dashboardNotifier"></param>
+        /// <param name="auditLogServer"></param>
         /// <returns>Returns void.</returns>
         public EventIngestorServer(
             ZeronServerDbContext dbContext,
             TaskDispatcherServer taskDispatcher,
-            IDashboardNotifier? dashboardNotifier = null)
+            IDashboardNotifier? dashboardNotifier = null,
+            AuditLogServer? auditLogServer = null)
         {
             m_DbContext = dbContext;
             m_TaskDispatcher = taskDispatcher;
             m_DashboardNotifier = dashboardNotifier;
+            m_AuditLogServer = auditLogServer;
         }
 
         /// <summary>
@@ -79,6 +86,7 @@ namespace Zeron.Server.ZServers
             await m_DbContext.SaveChangesAsync(cancellationToken);
 
             await TryCompletePackageDeployFromInstallEventAsync(report, cancellationToken);
+            await TryWritePackageAuditFromEventAsync(report, agent, cancellationToken);
 
             if (m_DashboardNotifier != null)
             {
@@ -222,6 +230,100 @@ namespace Zeron.Server.ZServers
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// TryWritePackageAuditFromEventAsync - mirror Demand package ops into AuditLog.
+        /// </summary>
+        /// <param name="report"></param>
+        /// <param name="agent"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns void.</returns>
+        private async Task TryWritePackageAuditFromEventAsync(
+            AgentEventReportType report,
+            AgentEntity agent,
+            CancellationToken cancellationToken)
+        {
+            if (m_AuditLogServer == null || string.IsNullOrWhiteSpace(report.Topic))
+            {
+                return;
+            }
+
+            string? action = report.Topic.ToLowerInvariant() switch
+            {
+                "package.override" => AuditActions.PackageOverride,
+                "package.clear-override" => AuditActions.PackageClearOverride,
+                "package.catalog.sync" => AuditActions.PackageCatalogSync,
+                _ => null
+            };
+
+            if (action == null)
+            {
+                return;
+            }
+
+            string? packageName = null;
+            bool success = true;
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(report.Payload))
+                {
+                    using JsonDocument document = JsonDocument.Parse(report.Payload);
+
+                    if (document.RootElement.TryGetProperty("package", out JsonElement packageElement))
+                    {
+                        packageName = packageElement.GetString();
+                    }
+
+                    if (document.RootElement.TryGetProperty("success", out JsonElement successElement)
+                        && successElement.ValueKind is JsonValueKind.True or JsonValueKind.False)
+                    {
+                        success = successElement.GetBoolean();
+                    }
+                    else if (document.RootElement.TryGetProperty("overridden", out JsonElement overridden)
+                        && overridden.ValueKind is JsonValueKind.True or JsonValueKind.False)
+                    {
+                        success = overridden.GetBoolean();
+                    }
+                    else if (document.RootElement.TryGetProperty("cleared", out JsonElement cleared)
+                        && cleared.ValueKind is JsonValueKind.True or JsonValueKind.False)
+                    {
+                        success = cleared.GetBoolean();
+                    }
+                    else if (document.RootElement.TryGetProperty("synced", out JsonElement synced)
+                        && synced.ValueKind is JsonValueKind.True or JsonValueKind.False)
+                    {
+                        success = synced.GetBoolean();
+                    }
+                }
+            }
+            catch (JsonException)
+            {
+            }
+
+            AuditActorType actor = new()
+            {
+                Username = agent.AgentKey,
+                Role = "Agent",
+                Source = "agent"
+            };
+
+            await m_AuditLogServer.WriteAsync(
+                action,
+                success,
+                $"{action} on agent '{agent.AgentKey}'.",
+                actor,
+                targetType: string.IsNullOrWhiteSpace(packageName) ? "agent" : "package",
+                targetKey: string.IsNullOrWhiteSpace(packageName) ? agent.AgentKey : packageName + "@" + agent.AgentKey,
+                details: new
+                {
+                    agent.AgentKey,
+                    agent.MachineName,
+                    report.Topic,
+                    report.Payload
+                },
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>

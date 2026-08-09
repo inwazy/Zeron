@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
 
@@ -21,18 +22,24 @@ namespace Zeron.Server.ZServers
         // Optional publisher for push catalog sync.
         private readonly CommandPublisherServer? m_CommandPublisher;
 
+        // Optional audit log.
+        private readonly AuditLogServer? m_AuditLogServer;
+
         /// <summary>
         /// ManagedPackageCatalogServer
         /// </summary>
         /// <param name="dbContext"></param>
         /// <param name="commandPublisher"></param>
+        /// <param name="auditLogServer"></param>
         /// <returns>Returns void.</returns>
         public ManagedPackageCatalogServer(
             ZeronServerDbContext dbContext,
-            CommandPublisherServer? commandPublisher = null)
+            CommandPublisherServer? commandPublisher = null,
+            AuditLogServer? auditLogServer = null)
         {
             m_DbContext = dbContext;
             m_CommandPublisher = commandPublisher;
+            m_AuditLogServer = auditLogServer;
         }
 
         /// <summary>
@@ -106,12 +113,14 @@ namespace Zeron.Server.ZServers
         /// <returns>Returns created package or error.</returns>
         public async Task<(ManagedPackageInfoType? Package, string? Error)> CreatePackageAsync(
             ManagedPackageUpsertRequestType request,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            AuditActorType? actor = null)
         {
             string? error = ValidateRequest(request, requireName: true, out string name);
 
             if (error != null)
             {
+                await WriteCatalogAuditAsync(AuditActions.CatalogCreate, false, error, name, actor, cancellationToken);
                 return (null, error);
             }
 
@@ -120,7 +129,9 @@ namespace Zeron.Server.ZServers
 
             if (exists)
             {
-                return (null, "Package name already exists.");
+                string existsError = "Package name already exists.";
+                await WriteCatalogAuditAsync(AuditActions.CatalogCreate, false, existsError, name, actor, cancellationToken);
+                return (null, existsError);
             }
 
             DateTime now = DateTime.UtcNow;
@@ -141,6 +152,15 @@ namespace Zeron.Server.ZServers
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "ManagedPackageCatalogServer created package '{0}'.", package.Name));
 
+            await WriteCatalogAuditAsync(
+                AuditActions.CatalogCreate,
+                true,
+                $"Created catalog package '{package.Name}'.",
+                package.Name,
+                actor,
+                cancellationToken,
+                new { package.Id, package.IsEnabled });
+
             return (ToInfo(package), null);
         }
 
@@ -154,13 +174,15 @@ namespace Zeron.Server.ZServers
         public async Task<(ManagedPackageInfoType? Package, string? Error)> UpdatePackageAsync(
             Guid packageId,
             ManagedPackageUpsertRequestType request,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            AuditActorType? actor = null)
         {
             ManagedPackageEntity? package = await m_DbContext.ManagedPackages
                 .FirstOrDefaultAsync(item => item.Id == packageId, cancellationToken);
 
             if (package == null)
             {
+                await WriteCatalogAuditAsync(AuditActions.CatalogUpdate, false, "Package not found.", null, actor, cancellationToken);
                 return (null, "Package not found.");
             }
 
@@ -170,6 +192,7 @@ namespace Zeron.Server.ZServers
 
                 if (error != null)
                 {
+                    await WriteCatalogAuditAsync(AuditActions.CatalogUpdate, false, error, package.Name, actor, cancellationToken);
                     return (null, error);
                 }
 
@@ -178,7 +201,9 @@ namespace Zeron.Server.ZServers
 
                 if (nameTaken)
                 {
-                    return (null, "Package name already exists.");
+                    string taken = "Package name already exists.";
+                    await WriteCatalogAuditAsync(AuditActions.CatalogUpdate, false, taken, name, actor, cancellationToken);
+                    return (null, taken);
                 }
 
                 package.Name = name;
@@ -198,6 +223,15 @@ namespace Zeron.Server.ZServers
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "ManagedPackageCatalogServer updated package '{0}'.", package.Name));
 
+            await WriteCatalogAuditAsync(
+                AuditActions.CatalogUpdate,
+                true,
+                $"Updated catalog package '{package.Name}'.",
+                package.Name,
+                actor,
+                cancellationToken,
+                new { package.Id, package.IsEnabled });
+
             return (ToInfo(package), null);
         }
 
@@ -209,22 +243,34 @@ namespace Zeron.Server.ZServers
         /// <returns>Returns error or null.</returns>
         public async Task<string?> DeletePackageAsync(
             Guid packageId,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            AuditActorType? actor = null)
         {
             ManagedPackageEntity? package = await m_DbContext.ManagedPackages
                 .FirstOrDefaultAsync(item => item.Id == packageId, cancellationToken);
 
             if (package == null)
             {
+                await WriteCatalogAuditAsync(AuditActions.CatalogDelete, false, "Package not found.", null, actor, cancellationToken);
                 return "Package not found.";
             }
 
+            string packageName = package.Name;
             m_DbContext.ManagedPackages.Remove(package);
             await m_DbContext.SaveChangesAsync(cancellationToken);
             await NotifyOnlineAgentsToSyncAsync(cancellationToken);
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
-                "ManagedPackageCatalogServer deleted package '{0}'.", package.Name));
+                "ManagedPackageCatalogServer deleted package '{0}'.", packageName));
+
+            await WriteCatalogAuditAsync(
+                AuditActions.CatalogDelete,
+                true,
+                $"Deleted catalog package '{packageName}'.",
+                packageName,
+                actor,
+                cancellationToken,
+                new { packageId });
 
             return null;
         }
@@ -358,6 +404,34 @@ namespace Zeron.Server.ZServers
             {
                 package.Sha256x64 = NormalizeSha(request.Sha256x64);
             }
+        }
+
+        /// <summary>
+        /// WriteCatalogAuditAsync
+        /// </summary>
+        private async Task WriteCatalogAuditAsync(
+            string action,
+            bool success,
+            string summary,
+            string? packageName,
+            AuditActorType? actor,
+            CancellationToken cancellationToken,
+            object? details = null)
+        {
+            if (m_AuditLogServer == null || actor == null)
+            {
+                return;
+            }
+
+            await m_AuditLogServer.WriteAsync(
+                action,
+                success,
+                summary,
+                actor,
+                targetType: "package",
+                targetKey: packageName,
+                details: details,
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>

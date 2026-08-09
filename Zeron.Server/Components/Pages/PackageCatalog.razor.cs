@@ -1,6 +1,8 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
+using Microsoft.AspNetCore.Components.Authorization;
+using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
@@ -109,9 +111,13 @@ namespace Zeron.Server.Components.Pages
                     IsEnabled = m_Form.IsEnabled
                 };
 
+                AuditActorType? actor = await GetActorAsync();
+
                 if (m_EditId == null)
                 {
-                    (ManagedPackageInfoType? package, string? error) = await CatalogServer.CreatePackageAsync(request);
+                    (ManagedPackageInfoType? package, string? error) = await CatalogServer.CreatePackageAsync(
+                        request,
+                        actor: actor);
 
                     if (error != null)
                     {
@@ -126,7 +132,10 @@ namespace Zeron.Server.Components.Pages
                 }
                 else
                 {
-                    (ManagedPackageInfoType? package, string? error) = await CatalogServer.UpdatePackageAsync(m_EditId.Value, request);
+                    (ManagedPackageInfoType? package, string? error) = await CatalogServer.UpdatePackageAsync(
+                        m_EditId.Value,
+                        request,
+                        actor: actor);
 
                     if (error != null)
                     {
@@ -167,7 +176,9 @@ namespace Zeron.Server.Components.Pages
 
             try
             {
-                string? error = await CatalogServer.DeletePackageAsync(packageId);
+                string? error = await CatalogServer.DeletePackageAsync(
+                    packageId,
+                    actor: await GetActorAsync());
 
                 if (error != null)
                 {
@@ -190,6 +201,16 @@ namespace Zeron.Server.Components.Pages
             {
                 m_IsBusy = false;
             }
+        }
+
+        /// <summary>
+        /// GetActorAsync
+        /// </summary>
+        /// <returns>Returns audit actor.</returns>
+        private async Task<AuditActorType?> GetActorAsync()
+        {
+            AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            return AuditLogServer.FromPrincipal(authState.User);
         }
 
         /// <summary>

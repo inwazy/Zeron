@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
 
@@ -18,15 +19,21 @@ namespace Zeron.Server.ZServers
         // Database context.
         private readonly ZeronServerDbContext m_DbContext;
 
+        // Optional audit log.
+        private readonly AuditLogServer? m_AuditLogServer;
+
         /// <summary>
         /// UserAgentBindingServer
         /// </summary>
         /// <param name="dbContext"></param>
+        /// <param name="auditLogServer"></param>
         /// <returns>Returns void.</returns>
         public UserAgentBindingServer(
-            ZeronServerDbContext dbContext)
+            ZeronServerDbContext dbContext,
+            AuditLogServer? auditLogServer = null)
         {
             m_DbContext = dbContext;
+            m_AuditLogServer = auditLogServer;
         }
 
         /// <summary>
@@ -70,10 +77,12 @@ namespace Zeron.Server.ZServers
         /// <returns>Returns binding or error.</returns>
         public async Task<(UserAgentBindingInfoType? Binding, string? Error)> CreateBindingAsync(
             UserAgentBindingRequestType request,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            AuditActorType? actor = null)
         {
             if (!Guid.TryParse(request.UserId, out Guid userId))
             {
+                await WriteBindingAuditAsync(AuditActions.BindingCreate, false, "User id is required.", null, actor, cancellationToken);
                 return (null, "User id is required.");
             }
 
@@ -81,6 +90,7 @@ namespace Zeron.Server.ZServers
 
             if (agentKey.Length == 0)
             {
+                await WriteBindingAuditAsync(AuditActions.BindingCreate, false, "Agent key is required.", null, actor, cancellationToken);
                 return (null, "Agent key is required.");
             }
 
@@ -89,6 +99,7 @@ namespace Zeron.Server.ZServers
 
             if (user == null)
             {
+                await WriteBindingAuditAsync(AuditActions.BindingCreate, false, "User not found.", agentKey, actor, cancellationToken);
                 return (null, "User not found.");
             }
 
@@ -97,6 +108,14 @@ namespace Zeron.Server.ZServers
 
             if (alreadyBound)
             {
+                await WriteBindingAuditAsync(
+                    AuditActions.BindingCreate,
+                    false,
+                    "User is already bound to this agent.",
+                    agentKey,
+                    actor,
+                    cancellationToken,
+                    new { user.Username });
                 return (null, "User is already bound to this agent.");
             }
 
@@ -115,6 +134,15 @@ namespace Zeron.Server.ZServers
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "UserAgentBindingServer bound user '{0}' to agent '{1}'.", user.Username, agentKey));
 
+            await WriteBindingAuditAsync(
+                AuditActions.BindingCreate,
+                true,
+                $"Bound user '{user.Username}' to agent '{agentKey}'.",
+                agentKey,
+                actor,
+                cancellationToken,
+                new { user.Username, binding.Id });
+
             Dictionary<string, string?> machineNames = await LoadMachineNamesAsync([agentKey], cancellationToken);
 
             return (ToInfo(binding, machineNames), null);
@@ -125,28 +153,71 @@ namespace Zeron.Server.ZServers
         /// </summary>
         /// <param name="bindingId"></param>
         /// <param name="cancellationToken"></param>
+        /// <param name="actor"></param>
         /// <returns>Returns error or null.</returns>
         public async Task<string?> UnbindAsync(
             Guid bindingId,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            AuditActorType? actor = null)
         {
             UserAgentBindingEntity? binding = await m_DbContext.UserAgentBindings
+                .Include(item => item.User)
                 .FirstOrDefaultAsync(item => item.Id == bindingId, cancellationToken);
 
             if (binding == null)
             {
+                await WriteBindingAuditAsync(AuditActions.BindingDelete, false, "Binding not found.", null, actor, cancellationToken);
                 return "Binding not found.";
             }
 
+            string agentKey = binding.AgentKey;
+            string? username = binding.User?.Username;
             m_DbContext.UserAgentBindings.Remove(binding);
             await m_DbContext.SaveChangesAsync(cancellationToken);
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "UserAgentBindingServer unbound agent '{0}' from user '{1}'.",
-                binding.AgentKey,
+                agentKey,
                 binding.UserId));
 
+            await WriteBindingAuditAsync(
+                AuditActions.BindingDelete,
+                true,
+                $"Unbound user '{username}' from agent '{agentKey}'.",
+                agentKey,
+                actor,
+                cancellationToken,
+                new { username, bindingId });
+
             return null;
+        }
+
+        /// <summary>
+        /// WriteBindingAuditAsync
+        /// </summary>
+        private async Task WriteBindingAuditAsync(
+            string action,
+            bool success,
+            string summary,
+            string? agentKey,
+            AuditActorType? actor,
+            CancellationToken cancellationToken,
+            object? details = null)
+        {
+            if (m_AuditLogServer == null || actor == null)
+            {
+                return;
+            }
+
+            await m_AuditLogServer.WriteAsync(
+                action,
+                success,
+                summary,
+                actor,
+                targetType: "binding",
+                targetKey: agentKey,
+                details: details,
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>

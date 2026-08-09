@@ -236,3 +236,17 @@ Demand ManagedPackage local commands (Client / RemoteCommand):
 Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
 
 Dashboard pages: `/my-devices`, `/device-bindings` (Admin).
+
+## Audit / 操作紀錄
+
+Server stores attributed operations in `AuditLogs` (Dashboard **Audit** `/audit`, API `GET /api/audit`).
+
+| Action | Source | When |
+|--------|--------|------|
+| `catalog.create` / `update` / `delete` | server | Catalog CRUD |
+| `package.deploy` | server | Staff package deploy |
+| `package.self_deploy` | server | DeviceOwner self-service deploy |
+| `binding.create` / `binding.delete` | server | Device bindings |
+| `package.override` / `package.clear-override` / `package.catalog.sync` | agent | Demand ManagedPackage commands (via events) |
+
+Query filters: `action`, `actor`, `target`, `source`, `limit`.

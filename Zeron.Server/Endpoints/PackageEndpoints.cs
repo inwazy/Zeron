@@ -1,6 +1,7 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
+using System.Security.Claims;
 using Zeron.Server.ZCore;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
@@ -53,9 +54,12 @@ namespace Zeron.Server.Endpoints
 
             app.MapPost("/api/packages/catalog", async (
                 ManagedPackageUpsertRequestType request,
+                ClaimsPrincipal principal,
                 ManagedPackageCatalogServer catalogServer) =>
             {
-                (ManagedPackageInfoType? package, string? error) = await catalogServer.CreatePackageAsync(request);
+                (ManagedPackageInfoType? package, string? error) = await catalogServer.CreatePackageAsync(
+                    request,
+                    actor: AuditLogServer.FromPrincipal(principal));
 
                 if (error != null)
                 {
@@ -68,9 +72,13 @@ namespace Zeron.Server.Endpoints
             app.MapPut("/api/packages/catalog/{packageId:guid}", async (
                 Guid packageId,
                 ManagedPackageUpsertRequestType request,
+                ClaimsPrincipal principal,
                 ManagedPackageCatalogServer catalogServer) =>
             {
-                (ManagedPackageInfoType? package, string? error) = await catalogServer.UpdatePackageAsync(packageId, request);
+                (ManagedPackageInfoType? package, string? error) = await catalogServer.UpdatePackageAsync(
+                    packageId,
+                    request,
+                    actor: AuditLogServer.FromPrincipal(principal));
 
                 if (error != null)
                 {
@@ -84,9 +92,12 @@ namespace Zeron.Server.Endpoints
 
             app.MapDelete("/api/packages/catalog/{packageId:guid}", async (
                 Guid packageId,
+                ClaimsPrincipal principal,
                 ManagedPackageCatalogServer catalogServer) =>
             {
-                string? error = await catalogServer.DeletePackageAsync(packageId);
+                string? error = await catalogServer.DeletePackageAsync(
+                    packageId,
+                    actor: AuditLogServer.FromPrincipal(principal));
 
                 if (error != null)
                 {
@@ -98,9 +109,12 @@ namespace Zeron.Server.Endpoints
 
             app.MapPost("/api/packages/deploy", async (
                 PackageDeployRequestType request,
+                ClaimsPrincipal principal,
                 PackageDeployServer packageDeployServer) =>
             {
-                PackageDeployResponseType response = await packageDeployServer.DeployAsync(request);
+                PackageDeployResponseType response = await packageDeployServer.DeployAsync(
+                    request,
+                    actor: AuditLogServer.FromPrincipal(principal));
 
                 return response.Success
                     ? Results.Created($"/api/tasks/{response.TaskId}", response)
