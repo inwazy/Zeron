@@ -61,5 +61,14 @@ namespace Zeron.ZCore.Type
             get;
             set;
         }
+
+        /// <summary>
+        /// Email
+        /// </summary>
+        public string? Email
+        {
+            get;
+            set;
+        }
     }
 }

@@ -82,6 +82,11 @@ namespace Zeron.Server.Data
         public DbSet<AuditLogEntity> AuditLogs => Set<AuditLogEntity>();
 
         /// <summary>
+        /// UserNotifications
+        /// </summary>
+        public DbSet<UserNotificationEntity> UserNotifications => Set<UserNotificationEntity>();
+
+        /// <summary>
         /// OnModelCreating
         /// </summary>
         /// <param name="modelBuilder"></param>
@@ -152,6 +157,17 @@ namespace Zeron.Server.Data
                 entity.HasIndex(log => log.ActorUsername);
                 entity.HasIndex(log => log.TargetKey);
                 entity.HasIndex(log => log.Source);
+            });
+
+            modelBuilder.Entity<UserNotificationEntity>(entity =>
+            {
+                entity.HasIndex(notification => notification.UserId);
+                entity.HasIndex(notification => notification.CreatedAt);
+                entity.HasIndex(notification => new { notification.UserId, notification.ReadAt });
+                entity.HasOne(notification => notification.User)
+                    .WithMany()
+                    .HasForeignKey(notification => notification.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

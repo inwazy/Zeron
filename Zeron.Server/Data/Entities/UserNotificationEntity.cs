@@ -4,9 +4,9 @@
 namespace Zeron.Server.Data.Entities
 {
     /// <summary>
-    /// UserEntity
+    /// UserNotificationEntity - per-user dashboard tip (e.g. self-service install result).
     /// </summary>
-    public class UserEntity
+    public class UserNotificationEntity
     {
         /// <summary>
         /// Id
@@ -18,40 +18,67 @@ namespace Zeron.Server.Data.Entities
         }
 
         /// <summary>
-        /// Username
+        /// UserId
         /// </summary>
-        public string Username
+        public Guid UserId
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Kind - e.g. install.result
+        /// </summary>
+        public string Kind
         {
             get;
             set;
         } = "";
 
         /// <summary>
-        /// PasswordHash
+        /// Title
         /// </summary>
-        public string PasswordHash
+        public string Title
         {
             get;
             set;
         } = "";
 
         /// <summary>
-        /// Role - Admin, Operator, Viewer, DeviceOwner
+        /// Message
         /// </summary>
-        public string Role
+        public string Message
         {
             get;
             set;
-        } = "Viewer";
+        } = "";
 
         /// <summary>
-        /// IsActive
+        /// AgentKey
         /// </summary>
-        public bool IsActive
+        public string? AgentKey
         {
             get;
             set;
-        } = true;
+        }
+
+        /// <summary>
+        /// PackageName
+        /// </summary>
+        public string? PackageName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Success - null when not applicable
+        /// </summary>
+        public bool? Success
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// CreatedAt
@@ -63,18 +90,18 @@ namespace Zeron.Server.Data.Entities
         }
 
         /// <summary>
-        /// MustChangePassword
+        /// ReadAt
         /// </summary>
-        public bool MustChangePassword
+        public DateTime? ReadAt
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Email - optional address for install-result and similar notifications.
+        /// User
         /// </summary>
-        public string? Email
+        public UserEntity? User
         {
             get;
             set;

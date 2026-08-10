@@ -87,6 +87,8 @@ namespace Zeron.Server
             builder.Services.AddScoped<PackageDeployServer>();
             builder.Services.AddScoped<UserAgentBindingServer>();
             builder.Services.AddScoped<DevicePortalServer>();
+            builder.Services.AddScoped<UserNotificationServer>();
+            builder.Services.AddScoped<InstallResultNotifierServer>();
             builder.Services.AddScoped<EventIngestorServer>();
             builder.Services.AddScoped<AlertNotifierServer>();
             builder.Services.AddScoped<AlertRuleServer>();

@@ -4,6 +4,7 @@
 @using Zeron.ZCore.Type
 @attribute [Authorize(Policy = ServerPolicies.DeviceOwnerOrStaff)]
 @inject DevicePortalServer PortalServer
+@inject UserNotificationServer NotificationServer
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="page-header">
@@ -13,8 +14,34 @@
     </div>
     <div class="actions">
         <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+        @if (m_Notifications.Count > 0)
+        {
+            <button class="btn btn-secondary" @onclick="DismissAllAsync" disabled="@m_IsBusy">Dismiss All</button>
+        }
     </div>
 </div>
+
+@if (m_Notifications.Count > 0)
+{
+    <div class="panel">
+        <h2>Install Results</h2>
+        @foreach (UserNotificationInfoType note in m_Notifications)
+        {
+            <div class="notify-banner @(note.Success == false ? "notify-fail" : "notify-ok")">
+                <div>
+                    <strong>@note.Title</strong>
+                    <p>@note.Message</p>
+                    <small class="muted">@note.CreatedAt.ToLocalTime().ToString("g")</small>
+                    @if (!string.IsNullOrWhiteSpace(note.AgentKey))
+                    {
+                        <small class="muted"> · <a href="@($"/my-devices/{note.AgentKey}")">Open device</a></small>
+                    }
+                </div>
+                <button class="btn btn-secondary" @onclick="() => DismissAsync(note)" disabled="@m_IsBusy">Dismiss</button>
+            </div>
+        }
+    </div>
+}
 
 @if (!string.IsNullOrWhiteSpace(m_Error))
 {

@@ -65,6 +65,7 @@ namespace Zeron.Server.Components.Pages
                     Id = user.Id!,
                     Username = user.Username ?? "",
                     Role = user.Role ?? ServerRoles.Viewer,
+                    Email = user.Email ?? "",
                     IsActive = user.IsActive,
                     MustChangePassword = user.MustChangePassword,
                     CreatedAt = user.CreatedAt,
@@ -88,7 +89,8 @@ namespace Zeron.Server.Components.Pages
                 {
                     Username = m_CreateModel.Username,
                     Password = m_CreateModel.Password,
-                    Role = m_CreateModel.Role
+                    Role = m_CreateModel.Role,
+                    Email = m_CreateModel.Email
                 });
 
                 if (error != null)
@@ -102,6 +104,7 @@ namespace Zeron.Server.Components.Pages
                 m_CreateMessage = $"Created user '{user!.Username}'.";
                 m_CreateModel.Username = "";
                 m_CreateModel.Password = "";
+                m_CreateModel.Email = "";
                 m_CreateModel.Role = ServerRoles.Viewer;
                 await ReloadAsync();
             }
@@ -134,7 +137,9 @@ namespace Zeron.Server.Components.Pages
                     new UserUpdateRequestType
                     {
                         Role = row.Role,
-                        Password = string.IsNullOrWhiteSpace(row.NewPassword) ? null : row.NewPassword
+                        Password = string.IsNullOrWhiteSpace(row.NewPassword) ? null : row.NewPassword,
+                        Email = row.Email,
+                        UpdateEmail = true
                     },
                     ParseCurrentUserId());
 
@@ -220,6 +225,9 @@ namespace Zeron.Server.Components.Pages
             // Password.
             public string Password { get; set; } = "";
 
+            // Email.
+            public string Email { get; set; } = "";
+
             // Role.
             public string Role { get; set; } = ServerRoles.Viewer;
         }
@@ -238,6 +246,9 @@ namespace Zeron.Server.Components.Pages
 
             // Role.
             public string Role { get; set; } = ServerRoles.Viewer;
+
+            // Email.
+            public string Email { get; set; } = "";
 
             // Is active.
             public bool IsActive { get; set; }

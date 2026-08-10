@@ -194,6 +194,24 @@ namespace Zeron.Server.ZCore
         }
 
         /// <summary>
+        /// InstallResultNotifyEnabled - create DeviceOwner dashboard tips for self-service install results.
+        /// </summary>
+        public bool InstallResultNotifyEnabled
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
+        /// InstallResultEmailEnabled - email bound users (with Email) on self-service install results.
+        /// </summary>
+        public bool InstallResultEmailEnabled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// SmtpHost
         /// </summary>
         public string? SmtpHost

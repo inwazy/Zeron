@@ -1,57 +1,75 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-namespace Zeron.Server.Data.Entities
+namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// UserEntity
+    /// UserNotificationInfoType
     /// </summary>
-    public class UserEntity
+    public class UserNotificationInfoType
     {
         /// <summary>
         /// Id
         /// </summary>
-        public Guid Id
+        public string? Id
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Username
+        /// Kind
         /// </summary>
-        public string Username
+        public string? Kind
         {
             get;
             set;
-        } = "";
+        }
 
         /// <summary>
-        /// PasswordHash
+        /// Title
         /// </summary>
-        public string PasswordHash
+        public string? Title
         {
             get;
             set;
-        } = "";
+        }
 
         /// <summary>
-        /// Role - Admin, Operator, Viewer, DeviceOwner
+        /// Message
         /// </summary>
-        public string Role
+        public string? Message
         {
             get;
             set;
-        } = "Viewer";
+        }
 
         /// <summary>
-        /// IsActive
+        /// AgentKey
         /// </summary>
-        public bool IsActive
+        public string? AgentKey
         {
             get;
             set;
-        } = true;
+        }
+
+        /// <summary>
+        /// PackageName
+        /// </summary>
+        public string? PackageName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Success
+        /// </summary>
+        public bool? Success
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// CreatedAt
@@ -63,18 +81,9 @@ namespace Zeron.Server.Data.Entities
         }
 
         /// <summary>
-        /// MustChangePassword
+        /// IsRead
         /// </summary>
-        public bool MustChangePassword
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Email - optional address for install-result and similar notifications.
-        /// </summary>
-        public string? Email
+        public bool IsRead
         {
             get;
             set;

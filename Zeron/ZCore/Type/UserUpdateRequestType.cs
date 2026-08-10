@@ -9,7 +9,7 @@ namespace Zeron.ZCore.Type
     public class UserUpdateRequestType
     {
         /// <summary>
-        /// Role - Admin, Operator, Viewer
+        /// Role - Admin, Operator, Viewer, DeviceOwner
         /// </summary>
         public string? Role
         {
@@ -30,6 +30,24 @@ namespace Zeron.ZCore.Type
         /// Password - optional reset
         /// </summary>
         public string? Password
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Email - optional notification address (empty clears)
+        /// </summary>
+        public string? Email
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// UpdateEmail - when true, apply Email (including clear)
+        /// </summary>
+        public bool UpdateEmail
         {
             get;
             set;

@@ -24,6 +24,8 @@
 | `DefaultAdminPassword` | `admin123` | Seed admin password (first run only) |
 | `AlertEmailEnabled` | `false` | Send email on new alerts |
 | `AlertEmailTo` | — | Alert recipient address |
+| `InstallResultNotifyEnabled` | `true` | Create My Devices tips when self-service install completes/fails |
+| `InstallResultEmailEnabled` | `false` | Email bound users (with `Users.Email`) on self-service install results (uses `Smtp*`) |
 | `SmtpHost` | — | SMTP server hostname |
 | `SmtpPort` | `587` | SMTP port |
 | `SmtpUser` | — | SMTP username |
@@ -227,6 +229,9 @@ Dashboard pages: `/packages`, `/packages/catalog`, `/packages/sync-health`, `/pa
 | `GET /api/my/devices/{agentKey}` | DeviceOwner or staff | Single bound agent |
 | `GET /api/my/devices/{agentKey}/install-events` | DeviceOwner or staff | Install events for bound agent |
 | `POST /api/my/devices/{agentKey}/deploy` | DeviceOwner or staff | Self-service install/uninstall (bound agent + Server catalog only) |
+| `GET /api/my/notifications` | DeviceOwner or staff | Install-result tips (`unreadOnly`, `limit`) |
+| `POST /api/my/notifications/{id}/read` | DeviceOwner or staff | Dismiss one tip |
+| `POST /api/my/notifications/read-all` | DeviceOwner or staff | Dismiss all tips |
 
 Demand ManagedPackage local commands (Client / RemoteCommand):
 
@@ -239,6 +244,8 @@ Demand ManagedPackage local commands (Client / RemoteCommand):
 | `status` / `install` / `uninstall` | Existing install queue commands |
 
 Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
+
+**Install result notifications:** when a self-service deploy (`Task.Name` starts with `self-`) finishes with `install.completed` / `install.failed`, Server notifies every active user bound to that agent. Dashboard tips appear on `/my-devices` (`InstallResultNotifyEnabled`). Optional per-user email uses `Users.Email` + SMTP (`InstallResultEmailEnabled`). Staff package deploys are not notified this way.
 
 Dashboard pages: `/my-devices`, `/device-bindings` (Admin).
 
