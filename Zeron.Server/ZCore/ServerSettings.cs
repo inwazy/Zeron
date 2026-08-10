@@ -104,6 +104,15 @@ namespace Zeron.Server.ZCore
         } = 90;
 
         /// <summary>
+        /// CatalogSyncStaleMinutes - online agents without sync within this window are stale.
+        /// </summary>
+        public int CatalogSyncStaleMinutes
+        {
+            get;
+            set;
+        } = 15;
+
+        /// <summary>
         /// DispatchIntervalMs
         /// </summary>
         public int DispatchIntervalMs

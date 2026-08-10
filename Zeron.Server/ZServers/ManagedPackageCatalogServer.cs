@@ -442,17 +442,51 @@ namespace Zeron.Server.ZServers
         private async Task NotifyOnlineAgentsToSyncAsync(
             CancellationToken cancellationToken)
         {
+            await RequestCatalogSyncAsync(agentKeys: null, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// RequestCatalogSyncAsync - push ManagedPackage sync to selected or all online agents.
+        /// </summary>
+        /// <param name="agentKeys"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns pushed agent keys.</returns>
+        public async Task<List<string>> RequestCatalogSyncAsync(
+            IEnumerable<string>? agentKeys = null,
+            CancellationToken cancellationToken = default)
+        {
             if (m_CommandPublisher == null)
             {
-                return;
+                return [];
             }
 
-            List<string> agentKeys = await m_DbContext.Agents
-                .Where(agent => agent.Status == "online")
-                .Select(agent => agent.AgentKey)
-                .ToListAsync(cancellationToken);
+            List<string> targets;
 
-            foreach (string agentKey in agentKeys)
+            if (agentKeys == null)
+            {
+                targets = await m_DbContext.Agents
+                    .Where(agent => agent.Status == "online")
+                    .Select(agent => agent.AgentKey)
+                    .ToListAsync(cancellationToken);
+            }
+            else
+            {
+                HashSet<string> requested = new(
+                    agentKeys.Where(key => !string.IsNullOrWhiteSpace(key)).Select(key => key.Trim()),
+                    StringComparer.OrdinalIgnoreCase);
+
+                if (requested.Count == 0)
+                {
+                    return [];
+                }
+
+                targets = await m_DbContext.Agents
+                    .Where(agent => agent.Status == "online" && requested.Contains(agent.AgentKey))
+                    .Select(agent => agent.AgentKey)
+                    .ToListAsync(cancellationToken);
+            }
+
+            foreach (string agentKey in targets)
             {
                 m_CommandPublisher.PublishRemoteCommand(
                     agentKey,
@@ -461,12 +495,14 @@ namespace Zeron.Server.ZServers
                     "sync");
             }
 
-            if (agentKeys.Count > 0)
+            if (targets.Count > 0)
             {
                 ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                     "ManagedPackageCatalogServer requested catalog sync on {0} online agent(s).",
-                    agentKeys.Count));
+                    targets.Count));
             }
+
+            return targets;
         }
 
         /// <summary>

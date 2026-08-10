@@ -27,6 +27,23 @@ namespace Zeron.Server.Endpoints
                 return Results.Ok(await catalogServer.GetPackagesAsync(enabledOnly ?? false));
             }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
 
+            app.MapGet("/api/packages/catalog/sync-health", async (CatalogSyncHealthServer syncHealthServer) =>
+            {
+                return Results.Ok(await syncHealthServer.GetHealthAsync());
+            }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
+
+            app.MapPost("/api/packages/catalog/sync-push", async (
+                CatalogSyncPushRequestType? request,
+                ClaimsPrincipal principal,
+                CatalogSyncHealthServer syncHealthServer) =>
+            {
+                CatalogSyncPushResponseType response = await syncHealthServer.PushSyncAsync(
+                    request,
+                    AuditLogServer.FromPrincipal(principal));
+
+                return Results.Ok(response);
+            }).RequireAuthorization(ServerPolicies.OperatorOrAbove);
+
             app.MapGet("/api/packages/catalog/sync", async (
                 HttpContext context,
                 ManagedPackageCatalogServer catalogServer,

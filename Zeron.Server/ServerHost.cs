@@ -83,6 +83,7 @@ namespace Zeron.Server
             builder.Services.AddScoped<TaskScheduleServer>();
             builder.Services.AddScoped<AuditLogServer>();
             builder.Services.AddScoped<ManagedPackageCatalogServer>();
+            builder.Services.AddScoped<CatalogSyncHealthServer>();
             builder.Services.AddScoped<PackageDeployServer>();
             builder.Services.AddScoped<UserAgentBindingServer>();
             builder.Services.AddScoped<DevicePortalServer>();

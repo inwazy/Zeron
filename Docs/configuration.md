@@ -14,6 +14,7 @@
 | `AgentHmacSkewSeconds` | `300` | Allowed clock skew for HMAC timestamps |
 | `RequireHttpsAgents` | `false` | Reject non-HTTPS agent calls (honors `X-Forwarded-Proto`) |
 | `HeartbeatTimeoutSeconds` | `90` | Seconds without heartbeat before agent marked offline |
+| `CatalogSyncStaleMinutes` | `15` | Online agents whose last catalog sync is older than this are stale on Sync Health |
 | `DispatchIntervalMs` | `5000` | Background task dispatch interval |
 | `ScheduleIntervalMs` | `15000` | Central cron schedule poll interval |
 | `JwtSecret` | (dev secret) | JWT signing key (min 32 chars) |
@@ -179,6 +180,8 @@ The Server catalog is the central source of ManagedPackage definitions. Demand a
 | `PUT /api/packages/catalog/{id}` | Operator+ | Update catalog package |
 | `DELETE /api/packages/catalog/{id}` | Operator+ | Delete catalog package |
 | `GET /api/packages/catalog/sync` | Agent API key | Full catalog snapshot for Demand |
+| `GET /api/packages/catalog/sync-health` | Viewer+ | Catalog sync health summary per agent |
+| `POST /api/packages/catalog/sync-push` | Operator+ | Push `ManagedPackage sync` to unhealthy / selected / all online agents |
 | `POST /api/packages/deploy` | Operator+ | Create install/uninstall deploy task (name must exist and be enabled in Server catalog) |
 | `GET /api/packages/deploys` | Viewer+ | Recent ManagedPackage tasks |
 | `GET /api/packages/install-events` | Viewer+ | Recent `install.*` events |
@@ -207,7 +210,9 @@ Package deploy assignment lifecycle:
 
 Related events: `install.started` / `install.uninstall` / `install.completed` / `install.failed`.
 
-Dashboard pages: `/packages`, `/packages/catalog`, `/packages/deploy`. Events shortcut: `/events?topic=install.`.
+Dashboard pages: `/packages`, `/packages/catalog`, `/packages/sync-health`, `/packages/deploy`. Events shortcut: `/events?topic=install.`.
+
+**Sync Health** (`/packages/sync-health`): classifies each agent as `healthy` / `stale` / `never` / `failed` / `offline` using `LastCatalogSyncAt` and recent failed `package.catalog.sync` audit rows. Operators can push sync to unhealthy online agents, all online agents, or a single agent. Stale window: `CatalogSyncStaleMinutes`.
 
 ## Device Owner Self-Service
 
@@ -248,5 +253,6 @@ Server stores attributed operations in `AuditLogs` (Dashboard **Audit** `/audit`
 | `package.self_deploy` | server | DeviceOwner self-service deploy |
 | `binding.create` / `binding.delete` | server | Device bindings |
 | `package.override` / `package.clear-override` / `package.catalog.sync` | agent | Demand ManagedPackage commands (via events) |
+| `catalog.sync.push` | server | Operator push sync from Sync Health |
 
 Query filters: `action`, `actor`, `target`, `source`, `limit`.

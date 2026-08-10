@@ -13,6 +13,7 @@
     </div>
     <div class="actions">
         <a class="btn btn-secondary" href="/packages">Deploys</a>
+        <a class="btn btn-secondary" href="/packages/sync-health">Sync Health</a>
         <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
             <Authorized>
                 <a class="btn" href="/packages/deploy">Deploy Package</a>

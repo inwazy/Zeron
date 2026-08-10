@@ -57,5 +57,10 @@ namespace Zeron.Server.ZCore
         /// PackageCatalogSync
         /// </summary>
         public const string PackageCatalogSync = "package.catalog.sync";
+
+        /// <summary>
+        /// CatalogSyncPush
+        /// </summary>
+        public const string CatalogSyncPush = "catalog.sync.push";
     }
 }

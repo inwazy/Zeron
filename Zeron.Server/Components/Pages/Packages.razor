@@ -12,6 +12,7 @@
     </div>
     <div class="actions">
         <a class="btn btn-secondary" href="/packages/catalog">Catalog</a>
+        <a class="btn btn-secondary" href="/packages/sync-health">Sync Health</a>
         <a class="btn btn-secondary" href="/events?topic=install.">Install Events</a>
         <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
             <Authorized>
