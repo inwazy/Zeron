@@ -173,6 +173,45 @@ namespace Zeron.Demand.ZServers.Impls
         }
 
         /// <summary>
+        /// GetPackageCatalogAsync
+        /// </summary>
+        /// <returns>Returns catalog sync payload.</returns>
+        public static async Task<ManagedPackageCatalogSyncResponseType?> GetPackageCatalogAsync()
+        {
+            if (string.IsNullOrWhiteSpace(s_ServerUrl))
+            {
+                return null;
+            }
+
+            try
+            {
+                HttpResponseMessage response = await SendRequestAsync(
+                    HttpMethod.Get,
+                    "/api/packages/catalog/sync");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    Zeron.ZCore.ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
+                        "ReporterImpl GetPackageCatalogAsync failed. Status={0}, Body={1}",
+                        (int)response.StatusCode,
+                        responseBody));
+
+                    return null;
+                }
+
+                return await response.Content.ReadFromJsonAsync<ManagedPackageCatalogSyncResponseType>(s_JsonOptions);
+            }
+            catch (Exception e)
+            {
+                Zeron.ZCore.ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
+                    "ReporterImpl GetPackageCatalogAsync Error:{0}\n{1}", e.Message, e.StackTrace));
+
+                return null;
+            }
+        }
+
+        /// <summary>
         /// SendEventAsync
         /// </summary>
         /// <param name="report"></param>

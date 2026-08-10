@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using System.Globalization;
+using System.Security.Cryptography;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
 
@@ -29,7 +30,7 @@ namespace Zeron.ZServers
 
             if (File.Exists(queuesType.FilePath))
             {
-                return true;
+                return VerifySha256OrCleanup(queuesType.FilePath, queuesType.ExpectedSha256);
             }
 
             using HttpClient httpClient = new();
@@ -44,7 +45,12 @@ namespace Zeron.ZServers
                     return false;
                 }
 
-                return TryWriteResponseToFile(queuesType.FilePath, httpResponse.Result);
+                if (!TryWriteResponseToFile(queuesType.FilePath, httpResponse.Result))
+                {
+                    return false;
+                }
+
+                return VerifySha256OrCleanup(queuesType.FilePath, queuesType.ExpectedSha256);
             }
             catch (InvalidOperationException e)
             {
@@ -60,6 +66,66 @@ namespace Zeron.ZServers
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// VerifySha256OrCleanup - when expected hash is set, require match; delete file on mismatch.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="expectedSha256"></param>
+        /// <returns>Returns bool.</returns>
+        public static bool VerifySha256OrCleanup(
+            string filePath,
+            string? expectedSha256)
+        {
+            if (string.IsNullOrWhiteSpace(expectedSha256))
+            {
+                return File.Exists(filePath);
+            }
+
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+
+            string actual = ComputeSha256Hex(filePath);
+            string expected = expectedSha256.Trim().ToLowerInvariant();
+
+            if (string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
+                "InstallBinaryServer SHA-256 mismatch for '{0}'. Expected={1}, Actual={2}",
+                filePath,
+                expected,
+                actual));
+
+            try
+            {
+                File.Delete(filePath);
+            }
+            catch (Exception e)
+            {
+                LogDownloadError(nameof(IOException), e);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// ComputeSha256Hex
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns>Returns lowercase hex digest.</returns>
+        public static string ComputeSha256Hex(
+            string filePath)
+        {
+            using FileStream stream = File.OpenRead(filePath);
+            byte[] hash = SHA256.HashData(stream);
+
+            return Convert.ToHexString(hash).ToLowerInvariant();
         }
 
         /// <summary>

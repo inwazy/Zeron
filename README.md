@@ -7,7 +7,7 @@ Driven by NetMQ (ZeroMQ), Zeron empowers SMB IT teams and developers to control 
 ![GitHub](https://img.shields.io/github/license/inwazy/Zeron)
 ![.NET](https://img.shields.io/badge/.NET-10.0-windows)
 ![Travis (.com)](https://img.shields.io/travis/com/jiowcl/Zeron)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/6bf8bdd0b9634cf3b8c50079e6bbbbfd)](https://www.codacy.com/gh/jiowcl/Zeron/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jiowcl/Zeron&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/6bf8bdd0b9634cf3b8c50079e6bbbbfd)](https://app.codacy.com/gh/jiowcl/Zeron/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 ![Screenshot](./Zeron.Server/Screenshot/Dashboard.png?raw=true)
 
@@ -48,6 +48,7 @@ Driven by NetMQ (ZeroMQ), Zeron empowers SMB IT teams and developers to control 
 - **Task Schedules** — Central cron schedules that dispatch remote APIs to agents
 - **Package Deploy** — Central ManagedPackage install/uninstall to selected agents
 - **Health Probes** — `/health` and `/ready` for deployment monitoring
+- **Windows Service** — `Zeron.Server` and `Zeron.Demand` can run as Windows Services
 
 ## How to Build
 
@@ -58,7 +59,7 @@ dotnet build Zeron.sln -c Release
 dotnet test Zeron.sln -c Release
 ```
 
-CI on GitHub Actions builds, tests, and publishes deploy zips (`zeron-server-win-x64`, `zeron-agent-win-x64`). See [Docs/deployment.md](./Docs/deployment.md).
+CI on GitHub Actions builds, tests, and publishes deploy zips (`zeron-server-win-x64`, `zeron-agent-win-x64`). Push a `v*` tag to create a [GitHub Release](https://github.com/inwazy/Zeron/releases) with the same packages. See [Docs/deployment.md](./Docs/deployment.md).
 
 Run the agent:
 

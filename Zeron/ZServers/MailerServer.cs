@@ -15,33 +15,43 @@ using Zeron.ZInterfaces;
 namespace Zeron.ZServers
 {
     /// <summary>
-    /// MailerServer - queued SMTP sender for agent-side notifications.
+    /// MailerServer - queued SMTP sender (instance state + Current facade).
     /// </summary>
     public class MailerServer : ConfigurationTable, IServer
     {
-        // SMTP client handle.
-        private static SmtpClient? m_SmtpClient;
-
-        // SMTP mail sender address handle.
-        private static MailAddress? m_MailSender;
-
-        // Email queue message.
-        private static readonly ConcurrentQueue<Tuple<string, string>> m_MailQueueMessages = new();
-
-        // Email queue enable running trigger.
-        private static bool m_MailEnableRunning = true;
-
-        // Email queue send signal.
-        private static readonly Semaphore m_MailSendSignal = new(0, 20000);
+        // Active runtime instance.
+        public static MailerServer? Current
+        {
+            get;
+            private set;
+        }
 
         // Email send per milliseconds.
-        private static readonly int m_DelayTimeToSend = 10;
+        private const int DelayTimeToSend = 10;
+
+        // SMTP client handle.
+        private SmtpClient? m_SmtpClient;
+
+        // SMTP mail sender address handle.
+        private MailAddress? m_MailSender;
+
+        // Email queue message.
+        private readonly ConcurrentQueue<Tuple<string, string>> m_MailQueueMessages = new();
+
+        // Email queue enable running trigger.
+        private bool m_MailEnableRunning = true;
+
+        // Email queue send signal.
+        private readonly Semaphore m_MailSendSignal = new(0, 20000);
 
         // Cached administrator recipients.
-        private static readonly List<MailAddress> m_AdministratorRecipients = [];
+        private readonly List<MailAddress> m_AdministratorRecipients = [];
 
         // Whether SMTP is ready.
-        private static bool m_IsConfigured;
+        private bool m_IsConfigured;
+
+        // Queue thread (started once per instance).
+        private Thread? m_QueueThread;
 
         /// <summary>
         /// Host
@@ -127,7 +137,7 @@ namespace Zeron.ZServers
         /// <summary>
         /// IsConfigured
         /// </summary>
-        public static bool IsConfigured => m_IsConfigured;
+        public static bool IsConfigured => Current?.m_IsConfigured == true;
 
         /// <summary>
         /// LoadConfig
@@ -170,6 +180,7 @@ namespace Zeron.ZServers
         /// <returns>Returns void.</returns>
         public void Initialize()
         {
+            Current = this;
             m_MailEnableRunning = true;
             m_IsConfigured = false;
             m_AdministratorRecipients.Clear();
@@ -192,7 +203,7 @@ namespace Zeron.ZServers
             if (!Enabled || !SmtpMailServer.HasConnection(options))
             {
                 ZNLogger.Common.Info("MailerServer disabled or incomplete SMTP configuration.");
-                StartQueueThread();
+                EnsureQueueThread();
 
                 return;
             }
@@ -227,7 +238,7 @@ namespace Zeron.ZServers
                 m_IsConfigured = false;
             }
 
-            StartQueueThread();
+            EnsureQueueThread();
         }
 
         /// <summary>
@@ -237,6 +248,70 @@ namespace Zeron.ZServers
         /// <param name="bodyHtml"></param>
         /// <returns>Returns bool.</returns>
         public static bool QueueMail(
+            string? subject,
+            string? bodyHtml)
+        {
+            return Current?.QueueMailCore(subject, bodyHtml) ?? false;
+        }
+
+        /// <summary>
+        /// SendMailNow - send immediately (used by tests / sync paths).
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="bodyHtml"></param>
+        /// <returns>Returns bool.</returns>
+        public static bool SendMailNow(
+            string subject,
+            string bodyHtml)
+        {
+            return Current?.SendQueuedMessage(subject, bodyHtml) ?? false;
+        }
+
+        /// <summary>
+        /// Stop
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        public void Stop()
+        {
+            m_MailEnableRunning = false;
+            m_IsConfigured = false;
+
+            try
+            {
+                m_MailSendSignal.Release();
+            }
+            catch (SemaphoreFullException)
+            {
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+
+            try
+            {
+                m_SmtpClient?.Dispose();
+                m_SmtpClient = null;
+            }
+            catch (Exception e)
+            {
+                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "MailerServer Error:{0}\n{1}", e.Message, e.StackTrace));
+            }
+
+            if (ReferenceEquals(Current, this))
+            {
+                Current = null;
+            }
+
+            ServerIntegrate.FinishSingleStop();
+        }
+
+        /// <summary>
+        /// QueueMailCore
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="bodyHtml"></param>
+        /// <returns>Returns bool.</returns>
+        private bool QueueMailCore(
             string? subject,
             string? bodyHtml)
         {
@@ -256,50 +331,11 @@ namespace Zeron.ZServers
             catch (SemaphoreFullException)
             {
             }
+            catch (ObjectDisposedException)
+            {
+            }
 
             return true;
-        }
-
-        /// <summary>
-        /// SendMailNow - send immediately (used by tests / sync paths).
-        /// </summary>
-        /// <param name="subject"></param>
-        /// <param name="bodyHtml"></param>
-        /// <returns>Returns bool.</returns>
-        public static bool SendMailNow(
-            string subject,
-            string bodyHtml)
-        {
-            return SendQueuedMessage(subject, bodyHtml);
-        }
-
-        /// <summary>
-        /// Stop
-        /// </summary>
-        /// <returns>Returns void.</returns>
-        public void Stop()
-        {
-            m_MailEnableRunning = false;
-
-            try
-            {
-                m_MailSendSignal.Release();
-            }
-            catch (SemaphoreFullException)
-            {
-            }
-
-            try
-            {
-                m_SmtpClient?.Dispose();
-                m_SmtpClient = null;
-            }
-            catch (Exception e)
-            {
-                ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture, "MailerServer Error:{0}\n{1}", e.Message, e.StackTrace));
-            }
-
-            ServerIntegrate.FinishSingleStop();
         }
 
         /// <summary>
@@ -321,20 +357,24 @@ namespace Zeron.ZServers
         }
 
         /// <summary>
-        /// StartQueueThread
+        /// EnsureQueueThread - start queue worker once per instance.
         /// </summary>
         /// <returns>Returns void.</returns>
-        private static void StartQueueThread()
+        private void EnsureQueueThread()
         {
+            if (m_QueueThread != null && m_QueueThread.IsAlive)
+            {
+                return;
+            }
+
             try
             {
-                Thread threadQueue = new(QueuesProc)
+                m_QueueThread = new Thread(QueuesProc)
                 {
                     IsBackground = true,
                     Name = "MailerServer"
                 };
-
-                threadQueue.Start();
+                m_QueueThread.Start();
             }
             catch (Exception e)
             {
@@ -348,7 +388,7 @@ namespace Zeron.ZServers
         /// </summary>
         /// <param name="aArg"></param>
         /// <returns>Returns void.</returns>
-        private static void QueuesProc(
+        private void QueuesProc(
             object? aArg)
         {
             while (m_MailEnableRunning)
@@ -376,7 +416,7 @@ namespace Zeron.ZServers
                     }
 
                     SendQueuedMessage(emailSubject, emailMessage);
-                    Thread.Sleep(m_DelayTimeToSend);
+                    Thread.Sleep(DelayTimeToSend);
                 }
                 catch (ObjectDisposedException e)
                 {
@@ -399,7 +439,7 @@ namespace Zeron.ZServers
         /// <param name="subject"></param>
         /// <param name="bodyHtml"></param>
         /// <returns>Returns bool.</returns>
-        private static bool SendQueuedMessage(
+        private bool SendQueuedMessage(
             string subject,
             string bodyHtml)
         {

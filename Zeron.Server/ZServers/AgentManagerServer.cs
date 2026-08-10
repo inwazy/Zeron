@@ -3,6 +3,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Text.Json;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
 using Zeron.Server.ZInterfaces;
@@ -83,6 +84,14 @@ namespace Zeron.Server.ZServers
             agent.Status = "online";
             agent.LastSeenAt = now;
             agent.LastHeartbeatAt = now;
+            agent.SupportedEnginesJson = request.SupportedEngines == null || request.SupportedEngines.Count == 0
+                ? agent.SupportedEnginesJson
+                : JsonSerializer.Serialize(request.SupportedEngines);
+
+            if (request.LastCatalogSyncAt.HasValue)
+            {
+                agent.LastCatalogSyncAt = request.LastCatalogSyncAt;
+            }
 
             m_DbContext.AgentHeartbeats.Add(new AgentHeartbeatEntity
             {

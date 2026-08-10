@@ -9,7 +9,7 @@ namespace Zeron.ZCore.Type
     public class TaskStepDefinition
     {
         /// <summary>
-        /// Type - powershell, managedPackage, wait, api
+        /// Type - powershell, script, managedPackage, wait, api
         /// </summary>
         public string? Type
         {
@@ -18,7 +18,16 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
-        /// Script - for powershell steps
+        /// Engine - for script steps (default powershell)
+        /// </summary>
+        public string? Engine
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Script - for powershell / script steps
         /// </summary>
         public string? Script
         {

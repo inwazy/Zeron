@@ -36,7 +36,7 @@ namespace Zeron.Server.Data.Entities
         } = "";
 
         /// <summary>
-        /// Role - Admin, Operator, Viewer
+        /// Role - Admin, Operator, Viewer, DeviceOwner
         /// </summary>
         public string Role
         {

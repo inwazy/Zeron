@@ -1,0 +1,106 @@
+@page "/packages/sync-health"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject CatalogSyncHealthServer SyncHealthServer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="page-header">
+    <div>
+        <h1>Catalog Sync Health</h1>
+        <p>ManagedPackage catalog sync status across Demand agents. Stale threshold: @m_Summary?.StaleThresholdMinutes min.</p>
+    </div>
+    <div class="actions">
+        <a class="btn btn-secondary" href="/packages/catalog">Catalog</a>
+        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+        <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+            <Authorized>
+                <button class="btn" @onclick="() => PushAsync(onlyUnhealthy: true)" disabled="@m_IsBusy">Push Unhealthy</button>
+                <button class="btn btn-secondary" @onclick="() => PushAsync(onlyUnhealthy: false)" disabled="@m_IsBusy">Push All Online</button>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(m_Message))
+{
+    <p class="@(m_Succeeded ? "success-text" : "error")">@m_Message</p>
+}
+
+@if (m_Summary != null)
+{
+    <div class="cards">
+        <div class="card"><span>Healthy</span><strong>@m_Summary.Healthy</strong></div>
+        <div class="card"><span>Stale</span><strong>@m_Summary.Stale</strong></div>
+        <div class="card"><span>Never Synced</span><strong>@m_Summary.NeverSynced</strong></div>
+        <div class="card"><span>Recently Failed</span><strong>@m_Summary.RecentlyFailed</strong></div>
+        <div class="card"><span>Offline / Disabled</span><strong>@m_Summary.Offline</strong></div>
+    </div>
+}
+
+<div class="panel">
+    <div class="panel-header">
+        <h2>Agents</h2>
+        <div class="actions">
+            <button class="btn btn-secondary" @onclick="() => SetFilter(null)">All</button>
+            <button class="btn btn-secondary" @onclick='() => SetFilter("healthy")'>Healthy</button>
+            <button class="btn btn-secondary" @onclick='() => SetFilter("stale")'>Stale</button>
+            <button class="btn btn-secondary" @onclick='() => SetFilter("never")'>Never</button>
+            <button class="btn btn-secondary" @onclick='() => SetFilter("failed")'>Failed</button>
+            <button class="btn btn-secondary" @onclick='() => SetFilter("offline")'>Offline</button>
+        </div>
+    </div>
+
+    @if (FilteredAgents.Count == 0)
+    {
+        <p class="muted">No agents in this filter.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Machine</th>
+                    <th>Agent</th>
+                    <th>Status</th>
+                    <th>Sync</th>
+                    <th>Last Sync</th>
+                    <th>Age (min)</th>
+                    <th>Last Fail</th>
+                    <th>Detail</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (CatalogSyncHealthItemType item in FilteredAgents)
+                {
+                    <tr>
+                        <td>@(item.MachineName ?? "-")</td>
+                        <td><a href="@($"/agents/{item.AgentKey}")"><code>@item.AgentKey</code></a></td>
+                        <td><span class="status @item.Status">@item.Status</span></td>
+                        <td><span class="status @item.SyncState">@item.SyncState</span></td>
+                        <td>@(item.LastCatalogSyncAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                        <td>@(item.AgeMinutes?.ToString() ?? "-")</td>
+                        <td>@(item.LastFailedSyncAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                        <td class="muted">@item.DiagnosticMessage</td>
+                        <td>
+                            <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+                                <Authorized>
+                                    @if (item.Status == "online")
+                                    {
+                                        <button class="btn btn-secondary"
+                                                @onclick="() => PushOneAsync(item.AgentKey!)"
+                                                disabled="@m_IsBusy">
+                                            Push Sync
+                                        </button>
+                                    }
+                                </Authorized>
+                            </AuthorizeView>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

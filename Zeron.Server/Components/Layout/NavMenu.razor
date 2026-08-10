@@ -3,16 +3,29 @@
 @using System.Reflection
 
 <nav class="nav-menu">
-    <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
-    <NavLink href="/agents">Agents</NavLink>
-    <NavLink href="/tasks">Tasks</NavLink>
-    <NavLink href="/schedules">Schedules</NavLink>
-    <NavLink href="/packages">Packages</NavLink>
-    <NavLink href="/events">Events</NavLink>
-    <NavLink href="/alerts">Alerts</NavLink>
+    <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator},{ServerRoles.Viewer}")">
+        <Authorized>
+            <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
+            <NavLink href="/agents">Agents</NavLink>
+            <NavLink href="/tasks">Tasks</NavLink>
+            <NavLink href="/schedules">Schedules</NavLink>
+            <NavLink href="/packages">Packages</NavLink>
+            <NavLink href="/packages/catalog">Catalog</NavLink>
+            <NavLink href="/packages/sync-health">Sync Health</NavLink>
+            <NavLink href="/events">Events</NavLink>
+            <NavLink href="/audit">Audit</NavLink>
+            <NavLink href="/alerts">Alerts</NavLink>
+        </Authorized>
+    </AuthorizeView>
+    <AuthorizeView Roles="@ServerRoles.DeviceOwner">
+        <Authorized>
+            <NavLink href="/my-devices">My Devices</NavLink>
+        </Authorized>
+    </AuthorizeView>
     <AuthorizeView Roles="@ServerRoles.Admin">
         <Authorized>
             <NavLink href="/users">Users</NavLink>
+            <NavLink href="/device-bindings">Device Bindings</NavLink>
         </Authorized>
     </AuthorizeView>
 </nav>

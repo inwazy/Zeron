@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -14,6 +15,9 @@ namespace Zeron.Server.Components.Pages
     {
         // Model.
         private readonly DeployFormModel m_Model = new();
+
+        // Catalog packages.
+        private List<ManagedPackageInfoType> m_Packages = [];
 
         // Error.
         private string? m_Error;
@@ -31,6 +35,15 @@ namespace Zeron.Server.Components.Pages
                     m_Model.ExtraArgs);
 
         /// <summary>
+        /// OnInitializedAsync
+        /// </summary>
+        /// <returns>Returns Task.</returns>
+        protected override async Task OnInitializedAsync()
+        {
+            m_Packages = await CatalogServer.GetPackagesAsync(enabledOnly: true);
+        }
+
+        /// <summary>
         /// HandleDeployAsync
         /// </summary>
         /// <returns>Returns Task.</returns>
@@ -41,16 +54,19 @@ namespace Zeron.Server.Components.Pages
 
             try
             {
-                PackageDeployResponseType response = await PackageDeployServer.DeployAsync(new PackageDeployRequestType
-                {
-                    Operation = m_Model.Operation,
-                    PackageName = m_Model.PackageName,
-                    ExtraArgs = m_Model.ExtraArgs,
-                    Name = string.IsNullOrWhiteSpace(m_Model.Name) ? null : m_Model.Name,
-                    TargetType = m_Model.TargetType,
-                    AgentIds = string.IsNullOrWhiteSpace(m_Model.AgentId) ? null : [m_Model.AgentId],
-                    HostnamePattern = m_Model.HostnamePattern
-                });
+                AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                PackageDeployResponseType response = await PackageDeployServer.DeployAsync(
+                    new PackageDeployRequestType
+                    {
+                        Operation = m_Model.Operation,
+                        PackageName = m_Model.PackageName,
+                        ExtraArgs = m_Model.ExtraArgs,
+                        Name = string.IsNullOrWhiteSpace(m_Model.Name) ? null : m_Model.Name,
+                        TargetType = m_Model.TargetType,
+                        AgentIds = string.IsNullOrWhiteSpace(m_Model.AgentId) ? null : [m_Model.AgentId],
+                        HostnamePattern = m_Model.HostnamePattern
+                    },
+                    actor: AuditLogServer.FromPrincipal(authState.User));
 
                 if (!response.Success || response.TaskId == null)
                 {
@@ -97,6 +113,5 @@ namespace Zeron.Server.Components.Pages
             // Hostname pattern.
             public string? HostnamePattern { get; set; }
         }
-
     }
 }

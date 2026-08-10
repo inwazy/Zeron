@@ -185,6 +185,7 @@ namespace Zeron.Demand.ZServers
         {
             try
             {
+                m_ZmqImpl.ActivateAsCurrent();
                 ZmqImpl.PrepareServices(Assembly.GetExecutingAssembly());
 
                 if (PubSocketEnabled)

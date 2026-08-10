@@ -1,0 +1,136 @@
+@page "/packages/catalog"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject ManagedPackageCatalogServer CatalogServer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="page-header">
+    <div>
+        <h1>Package Catalog</h1>
+        <p>Central ManagedPackage definitions synced to Demand agents. Local Demand overrides are preserved.</p>
+    </div>
+    <div class="actions">
+        <a class="btn btn-secondary" href="/packages">Deploys</a>
+        <a class="btn btn-secondary" href="/packages/sync-health">Sync Health</a>
+        <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+            <Authorized>
+                <a class="btn" href="/packages/deploy">Deploy Package</a>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+<AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+    <Authorized>
+        <div class="panel">
+            <h2>@(m_EditId == null ? "Create Package" : "Edit Package")</h2>
+            <div class="form-grid">
+                <label>
+                    Name
+                    <InputText @bind-Value="m_Form.Name" disabled="@(m_EditId != null)" />
+                </label>
+                <label>
+                    Enabled
+                    <InputCheckbox @bind-Value="m_Form.IsEnabled" />
+                </label>
+                <label>
+                    URL x86
+                    <InputText @bind-Value="m_Form.Urlx86" />
+                </label>
+                <label>
+                    URL x64
+                    <InputText @bind-Value="m_Form.Urlx64" />
+                </label>
+                <label>
+                    Install Cmd x86
+                    <InputText @bind-Value="m_Form.CmdInstallx86" />
+                </label>
+                <label>
+                    Install Cmd x64
+                    <InputText @bind-Value="m_Form.CmdInstallx64" />
+                </label>
+                <label>
+                    Uninstall Cmd x86
+                    <InputText @bind-Value="m_Form.CmdUnInstallx86" />
+                </label>
+                <label>
+                    Uninstall Cmd x64
+                    <InputText @bind-Value="m_Form.CmdUnInstallx64" />
+                </label>
+                <label>
+                    SHA-256 x86
+                    <InputText @bind-Value="m_Form.Sha256x86" />
+                    <small class="muted">Optional. Lowercase hex digest verified after download.</small>
+                </label>
+                <label>
+                    SHA-256 x64
+                    <InputText @bind-Value="m_Form.Sha256x64" />
+                </label>
+                <div class="actions">
+                    <button class="btn" @onclick="SaveAsync" disabled="@m_IsBusy">@(m_EditId == null ? "Create" : "Save")</button>
+                    @if (m_EditId != null)
+                    {
+                        <button class="btn btn-secondary" @onclick="CancelEdit" disabled="@m_IsBusy">Cancel</button>
+                    }
+                </div>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(m_Message))
+            {
+                <p class="@(m_Succeeded ? "success-text" : "error")">@m_Message</p>
+            }
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2>Catalog</h2>
+        <button class="btn btn-secondary" @onclick="ReloadAsync">Refresh</button>
+    </div>
+
+    @if (m_Packages.Count == 0)
+    {
+        <p class="muted">No packages in the Server catalog yet.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>URL x64</th>
+                    <th>Updated</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ManagedPackageInfoType package in m_Packages)
+                {
+                    <tr>
+                        <td><code>@package.Name</code></td>
+                        <td>
+                            <span class="status @(package.IsEnabled ? "online" : "offline")">
+                                @(package.IsEnabled ? "enabled" : "disabled")
+                            </span>
+                        </td>
+                        <td class="muted">@(string.IsNullOrWhiteSpace(package.Urlx64) ? "-" : package.Urlx64)</td>
+                        <td>@(package.UpdatedAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                        <td>
+                            <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+                                <Authorized>
+                                    <div class="actions">
+                                        <button class="btn btn-secondary" @onclick="() => BeginEdit(package)" disabled="@m_IsBusy">Edit</button>
+                                        <button class="btn btn-danger" @onclick="() => DeleteAsync(package)" disabled="@m_IsBusy">Delete</button>
+                                    </div>
+                                </Authorized>
+                            </AuthorizeView>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

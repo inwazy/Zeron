@@ -84,7 +84,11 @@ namespace Zeron.Demand.ZCore
 
             return stepType switch
             {
-                "powershell" => ExecutePowerShellStep(step),
+                "powershell" => ExecuteScriptStep(step, "powershell", "powershell"),
+                "script" => ExecuteScriptStep(
+                    step,
+                    string.IsNullOrWhiteSpace(step.Engine) ? "powershell" : step.Engine.Trim().ToLowerInvariant(),
+                    "script"),
                 "managedpackage" => ExecuteApiStep("ManagedPackage", step.Command),
                 "wait" => ExecuteWaitStep(step),
                 "api" => ExecuteApiStep(step.ApiName, step.Command),
@@ -98,20 +102,27 @@ namespace Zeron.Demand.ZCore
         }
 
         /// <summary>
-        /// ExecutePowerShellStep
+        /// ExecuteScriptStep
         /// </summary>
         /// <param name="step"></param>
+        /// <param name="engineId"></param>
+        /// <param name="resultType"></param>
         /// <returns>Returns step result.</returns>
-        private static TaskStepResultType ExecutePowerShellStep(
-            TaskStepDefinition step)
+        private static TaskStepResultType ExecuteScriptStep(
+            TaskStepDefinition step,
+            string engineId,
+            string resultType)
         {
-            bool success = ScriptExecutor.Execute(step.Script);
+            ScriptResult scriptResult = ScriptHostServer.Execute(engineId, step.Script);
 
             return new TaskStepResultType
             {
-                Type = "powershell",
-                Success = success,
-                Message = success ? null : "PowerShell step failed."
+                Type = resultType,
+                Success = scriptResult.Success,
+                Message = scriptResult.Success
+                    ? null
+                    : (scriptResult.ErrorMessage ?? scriptResult.StdErr ?? "Script step failed."),
+                Response = scriptResult.StdOut
             };
         }
 

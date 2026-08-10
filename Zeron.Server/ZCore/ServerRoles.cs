@@ -22,5 +22,10 @@ namespace Zeron.Server.ZCore
         /// Viewer
         /// </summary>
         public const string Viewer = "Viewer";
+
+        /// <summary>
+        /// DeviceOwner - self-service portal for bound Demand agents.
+        /// </summary>
+        public const string DeviceOwner = "DeviceOwner";
     }
 }

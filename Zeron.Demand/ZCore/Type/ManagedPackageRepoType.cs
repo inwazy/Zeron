@@ -108,6 +108,33 @@ namespace Zeron.Demand.ZCore.Type
         }
 
         /// <summary>
+        /// Sha256x86 - optional expected SHA-256 hex for x86 binary.
+        /// </summary>
+        public string? Sha256x86
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Sha256x64 - optional expected SHA-256 hex for x64 binary.
+        /// </summary>
+        public string? Sha256x64
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Source
+        /// </summary>
+        public string? Source
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// ManagedPackageRepoType
         /// </summary>
         /// <returns>Returns void.</returns>
@@ -120,12 +147,13 @@ namespace Zeron.Demand.ZCore.Type
             CmdInstallx64 = "";
             CmdUnInstallx86 = "";
             CmdUnInstallx64 = "";
-            CmdUnInstallx86 = "";
-            CmdUnInstallx64 = "";
             ScriptInstallBefore = "";
             ScriptInstallAfter = "";
             ScriptUnInstallBefore = "";
             ScriptUnInstallAfter = "";
+            Sha256x86 = "";
+            Sha256x64 = "";
+            Source = "";
         }
     }
 }

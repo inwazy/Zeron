@@ -4,6 +4,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.IdentityModel.Tokens;
 using NLog;
 using NLog.Extensions.Logging;
@@ -35,7 +36,15 @@ namespace Zeron.Server
         public static WebApplication BuildApplication(
             string[] args)
         {
-            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            WebApplicationOptions options = new()
+            {
+                Args = args,
+                ContentRootPath = WindowsServiceHelpers.IsWindowsService()
+                    ? AppContext.BaseDirectory
+                    : default
+            };
+
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(options);
 
             LogManager.Setup().LoadConfigurationFromFile("NLog.config");
             builder.Logging.ClearProviders();
@@ -44,6 +53,15 @@ namespace Zeron.Server
             ServerSettings serverSettings = builder.Configuration
                 .GetSection(ServerSettings.SectionName)
                 .Get<ServerSettings>() ?? new ServerSettings();
+
+            string serviceName = string.IsNullOrWhiteSpace(serverSettings.WindowsServiceName)
+                ? "Zeron.Server"
+                : serverSettings.WindowsServiceName.Trim();
+
+            builder.Host.UseWindowsService(windowsService =>
+            {
+                windowsService.ServiceName = serviceName;
+            });
 
             EncryptionProvider.Configure(serverSettings.EncryptionSaltKey, serverSettings.EncryptionIvKey);
             EncryptionProvider.ConfigureFromEnvironment();
@@ -63,7 +81,12 @@ namespace Zeron.Server
             builder.Services.AddScoped<AgentDiagnosticServer>();
             builder.Services.AddScoped<TaskDispatcherServer>();
             builder.Services.AddScoped<TaskScheduleServer>();
+            builder.Services.AddScoped<AuditLogServer>();
+            builder.Services.AddScoped<ManagedPackageCatalogServer>();
+            builder.Services.AddScoped<CatalogSyncHealthServer>();
             builder.Services.AddScoped<PackageDeployServer>();
+            builder.Services.AddScoped<UserAgentBindingServer>();
+            builder.Services.AddScoped<DevicePortalServer>();
             builder.Services.AddScoped<EventIngestorServer>();
             builder.Services.AddScoped<AlertNotifierServer>();
             builder.Services.AddScoped<AlertRuleServer>();
@@ -111,6 +134,14 @@ namespace Zeron.Server
                     policy.RequireRole(ServerRoles.Admin, ServerRoles.Operator));
                 options.AddPolicy(ServerPolicies.AdminOnly, policy =>
                     policy.RequireRole(ServerRoles.Admin));
+                options.AddPolicy(ServerPolicies.DeviceOwnerOnly, policy =>
+                    policy.RequireRole(ServerRoles.DeviceOwner));
+                options.AddPolicy(ServerPolicies.DeviceOwnerOrStaff, policy =>
+                    policy.RequireRole(
+                        ServerRoles.Admin,
+                        ServerRoles.Operator,
+                        ServerRoles.Viewer,
+                        ServerRoles.DeviceOwner));
             });
 
             builder.Services.AddCascadingAuthenticationState();
@@ -154,7 +185,8 @@ namespace Zeron.Server
 
                 if (path.StartsWithSegments("/api/agents/heartbeat")
                     || path.StartsWithSegments("/api/events")
-                    || path.Equals("/api/tasks/results", StringComparison.OrdinalIgnoreCase))
+                    || path.Equals("/api/tasks/results", StringComparison.OrdinalIgnoreCase)
+                    || path.Equals("/api/packages/catalog/sync", StringComparison.OrdinalIgnoreCase))
                 {
                     context.Request.EnableBuffering();
                 }
@@ -184,6 +216,9 @@ namespace Zeron.Server
             app.MapEventEndpoints();
             app.MapAlertEndpoints();
             app.MapUserEndpoints();
+            app.MapUserAgentBindingEndpoints();
+            app.MapDevicePortalEndpoints();
+            app.MapAuditEndpoints();
             app.MapHub<DashboardHub>("/hubs/dashboard");
 
             app.MapRazorComponents<App>()

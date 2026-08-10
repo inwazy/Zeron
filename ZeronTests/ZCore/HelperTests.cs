@@ -41,6 +41,11 @@ namespace Zeron.ZCore.Tests
 
             Assert.AreEqual("status", statusCommand.Option);
             Assert.IsTrue(string.IsNullOrEmpty(statusCommand.PackageName));
+
+            ServicesSubCommandType clearOverride = Helper.BuildCommands("clear-override ccleaner");
+
+            Assert.AreEqual("clear-override", clearOverride.Option);
+            Assert.AreEqual("ccleaner", clearOverride.PackageName);
         }
 
         [TestMethod()]

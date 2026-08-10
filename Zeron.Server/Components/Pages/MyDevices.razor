@@ -1,0 +1,73 @@
+@page "/my-devices"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.DeviceOwnerOrStaff)]
+@inject DevicePortalServer PortalServer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="page-header">
+    <div>
+        <h1>My Devices</h1>
+        <p>Status of Zeron.Demand agents bound to your account.</p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(m_Error))
+{
+    <p class="error">@m_Error</p>
+}
+else if (m_Devices.Count == 0)
+{
+    <div class="panel">
+        <p class="muted">No Demand agents are bound to your account. Ask an Admin to bind your user on Device Bindings.</p>
+    </div>
+}
+else
+{
+    <div class="panel">
+        <table>
+            <thead>
+                <tr>
+                    <th>Machine</th>
+                    <th>Agent</th>
+                    <th>Status</th>
+                    <th>Install</th>
+                    <th>Catalog Sync</th>
+                    <th>Last Heartbeat</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (DeviceAgentStatusType device in m_Devices)
+                {
+                    <tr>
+                        <td>@(device.MachineName ?? "-")</td>
+                        <td><code>@device.AgentKey</code></td>
+                        <td><span class="status @device.Status">@device.Status</span></td>
+                        <td>
+                            @if (device.InstallRunning)
+                            {
+                                <span class="status stale">running (queue @device.InstallQueueCount)</span>
+                            }
+                            else if (device.InstallQueueCount > 0)
+                            {
+                                <span class="status stale">queued (@device.InstallQueueCount)</span>
+                            }
+                            else
+                            {
+                                <span class="status healthy">idle</span>
+                            }
+                        </td>
+                        <td>@(device.LastCatalogSyncAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                        <td>@(device.LastHeartbeatAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                        <td><a href="@($"/my-devices/{device.AgentKey}")">Details</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

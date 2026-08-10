@@ -87,7 +87,7 @@ namespace Zeron.Server.ZServers
 
             if (role == null)
             {
-                return (null, "Role must be Admin, Operator, or Viewer.");
+                return (null, "Role must be Admin, Operator, Viewer, or DeviceOwner.");
             }
 
             bool exists = await m_DbContext.Users
@@ -146,7 +146,7 @@ namespace Zeron.Server.ZServers
 
                 if (role == null)
                 {
-                    return (null, "Role must be Admin, Operator, or Viewer.");
+                    return (null, "Role must be Admin, Operator, Viewer, or DeviceOwner.");
                 }
 
                 if (user.Role == ServerRoles.Admin
@@ -241,6 +241,11 @@ namespace Zeron.Server.ZServers
             if (string.Equals(role, ServerRoles.Viewer, StringComparison.OrdinalIgnoreCase))
             {
                 return ServerRoles.Viewer;
+            }
+
+            if (string.Equals(role, ServerRoles.DeviceOwner, StringComparison.OrdinalIgnoreCase))
+            {
+                return ServerRoles.DeviceOwner;
             }
 
             return null;

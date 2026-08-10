@@ -10,21 +10,32 @@ using Zeron.ZCore;
 using Zeron.ZCore.Container;
 using Zeron.ZCore.Foundation;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
 using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServers
 {
     /// <summary>
-    /// ReporterServer - sends heartbeat and forwards events to Zeron.Server.
+    /// ReporterServer - heartbeat and event forwarder (instance state + Current facade).
     /// </summary>
     internal class ReporterServer : ConfigurationTable, IServer
     {
-        // Heartbeat timer.
-        private static readonly System.Timers.Timer s_HeartbeatTimer = new();
+        // Active runtime instance.
+        public static ReporterServer? Current
+        {
+            get;
+            private set;
+        }
 
-        // Enabled.
-        private static bool s_Enabled;
+        // Configured enabled flag (written by LoadConfig before Fork).
+        private static bool s_ConfigEnabled;
+
+        // Heartbeat timer.
+        private readonly System.Timers.Timer m_HeartbeatTimer = new();
+
+        // Runtime enabled flag for this instance.
+        private bool m_Enabled;
 
         /// <summary>
         /// HeartbeatIntervalMs
@@ -38,7 +49,7 @@ namespace Zeron.Demand.ZServers
         /// <summary>
         /// Enabled
         /// </summary>
-        public static bool Enabled => s_Enabled;
+        public static bool Enabled => Current?.m_Enabled == true || (Current == null && s_ConfigEnabled);
 
         /// <summary>
         /// LoadConfig
@@ -50,7 +61,7 @@ namespace Zeron.Demand.ZServers
         {
             try
             {
-                s_Enabled = bool.Parse(aConfig["server_enabled"] ?? "false");
+                s_ConfigEnabled = bool.Parse(aConfig["server_enabled"] ?? "false");
                 ReporterImpl.ServerUrl = aConfig["server_url"];
                 ReporterImpl.ServerApiKey = aConfig["server_api_key"] ?? "zeron.testkey";
                 ReporterImpl.HmacEnabled = bool.Parse(aConfig["server_hmac_enabled"] ?? "false");
@@ -68,7 +79,10 @@ namespace Zeron.Demand.ZServers
         /// <returns>Returns void.</returns>
         public void Initialize()
         {
-            if (!s_Enabled)
+            Current = this;
+            m_Enabled = s_ConfigEnabled;
+
+            if (!m_Enabled)
             {
                 ZNLogger.Common.Info("ReporterServer disabled.");
 
@@ -78,10 +92,10 @@ namespace Zeron.Demand.ZServers
             InstallServer.AssignmentCompletedHandler = (assignmentId, success, responseJson, errorMessage) =>
                 ReportTaskResult(assignmentId, success, responseJson, errorMessage);
 
-            s_HeartbeatTimer.Elapsed += OnHeartbeatTimer;
-            s_HeartbeatTimer.Interval = HeartbeatIntervalMs;
-            s_HeartbeatTimer.AutoReset = true;
-            s_HeartbeatTimer.Enabled = true;
+            m_HeartbeatTimer.Elapsed += OnHeartbeatTimer;
+            m_HeartbeatTimer.Interval = HeartbeatIntervalMs > 0 ? HeartbeatIntervalMs : 30000;
+            m_HeartbeatTimer.AutoReset = true;
+            m_HeartbeatTimer.Enabled = true;
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "ReporterServer initialized. ServerUrl={0}", ReporterImpl.ServerUrl));
@@ -96,9 +110,21 @@ namespace Zeron.Demand.ZServers
         public void Stop()
         {
             InstallServer.AssignmentCompletedHandler = null;
+            m_Enabled = false;
 
-            s_HeartbeatTimer.Stop();
-            s_HeartbeatTimer.Dispose();
+            try
+            {
+                m_HeartbeatTimer.Stop();
+                m_HeartbeatTimer.Dispose();
+            }
+            catch (Exception)
+            {
+            }
+
+            if (ReferenceEquals(Current, this))
+            {
+                Current = null;
+            }
 
             ServerIntegrate.FinishSingleStop();
         }
@@ -113,19 +139,7 @@ namespace Zeron.Demand.ZServers
             string topic, 
             string message)
         {
-            if (!s_Enabled || string.IsNullOrWhiteSpace(ReporterImpl.ServerUrl))
-            {
-                return;
-            }
-
-            AgentEventReportType report = new()
-            {
-                AgentId = AgentServer.AgentId,
-                Topic = topic,
-                Payload = message
-            };
-
-            _ = ReporterImpl.SendEventAsync(report);
+            Current?.ForwardEventCore(topic, message);
         }
 
         /// <summary>
@@ -142,7 +156,49 @@ namespace Zeron.Demand.ZServers
             string? responseJson, 
             string? errorMessage = null)
         {
-            if (!s_Enabled || string.IsNullOrWhiteSpace(assignmentId))
+            Current?.ReportTaskResultCore(assignmentId, success, responseJson, errorMessage);
+        }
+
+        /// <summary>
+        /// ForwardEventCore
+        /// </summary>
+        /// <param name="topic"></param>
+        /// <param name="message"></param>
+        /// <returns>Returns void.</returns>
+        private void ForwardEventCore(
+            string topic,
+            string message)
+        {
+            if (!m_Enabled || string.IsNullOrWhiteSpace(ReporterImpl.ServerUrl))
+            {
+                return;
+            }
+
+            AgentEventReportType report = new()
+            {
+                AgentId = AgentServer.AgentId,
+                Topic = topic,
+                Payload = message
+            };
+
+            _ = ReporterImpl.SendEventAsync(report);
+        }
+
+        /// <summary>
+        /// ReportTaskResultCore
+        /// </summary>
+        /// <param name="assignmentId"></param>
+        /// <param name="success"></param>
+        /// <param name="responseJson"></param>
+        /// <param name="errorMessage"></param>
+        /// <returns>Returns void.</returns>
+        private void ReportTaskResultCore(
+            string? assignmentId,
+            bool success,
+            string? responseJson,
+            string? errorMessage)
+        {
+            if (!m_Enabled || string.IsNullOrWhiteSpace(assignmentId))
             {
                 return;
             }
@@ -165,7 +221,7 @@ namespace Zeron.Demand.ZServers
         /// <param name="sender"></param>
         /// <param name="args"></param>
         /// <returns>Returns void.</returns>
-        private static async void OnHeartbeatTimer(
+        private async void OnHeartbeatTimer(
             object? sender, 
             ElapsedEventArgs args)
         {
@@ -186,11 +242,22 @@ namespace Zeron.Demand.ZServers
         /// <returns>Returns void.</returns>
         public static async Task SendHeartbeatAndProcessTasksAsync()
         {
-            if (!s_Enabled)
+            ReporterServer? current = Current;
+
+            if (current == null || !current.m_Enabled)
             {
                 return;
             }
 
+            await current.SendHeartbeatAndProcessTasksCoreAsync();
+        }
+
+        /// <summary>
+        /// SendHeartbeatAndProcessTasksCoreAsync
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private async Task SendHeartbeatAndProcessTasksCoreAsync()
+        {
             AgentHeartbeatRequestType request = new()
             {
                 AgentId = AgentServer.AgentId,
@@ -199,7 +266,9 @@ namespace Zeron.Demand.ZServers
                 Version = typeof(ReporterServer).Assembly.GetName().Version?.ToString(),
                 InstallQueueCount = InstallJobTracker.GetStatus().QueueCount,
                 InstallRunning = InstallJobTracker.GetStatus().IsRunning,
-                SchedulerTaskCount = SchedulerServer.GetTasks().Count
+                SchedulerTaskCount = SchedulerServer.GetTasks().Count,
+                SupportedEngines = ScriptHostServer.ListEngines(),
+                LastCatalogSyncAt = ManagedPackageServer.LastCatalogSyncUtc
             };
 
             AgentHeartbeatResponseType? response = await ReporterImpl.SendHeartbeatAsync(request);
@@ -236,7 +305,7 @@ namespace Zeron.Demand.ZServers
                 bool success = resultJson.Contains("\"success\":true", StringComparison.OrdinalIgnoreCase)
                     || resultJson.Contains("\"success\": true", StringComparison.OrdinalIgnoreCase);
 
-                ReportTaskResult(pendingTask.AssignmentId, success, resultJson, success ? null : resultJson);
+                ReportTaskResultCore(pendingTask.AssignmentId, success, resultJson, success ? null : resultJson);
             }
         }
     }

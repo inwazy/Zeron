@@ -90,6 +90,15 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
+        /// ExpectedSha256 - optional lowercase hex digest for downloaded binary.
+        /// </summary>
+        public string? ExpectedSha256
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// InstallQueuesType
         /// </summary>
         /// <returns>Returns void.</returns>
@@ -104,6 +113,7 @@ namespace Zeron.ZCore.Type
             ScriptBefore = "";
             ScriptAfter = "";
             AssignmentId = null;
+            ExpectedSha256 = null;
         }
     }
 }

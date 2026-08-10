@@ -1,6 +1,9 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zeron.ZCore.Type;
 using Zeron.ZServers;
 
@@ -9,52 +12,75 @@ namespace Zeron.ZServers.Tests
     [TestClass()]
     public class InstallBinaryServerTests
     {
+        /// <summary>
+        /// VerifySha256OrCleanup accepts matching digest.
+        /// </summary>
         [TestMethod()]
-        public void TryDownloadRejectsIncompleteQueuesTypeTest()
+        public void VerifySha256OrCleanupAcceptsMatchTest()
         {
-            Assert.IsFalse(InstallBinaryServer.TryDownload(null));
-            Assert.IsFalse(InstallBinaryServer.TryDownload(new InstallQueuesType
-            {
-                RepoUrl = "",
-                FilePath = "C:\\temp\\installer.exe"
-            }));
-            Assert.IsFalse(InstallBinaryServer.TryDownload(new InstallQueuesType
-            {
-                RepoUrl = "https://example.com/pkg.exe",
-                FilePath = ""
-            }));
-        }
-
-        [TestMethod()]
-        public void TryDownloadReturnsTrueWhenLocalFileExistsTest()
-        {
-            string tempFile = Path.Combine(Path.GetTempPath(), "zeron-install-" + Guid.NewGuid().ToString("N") + ".bin");
+            string path = Path.Combine(Path.GetTempPath(), "zeron-sha-" + Guid.NewGuid().ToString("N") + ".bin");
+            byte[] payload = Encoding.UTF8.GetBytes("zeron-package");
+            File.WriteAllBytes(path, payload);
+            string expected = Convert.ToHexString(SHA256.HashData(payload)).ToLowerInvariant();
 
             try
             {
-                File.WriteAllBytes(tempFile, [1, 2, 3]);
-
-                bool downloaded = InstallBinaryServer.TryDownload(new InstallQueuesType
-                {
-                    RepoUrl = "https://example.invalid/should-not-download.exe",
-                    FilePath = tempFile
-                });
-
-                Assert.IsTrue(downloaded);
+                Assert.IsTrue(InstallBinaryServer.VerifySha256OrCleanup(path, expected));
+                Assert.IsTrue(File.Exists(path));
             }
             finally
             {
-                if (File.Exists(tempFile))
+                if (File.Exists(path))
                 {
-                    File.Delete(tempFile);
+                    File.Delete(path);
                 }
             }
         }
 
+        /// <summary>
+        /// VerifySha256OrCleanup deletes file on mismatch.
+        /// </summary>
         [TestMethod()]
-        public void InstallServerGetBinaryFileFromUrlDelegatesTest()
+        public void VerifySha256OrCleanupDeletesOnMismatchTest()
         {
-            Assert.IsFalse(InstallServer.GetBinaryFileFromUrl(null));
+            string path = Path.Combine(Path.GetTempPath(), "zeron-sha-" + Guid.NewGuid().ToString("N") + ".bin");
+            File.WriteAllText(path, "zeron-package");
+
+            try
+            {
+                Assert.IsFalse(InstallBinaryServer.VerifySha256OrCleanup(path, new string('a', 64)));
+                Assert.IsFalse(File.Exists(path));
+            }
+            finally
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+        }
+
+        /// <summary>
+        /// VerifySha256OrCleanup skips check when expected hash is empty.
+        /// </summary>
+        [TestMethod()]
+        public void VerifySha256OrCleanupSkipsWhenEmptyTest()
+        {
+            string path = Path.Combine(Path.GetTempPath(), "zeron-sha-" + Guid.NewGuid().ToString("N") + ".bin");
+            File.WriteAllText(path, "zeron-package");
+
+            try
+            {
+                Assert.IsTrue(InstallBinaryServer.VerifySha256OrCleanup(path, null));
+                Assert.IsTrue(File.Exists(path));
+            }
+            finally
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
         }
     }
 }

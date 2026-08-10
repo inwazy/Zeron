@@ -7,6 +7,7 @@ using Zeron.Demand.ZServers;
 using Zeron.ZAttribute;
 using Zeron.ZCore;
 using Zeron.ZInterfaces;
+using Zeron.ZServers;
 
 namespace Zeron.Demand.ZServices
 {
@@ -27,6 +28,20 @@ namespace Zeron.Demand.ZServices
         {
             try
             {
+                string? targetAgentKey = Convert.ToString(aJson["AgentKey"]);
+
+                if (!string.IsNullOrWhiteSpace(targetAgentKey)
+                    && !string.IsNullOrWhiteSpace(AgentServer.AgentId)
+                    && !string.Equals(targetAgentKey, AgentServer.AgentId, StringComparison.Ordinal))
+                {
+                    ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
+                        "RemoteCommand ignored for AgentKey={0} (local AgentId={1}).",
+                        targetAgentKey,
+                        AgentServer.AgentId));
+
+                    return ServiceResponse.SerializeFailure("RemoteCommand AgentKey mismatch.");
+                }
+
                 string? targetApi = Convert.ToString(aJson["TargetApi"]);
                 string? command = Convert.ToString(aJson["Command"]);
 
@@ -47,7 +62,10 @@ namespace Zeron.Demand.ZServices
                 }
 
                 string? assignmentId = Convert.ToString(aJson["AssignmentId"]);
-                RemoteCommandContext.AssignmentId = assignmentId;
+                bool trackAssignment = !string.IsNullOrWhiteSpace(assignmentId)
+                    && !string.Equals(assignmentId, Guid.Empty.ToString(), StringComparison.OrdinalIgnoreCase);
+
+                RemoteCommandContext.AssignmentId = trackAssignment ? assignmentId : null;
 
                 try
                 {
@@ -58,14 +76,17 @@ namespace Zeron.Demand.ZServices
                     AuditServer.Log(targetApi, command, success, success ? "Remote command executed" : response, "sub");
 
                     // ManagedPackage queue success reports interim result; final status comes from install.* completion.
-                    ReporterServer.ReportTaskResult(assignmentId, success, response, success ? null : response);
+                    if (trackAssignment)
+                    {
+                        ReporterServer.ReportTaskResult(assignmentId, success, response, success ? null : response);
+                    }
 
                     InstallEventPublisher.PublishObject("remotecommand.executed", new
                     {
                         targetApi,
                         command,
                         success,
-                        assignmentId
+                        assignmentId = trackAssignment ? assignmentId : null
                     });
 
                     return response;

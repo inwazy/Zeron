@@ -59,6 +59,38 @@ else
     }
 
     <div class="panel">
+        <h2>Script Engines</h2>
+        @if (m_ScriptEngines.Count == 0)
+        {
+            <p>No script engine capabilities reported yet.</p>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Platforms</th>
+                        <th>Available</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (ScriptEngineInfoType engine in m_ScriptEngines)
+                    {
+                        <tr>
+                            <td>@engine.Id</td>
+                            <td>@engine.DisplayName</td>
+                            <td>@string.Join(", ", engine.Platforms)</td>
+                            <td>@(engine.Available ? "yes" : "no")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div class="panel">
         <h2>Heartbeat History</h2>
         @if (m_Heartbeats.Count == 0)
         {

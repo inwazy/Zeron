@@ -233,7 +233,7 @@ th {
 .status.resolved { background: rgba(34, 197, 94, 0.15); color: var(--success); }
 .status.healthy { background: rgba(34, 197, 94, 0.15); color: var(--success); }
 .status.stale { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-.status.never_seen { background: rgba(148, 163, 184, 0.15); color: var(--muted); }
+.status.never, .status.never_seen { background: rgba(148, 163, 184, 0.15); color: var(--muted); }
 .status.hardened { background: rgba(34, 197, 94, 0.15); color: var(--success); }
 .status.partial { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
 .status.insecure { background: rgba(239, 68, 68, 0.15); color: var(--danger); }

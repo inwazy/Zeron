@@ -4,7 +4,9 @@
 @using Zeron.ZCore.Type
 @attribute [Authorize(Policy = ServerPolicies.OperatorOrAbove)]
 @inject PackageDeployServer PackageDeployServer
+@inject ManagedPackageCatalogServer CatalogServer
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="page-header">
     <div>
@@ -23,9 +25,15 @@
             </InputSelect>
         </label>
         <label>
-            Package Name
-            <InputText @bind-Value="m_Model.PackageName" />
-            <small class="muted">Must exist in each agent's local <code>managed_packages</code> catalog.</small>
+            Package
+            <InputSelect @bind-Value="m_Model.PackageName">
+                <option value="">Select package</option>
+                @foreach (ManagedPackageInfoType package in m_Packages)
+                {
+                    <option value="@package.Name">@package.Name</option>
+                }
+            </InputSelect>
+            <small class="muted">From the Server catalog. Agents sync this list (local overrides are preserved).</small>
         </label>
         <label>
             Extra Args
@@ -62,6 +70,7 @@
         <div class="actions">
             <button class="btn" @onclick="HandleDeployAsync" disabled="@m_IsSubmitting">Deploy</button>
             <a class="btn btn-secondary" href="/packages">Cancel</a>
+            <a class="btn btn-secondary" href="/packages/catalog">Catalog</a>
         </div>
     </div>
 
@@ -75,6 +84,11 @@
     @if (!string.IsNullOrWhiteSpace(m_Error))
     {
         <p class="error">@m_Error</p>
+    }
+
+    @if (m_Packages.Count == 0)
+    {
+        <p class="error" style="margin-top: 1rem;">No enabled packages in the catalog. Add one under Package Catalog first.</p>
     }
 </div>
 

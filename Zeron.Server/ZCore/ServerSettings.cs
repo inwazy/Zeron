@@ -104,6 +104,15 @@ namespace Zeron.Server.ZCore
         } = 90;
 
         /// <summary>
+        /// CatalogSyncStaleMinutes - online agents without sync within this window are stale.
+        /// </summary>
+        public int CatalogSyncStaleMinutes
+        {
+            get;
+            set;
+        } = 15;
+
+        /// <summary>
         /// DispatchIntervalMs
         /// </summary>
         public int DispatchIntervalMs
@@ -255,5 +264,14 @@ namespace Zeron.Server.ZCore
             get;
             set;
         }
+
+        /// <summary>
+        /// WindowsServiceName - SCM service name when hosted as a Windows Service.
+        /// </summary>
+        public string WindowsServiceName
+        {
+            get;
+            set;
+        } = "Zeron.Server";
     }
 }

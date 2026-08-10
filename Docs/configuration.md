@@ -14,6 +14,7 @@
 | `AgentHmacSkewSeconds` | `300` | Allowed clock skew for HMAC timestamps |
 | `RequireHttpsAgents` | `false` | Reject non-HTTPS agent calls (honors `X-Forwarded-Proto`) |
 | `HeartbeatTimeoutSeconds` | `90` | Seconds without heartbeat before agent marked offline |
+| `CatalogSyncStaleMinutes` | `15` | Online agents whose last catalog sync is older than this are stale on Sync Health |
 | `DispatchIntervalMs` | `5000` | Background task dispatch interval |
 | `ScheduleIntervalMs` | `15000` | Central cron schedule poll interval |
 | `JwtSecret` | (dev secret) | JWT signing key (min 32 chars) |
@@ -31,6 +32,7 @@
 | `SmtpEnableSsl` | `true` | Use TLS for SMTP |
 | `EncryptionSaltKey` | (legacy default) | AES salt for NetMQ API-key obfuscation; must match agents |
 | `EncryptionIvKey` | (legacy default) | AES IV source for NetMQ API-key obfuscation; must match agents |
+| `WindowsServiceName` | `Zeron.Server` | SCM service name when hosted with `UseWindowsService` |
 
 Environment variable override uses double underscore: `Zeron__AgentApiKey`.
 
@@ -66,12 +68,17 @@ Start from `App.Sample.config` (production-shaped) or the published sample next 
 | `zmq_pub_addr` | Local event PUB bind (plaintext) |
 | `encryption_salt_key` | Must match Server `EncryptionSaltKey` (or `ZERON_CRYPT_SALT`) |
 | `encryption_iv_key` | Must match Server `EncryptionIvKey` (or `ZERON_CRYPT_IV`) |
+| `script_powershell_enabled` | Enable built-in PowerShell script engine (`true` default) |
+| `script_powershell_exe` | PowerShell executable (`powershell.exe` default) |
+| `script_default_timeout_ms` | Default script timeout in ms (`300000`) |
 | `mail_enabled` | `true` to enable agent-side SMTP (`MailerServer`) |
 | `mail_host` / `mail_port` | SMTP server |
 | `mail_user_login` / `mail_user_password` | SMTP credentials (optional if relay allows anonymous) |
 | `mail_sender_name` / `mail_sender_address` | From identity |
 | `mail_recipients_administrator` | Comma/space-separated admin recipients |
 | `mail_enable_ssl` | Use TLS for SMTP (`true` default) |
+
+Script engines: see [Script Host](./script-host.md) for engine IDs, Pipeline `powershell` vs `script`, and capability reporting.
 
 Agent identity is persisted under `Resource/agent.id`. The agent sends heartbeats every 30 seconds when `server_enabled=true`.
 
@@ -162,15 +169,31 @@ Cron uses 5-field NCrontab expressions evaluated in **server local time**. When 
 
 Dashboard pages: `/schedules`, `/schedules/create`, `/schedules/{id}`.
 
-## ManagedPackage Central Deploy
+## ManagedPackage Catalog and Central Deploy
 
-Central package deploy reuses the task dispatch path (`TargetApi=ManagedPackage`).
+The Server catalog is the central source of ManagedPackage definitions. Demand agents periodically pull `/api/packages/catalog/sync` and upsert rows with `source=server`. Rows marked `source=local` on Demand are never overwritten (standalone Demand or local overrides).
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| `POST /api/packages/deploy` | Operator+ | Create install/uninstall deploy task |
+| `GET /api/packages/catalog` | Viewer+ | List Server catalog |
+| `POST /api/packages/catalog` | Operator+ | Create catalog package |
+| `PUT /api/packages/catalog/{id}` | Operator+ | Update catalog package |
+| `DELETE /api/packages/catalog/{id}` | Operator+ | Delete catalog package |
+| `GET /api/packages/catalog/sync` | Agent API key | Full catalog snapshot for Demand |
+| `GET /api/packages/catalog/sync-health` | Viewer+ | Catalog sync health summary per agent |
+| `POST /api/packages/catalog/sync-push` | Operator+ | Push `ManagedPackage sync` to unhealthy / selected / all online agents |
+| `POST /api/packages/deploy` | Operator+ | Create install/uninstall deploy task (name must exist and be enabled in Server catalog) |
 | `GET /api/packages/deploys` | Viewer+ | Recent ManagedPackage tasks |
 | `GET /api/packages/install-events` | Viewer+ | Recent `install.*` events |
+
+Demand App.config keys:
+
+| Key | Description |
+|-----|-------------|
+| `mp_db_source_file` | Local SQLite path (created if missing) |
+| `mp_repo_temp_path` | Download temp folder |
+| `mp_catalog_sync_enabled` | Sync from Server when reporter is enabled (default `true`) |
+| `mp_catalog_sync_interval_ms` | Sync interval (default `300000`) |
 
 Command format sent to agents:
 
@@ -178,8 +201,6 @@ Command format sent to agents:
 install <packageName> [extraArgs]
 uninstall <packageName> [extraArgs]
 ```
-
-Package names must exist in each agent's local SQLite `managed_packages` catalog (`status=1`).
 
 Package deploy assignment lifecycle:
 
@@ -189,4 +210,49 @@ Package deploy assignment lifecycle:
 
 Related events: `install.started` / `install.uninstall` / `install.completed` / `install.failed`.
 
-Dashboard pages: `/packages`, `/packages/deploy`. Events shortcut: `/events?topic=install.`.
+Dashboard pages: `/packages`, `/packages/catalog`, `/packages/sync-health`, `/packages/deploy`. Events shortcut: `/events?topic=install.`.
+
+**Sync Health** (`/packages/sync-health`): classifies each agent as `healthy` / `stale` / `never` / `failed` / `offline` using `LastCatalogSyncAt` and recent failed `package.catalog.sync` audit rows. Operators can push sync to unhealthy online agents, all online agents, or a single agent. Stale window: `CatalogSyncStaleMinutes`.
+
+## Device Owner Self-Service
+
+`DeviceOwner` accounts can log into the Dashboard and view only Demand agents bound to their user (Admin manages bindings).
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/user-agent-bindings` | Admin | List bindings |
+| `POST /api/user-agent-bindings` | Admin | Bind user ↔ AgentKey |
+| `DELETE /api/user-agent-bindings/{id}` | Admin | Remove binding |
+| `GET /api/my/devices` | DeviceOwner or staff | Bound agent status |
+| `GET /api/my/devices/{agentKey}` | DeviceOwner or staff | Single bound agent |
+| `GET /api/my/devices/{agentKey}/install-events` | DeviceOwner or staff | Install events for bound agent |
+| `POST /api/my/devices/{agentKey}/deploy` | DeviceOwner or staff | Self-service install/uninstall (bound agent + Server catalog only) |
+
+Demand ManagedPackage local commands (Client / RemoteCommand):
+
+| Command | Description |
+|---------|-------------|
+| `list` | List local catalog (`name`, `source`, `enabled`) |
+| `sync` | Pull Server catalog now |
+| `override <name>` | Mark row `source=local` (sync will not overwrite) |
+| `clear-override <name>` | Delete local-override row so next sync can recreate Server version |
+| `status` / `install` / `uninstall` | Existing install queue commands |
+
+Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
+
+Dashboard pages: `/my-devices`, `/device-bindings` (Admin).
+
+## Audit / 操作紀錄
+
+Server stores attributed operations in `AuditLogs` (Dashboard **Audit** `/audit`, API `GET /api/audit`).
+
+| Action | Source | When |
+|--------|--------|------|
+| `catalog.create` / `update` / `delete` | server | Catalog CRUD |
+| `package.deploy` | server | Staff package deploy |
+| `package.self_deploy` | server | DeviceOwner self-service deploy |
+| `binding.create` / `binding.delete` | server | Device bindings |
+| `package.override` / `package.clear-override` / `package.catalog.sync` | agent | Demand ManagedPackage commands (via events) |
+| `catalog.sync.push` | server | Operator push sync from Sync Health |
+
+Query filters: `action`, `actor`, `target`, `source`, `limit`.

@@ -67,6 +67,21 @@ namespace Zeron.Server.Data
         public DbSet<TaskScheduleEntity> TaskSchedules => Set<TaskScheduleEntity>();
 
         /// <summary>
+        /// ManagedPackages
+        /// </summary>
+        public DbSet<ManagedPackageEntity> ManagedPackages => Set<ManagedPackageEntity>();
+
+        /// <summary>
+        /// UserAgentBindings
+        /// </summary>
+        public DbSet<UserAgentBindingEntity> UserAgentBindings => Set<UserAgentBindingEntity>();
+
+        /// <summary>
+        /// AuditLogs
+        /// </summary>
+        public DbSet<AuditLogEntity> AuditLogs => Set<AuditLogEntity>();
+
+        /// <summary>
         /// OnModelCreating
         /// </summary>
         /// <param name="modelBuilder"></param>
@@ -112,6 +127,31 @@ namespace Zeron.Server.Data
                 entity.HasIndex(schedule => schedule.Name).IsUnique();
                 entity.HasIndex(schedule => schedule.Enabled);
                 entity.HasIndex(schedule => schedule.NextRunAt);
+            });
+
+            modelBuilder.Entity<ManagedPackageEntity>(entity =>
+            {
+                entity.HasIndex(package => package.Name).IsUnique();
+                entity.HasIndex(package => package.IsEnabled);
+            });
+
+            modelBuilder.Entity<UserAgentBindingEntity>(entity =>
+            {
+                entity.HasIndex(binding => new { binding.UserId, binding.AgentKey }).IsUnique();
+                entity.HasIndex(binding => binding.AgentKey);
+                entity.HasOne(binding => binding.User)
+                    .WithMany()
+                    .HasForeignKey(binding => binding.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<AuditLogEntity>(entity =>
+            {
+                entity.HasIndex(log => log.OccurredAt);
+                entity.HasIndex(log => log.Action);
+                entity.HasIndex(log => log.ActorUsername);
+                entity.HasIndex(log => log.TargetKey);
+                entity.HasIndex(log => log.Source);
             });
         }
     }

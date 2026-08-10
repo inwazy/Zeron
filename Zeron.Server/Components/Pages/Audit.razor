@@ -1,0 +1,104 @@
+@page "/audit"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
+@inject AuditLogServer AuditLogServer
+
+<div class="page-header">
+    <div>
+        <h1>Audit</h1>
+        <p>Attributed operation history for catalog, deploy, bindings, and agent package overrides.</p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="form-grid">
+        <label>
+            Action
+            <InputText @bind-Value="m_ActionFilter" placeholder="catalog. / package." />
+        </label>
+        <label>
+            Actor
+            <InputText @bind-Value="m_ActorFilter" placeholder="username or agent key" />
+        </label>
+        <label>
+            Target
+            <InputText @bind-Value="m_TargetFilter" placeholder="package or agent" />
+        </label>
+        <label>
+            Source
+            <InputSelect @bind-Value="m_SourceFilter">
+                <option value="">All</option>
+                <option value="server">server</option>
+                <option value="agent">agent</option>
+            </InputSelect>
+        </label>
+        <div class="actions">
+            <button class="btn" @onclick="ReloadAsync" disabled="@m_IsBusy">Apply Filters</button>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    @if (m_Rows.Count == 0)
+    {
+        <p class="muted">No audit records found.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>Action</th>
+                    <th>Actor</th>
+                    <th>Target</th>
+                    <th>Result</th>
+                    <th>Source</th>
+                    <th>Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (AuditLogInfoType row in m_Rows)
+                {
+                    <tr>
+                        <td>@row.OccurredAt.ToLocalTime().ToString("g")</td>
+                        <td><code>@row.Action</code></td>
+                        <td>
+                            @(row.ActorUsername ?? "-")
+                            @if (!string.IsNullOrWhiteSpace(row.ActorRole))
+                            {
+                                <small class="muted"> (@row.ActorRole)</small>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(row.TargetKey))
+                            {
+                                <code>@row.TargetKey</code>
+                                @if (!string.IsNullOrWhiteSpace(row.TargetType))
+                                {
+                                    <small class="muted"> (@row.TargetType)</small>
+                                }
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="status @(row.Success ? "online" : "offline")">
+                                @(row.Success ? "ok" : "failed")
+                            </span>
+                        </td>
+                        <td>@row.Source</td>
+                        <td>@row.Summary</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

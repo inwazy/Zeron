@@ -98,9 +98,28 @@ namespace Zeron.ZServers.Tests
             });
             m_Mailer.Initialize();
 
+            Assert.AreSame(m_Mailer, MailerServer.Current);
             Assert.IsTrue(MailerServer.IsConfigured);
             Assert.IsFalse(MailerServer.QueueMail("", "<p>body</p>"));
             Assert.IsFalse(MailerServer.QueueMail("subject", ""));
+        }
+
+        [TestMethod()]
+        public void StopClearsCurrentTest()
+        {
+            m_Mailer = new MailerServer();
+            m_Mailer.LoadConfig(new NameValueCollection
+            {
+                ["mail_enabled"] = "false"
+            });
+            m_Mailer.Initialize();
+
+            Assert.IsNotNull(MailerServer.Current);
+            m_Mailer.Stop();
+            Assert.IsNull(MailerServer.Current);
+            Assert.IsFalse(MailerServer.IsConfigured);
+            Assert.IsFalse(MailerServer.QueueMail("subject", "<p>body</p>"));
+            m_Mailer = null;
         }
     }
 }

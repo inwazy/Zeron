@@ -99,6 +99,27 @@ namespace Zeron.Server.ZServers.Tests
             Assert.IsNotNull(admin);
         }
 
+        /// <summary>
+        /// CreateUserAsync accepts DeviceOwner role.
+        /// </summary>
+        [TestMethod()]
+        public async Task CreateUserAsyncCreatesDeviceOwnerTest()
+        {
+            await using ZeronServerDbContext dbContext = CreateContext();
+            UserManagerServer userManager = new(dbContext);
+
+            (UserInfoType? user, string? error) = await userManager.CreateUserAsync(new UserCreateRequestType
+            {
+                Username = "device1",
+                Password = "secret1",
+                Role = ServerRoles.DeviceOwner
+            });
+
+            Assert.IsNull(error);
+            Assert.IsNotNull(user);
+            Assert.AreEqual(ServerRoles.DeviceOwner, user!.Role);
+        }
+
         private static ZeronServerDbContext CreateContext()
         {
             DbContextOptions<ZeronServerDbContext> options = new DbContextOptionsBuilder<ZeronServerDbContext>()

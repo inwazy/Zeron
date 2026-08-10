@@ -10,16 +10,25 @@ This guide covers deploying **Zeron.Server** (central management) and **Zeron.De
 
 ## 1. Build
 
-### From CI artifacts (recommended)
+### From GitHub Release (recommended)
 
-GitHub Actions CI publishes framework-dependent **win-x64** zip packages after tests pass:
+Push a version tag (for example `v1.0.1`) to run the **Release** workflow. After tests and publish succeed, a GitHub Release is created with:
 
-| Artifact | Contents |
-|----------|----------|
-| `zeron-server-win-x64` | `Zeron.Server` publish output |
-| `zeron-agent-win-x64` | `Zeron.Demand` publish output + `App.Sample.config` |
+| Asset | Contents |
+|-------|----------|
+| `zeron-server-win-x64.zip` | `Zeron.Server` publish output |
+| `zeron-agent-win-x64.zip` | `Zeron.Demand` publish output + `App.Sample.config` |
 
-Download from the workflow run → **Artifacts**, extract, then configure before first start. Each zip includes `BUILD.txt` with commit SHA.
+```powershell
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+Download the zips from the Release page, extract, then configure before first start. Each zip includes `BUILD.txt` with version, commit SHA, and build time.
+
+### From CI artifacts
+
+GitHub Actions CI also uploads the same framework-dependent **win-x64** packages as workflow artifacts (retained ~30 days) after tests pass on `main` / `develop` / PRs. Prefer Releases for long-term installs.
 
 ### Local build
 
@@ -31,6 +40,7 @@ dotnet test Zeron.sln -c Release
 dotnet publish Zeron.Server/Zeron.Server.csproj -c Release -r win-x64 --self-contained false -o ./publish/server
 dotnet publish Zeron.Demand/Zeron.Demand.csproj -c Release -r win-x64 --self-contained false -o ./publish/agent
 Copy-Item ./Zeron.Demand/App.Sample.config ./publish/agent/App.config -Force
+Copy-Item ./Zeron.Server/scripts/*.ps1 ./publish/server/ -Force
 ```
 
 Target machines need the [.NET 10 Windows runtime](https://dotnet.microsoft.com/download/dotnet/10.0) (framework-dependent packages).
@@ -77,12 +87,46 @@ Design-time factory: `ZeronServerDbContextFactory` reads `Zeron:DatabasePath` fr
 
 ## 3. Run Zeron.Server
 
+### Console (dev / smoke test)
+
 ```powershell
 cd publish/server
 dotnet Zeron.Server.dll --urls "http://0.0.0.0:5000"
+# or: .\Zeron.Server.exe
 ```
 
-For production, run behind IIS, Windows Service wrapper, or a process manager. Open firewall ports:
+### Windows Service (recommended for production)
+
+`Zeron.Server` supports SCM hosting via `UseWindowsService`. Publish output includes install scripts.
+
+1. Configure `appsettings.Production.json` (or environment variables) in the publish folder.
+2. Open an elevated PowerShell in the publish folder:
+
+```powershell
+cd C:\path\to\publish\server
+.\install-windows-service.ps1 -Urls "http://0.0.0.0:5000"
+# optional: -ServiceName "Zeron.Server" -DisplayName "Zeron Server"
+```
+
+The script registers the service, sets `ASPNETCORE_ENVIRONMENT=Production` and `ASPNETCORE_URLS`, then starts it. Service name defaults to `Zeron:WindowsServiceName` / `Zeron.Server`.
+
+```powershell
+.\uninstall-windows-service.ps1
+# or: Stop-Service Zeron.Server; sc.exe delete Zeron.Server
+```
+
+Manual install (equivalent):
+
+```powershell
+New-Service -Name "Zeron.Server" -BinaryPathName '"C:\path\to\publish\server\Zeron.Server.exe"' `
+  -DisplayName "Zeron Server" -StartupType Automatic
+# Set Environment (REG_MULTI_SZ) under HKLM:\SYSTEM\CurrentControlSet\Services\Zeron.Server:
+#   ASPNETCORE_ENVIRONMENT=Production
+#   ASPNETCORE_URLS=http://0.0.0.0:5000
+Start-Service Zeron.Server
+```
+
+You may still place a reverse proxy (IIS / nginx / Caddy) in front for TLS. Open firewall ports:
 
 | Port | Purpose |
 |------|---------|
@@ -124,8 +168,9 @@ sc start ZeronDemand
 4. Confirm the agent appears on **Agents** with connection state **healthy**.
 5. Create a test task (e.g. `HealthCheck`) targeting the agent.
 6. Check **Events** and **Alerts** for operational data.
-7. On **Users**, create Operator/Viewer accounts as needed.
-8. For package deploy: ensure each agent has a populated `managed_packages` SQLite catalog, then use Dashboard **Packages → Deploy Package**. Task status should go `running` then `completed`/`failed` after install finishes.
+7. On **Users**, create Operator/Viewer/DeviceOwner accounts as needed.
+8. For package deploy: add packages on Dashboard **Packages → Catalog**, wait for Demand sync (or keep local `source=local` overrides), then use **Packages → Deploy Package**. Task status should go `running` then `completed`/`failed` after install finishes.
+9. For end-user self-service: create a DeviceOwner user, bind their account to an AgentKey on **Device Bindings**, then they can sign in and open **My Devices**.
 
 See [Agent Connection Guide](./agent-connection.md) if agents stay offline or stale.
 

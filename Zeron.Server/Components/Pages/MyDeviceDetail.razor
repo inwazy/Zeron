@@ -1,0 +1,96 @@
+@page "/my-devices/{AgentKey}"
+@rendermode InteractiveServer
+@using Zeron.Server.Data.Entities
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.DeviceOwnerOrStaff)]
+@inject DevicePortalServer PortalServer
+@inject ManagedPackageCatalogServer CatalogServer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="page-header">
+    <div>
+        <h1>@(m_Device?.MachineName ?? AgentKey)</h1>
+        <p>Zeron.Demand status and self-service package install for your bound agent.</p>
+    </div>
+    <div class="actions">
+        <a class="btn btn-secondary" href="/my-devices">Back</a>
+        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(m_Error))
+{
+    <p class="error">@m_Error</p>
+}
+else if (m_Device == null)
+{
+    <p class="error">Device not found or not bound to your account.</p>
+}
+else
+{
+    <div class="cards">
+        <div class="card"><span>Status</span><strong><span class="status @m_Device.Status">@m_Device.Status</span></strong></div>
+        <div class="card"><span>Version</span><strong>@(m_Device.Version ?? "-")</strong></div>
+        <div class="card"><span>IP</span><strong>@(m_Device.IpAddress ?? "-")</strong></div>
+        <div class="card"><span>Last Heartbeat</span><strong>@(m_Device.LastHeartbeatAt?.ToLocalTime().ToString("g") ?? "-")</strong></div>
+        <div class="card"><span>Catalog Sync</span><strong>@(m_Device.LastCatalogSyncAt?.ToLocalTime().ToString("g") ?? "-")</strong></div>
+        <div class="card"><span>Install Queue</span><strong>@m_Device.InstallQueueCount</strong></div>
+        <div class="card"><span>Install Running</span><strong>@(m_Device.InstallRunning ? "yes" : "no")</strong></div>
+        <div class="card"><span>Uptime (sec)</span><strong>@m_Device.UptimeSeconds</strong></div>
+    </div>
+
+    <div class="panel">
+        <h2>Install / Uninstall Package</h2>
+        <p class="muted">Only packages from the Server catalog can be installed on this device.</p>
+        <div class="form-grid">
+            <label>
+                Operation
+                <InputSelect @bind-Value="m_Deploy.Operation">
+                    <option value="install">Install</option>
+                    <option value="uninstall">Uninstall</option>
+                </InputSelect>
+            </label>
+            <label>
+                Package
+                <InputSelect @bind-Value="m_Deploy.PackageName">
+                    <option value="">Select package</option>
+                    @foreach (ManagedPackageInfoType package in m_Packages)
+                    {
+                        <option value="@package.Name">@package.Name</option>
+                    }
+                </InputSelect>
+            </label>
+            <label>
+                Extra Args
+                <InputText @bind-Value="m_Deploy.ExtraArgs" />
+            </label>
+            <div class="actions">
+                <button class="btn" @onclick="DeployAsync" disabled="@m_IsBusy">Submit</button>
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(m_DeployMessage))
+        {
+            <p class="@(m_DeploySucceeded ? "success-text" : "error")">@m_DeployMessage</p>
+        }
+    </div>
+
+    <div class="panel">
+        <h2>Recent Install Events</h2>
+        @if (m_Events.Count == 0)
+        {
+            <p class="muted">No recent install events.</p>
+        }
+        else
+        {
+            @foreach (EventEntity evt in m_Events)
+            {
+                <div class="timeline-item">
+                    <strong>@evt.Topic</strong>
+                    <small>@evt.ReceivedAt.ToLocalTime()</small>
+                    <div>@evt.Payload</div>
+                </div>
+            }
+        }
+    </div>
+}

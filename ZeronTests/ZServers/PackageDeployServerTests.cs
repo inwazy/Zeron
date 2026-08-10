@@ -75,6 +75,26 @@ namespace Zeron.Server.ZServers.Tests
         }
 
         /// <summary>
+        /// DeployAsync rejects packages missing from the Server catalog when catalog is wired.
+        /// </summary>
+        [TestMethod()]
+        public async Task DeployAsyncRejectsMissingCatalogPackageTest()
+        {
+            await using ZeronServerDbContext dbContext = CreateContext();
+            ManagedPackageCatalogServer catalog = new(dbContext);
+            PackageDeployServer deployServer = CreateDeployServer(dbContext, catalog);
+
+            PackageDeployResponseType response = await deployServer.DeployAsync(new PackageDeployRequestType
+            {
+                Operation = "install",
+                PackageName = "missing-pkg"
+            });
+
+            Assert.IsFalse(response.Success);
+            Assert.IsTrue(response.Message!.Contains("not found", StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
         /// BuildCommand formats install/uninstall commands.
         /// </summary>
         [TestMethod()]
@@ -84,11 +104,13 @@ namespace Zeron.Server.ZServers.Tests
             Assert.AreEqual("uninstall 7zip /S", PackageDeployServer.BuildCommand("uninstall", "7zip", "/S"));
         }
 
-        private static PackageDeployServer CreateDeployServer(ZeronServerDbContext dbContext)
+        private static PackageDeployServer CreateDeployServer(
+            ZeronServerDbContext dbContext,
+            ManagedPackageCatalogServer? catalogServer = null)
         {
             TaskDispatcherServer taskDispatcher = new(dbContext, new CommandPublisherServer(new ServerSettings()));
 
-            return new PackageDeployServer(taskDispatcher, dbContext);
+            return new PackageDeployServer(taskDispatcher, dbContext, catalogServer);
         }
 
         private static ZeronServerDbContext CreateContext()
