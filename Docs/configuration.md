@@ -181,6 +181,9 @@ The Server catalog is the central source of ManagedPackage definitions. Demand a
 | `POST /api/packages/catalog` | Operator+ | Create catalog package |
 | `PUT /api/packages/catalog/{id}` | Operator+ | Update catalog package |
 | `DELETE /api/packages/catalog/{id}` | Operator+ | Delete catalog package |
+| `GET /api/packages/catalog/{id}/versions` | Viewer+ | Package version history |
+| `GET /api/packages/catalog/{id}/versions/{n}` | Viewer+ | Single version snapshot |
+| `POST /api/packages/catalog/{id}/rollback` | Operator+ | Restore version `n` onto live package and push sync |
 | `GET /api/packages/catalog/sync` | Agent API key | Full catalog snapshot for Demand |
 | `GET /api/packages/catalog/sync-health` | Viewer+ | Catalog sync health summary per agent |
 | `POST /api/packages/catalog/sync-push` | Operator+ | Push `ManagedPackage sync` to unhealthy / selected / all online agents |
@@ -243,7 +246,9 @@ Demand ManagedPackage local commands (Client / RemoteCommand):
 | `clear-override <name>` | Delete local-override row so next sync can recreate Server version |
 | `status` / `install` / `uninstall` | Existing install queue commands |
 
-Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
+Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete/rollback pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
+
+**Catalog versions:** each successful create/update/rollback appends a `ManagedPackageVersions` snapshot (`create` / `update` / `rollback`). Operators can Restore a prior version from Catalog **History**; restore writes a new version row (does not rewrite history) and re-pushes sync. Deleting a package cascades its version rows away.
 
 **Install result notifications:** when a self-service deploy (`Task.Name` starts with `self-`) finishes with `install.completed` / `install.failed`, Server notifies every active user bound to that agent. Dashboard tips appear on `/my-devices` (`InstallResultNotifyEnabled`). Optional per-user email uses `Users.Email` + SMTP (`InstallResultEmailEnabled`). Staff package deploys are not notified this way.
 
@@ -255,7 +260,7 @@ Server stores attributed operations in `AuditLogs` (Dashboard **Audit** `/audit`
 
 | Action | Source | When |
 |--------|--------|------|
-| `catalog.create` / `update` / `delete` | server | Catalog CRUD |
+| `catalog.create` / `update` / `delete` / `rollback` | server | Catalog CRUD and restore |
 | `package.deploy` | server | Staff package deploy |
 | `package.self_deploy` | server | DeviceOwner self-service deploy |
 | `binding.create` / `binding.delete` | server | Device bindings |

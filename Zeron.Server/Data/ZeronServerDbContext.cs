@@ -72,6 +72,11 @@ namespace Zeron.Server.Data
         public DbSet<ManagedPackageEntity> ManagedPackages => Set<ManagedPackageEntity>();
 
         /// <summary>
+        /// ManagedPackageVersions
+        /// </summary>
+        public DbSet<ManagedPackageVersionEntity> ManagedPackageVersions => Set<ManagedPackageVersionEntity>();
+
+        /// <summary>
         /// UserAgentBindings
         /// </summary>
         public DbSet<UserAgentBindingEntity> UserAgentBindings => Set<UserAgentBindingEntity>();
@@ -138,6 +143,16 @@ namespace Zeron.Server.Data
             {
                 entity.HasIndex(package => package.Name).IsUnique();
                 entity.HasIndex(package => package.IsEnabled);
+            });
+
+            modelBuilder.Entity<ManagedPackageVersionEntity>(entity =>
+            {
+                entity.HasIndex(version => new { version.PackageId, version.VersionNumber }).IsUnique();
+                entity.HasIndex(version => new { version.PackageId, version.CreatedAt });
+                entity.HasOne(version => version.Package)
+                    .WithMany()
+                    .HasForeignKey(version => version.PackageId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<UserAgentBindingEntity>(entity =>

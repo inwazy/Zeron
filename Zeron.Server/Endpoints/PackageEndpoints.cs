@@ -124,6 +124,53 @@ namespace Zeron.Server.Endpoints
                 return Results.Ok(new { success = true });
             }).RequireAuthorization(ServerPolicies.OperatorOrAbove);
 
+            app.MapGet("/api/packages/catalog/{packageId:guid}/versions", async (
+                Guid packageId,
+                ManagedPackageCatalogServer catalogServer) =>
+            {
+                ManagedPackageInfoType? package = await catalogServer.GetPackageAsync(packageId);
+
+                if (package == null)
+                {
+                    return Results.NotFound();
+                }
+
+                return Results.Ok(await catalogServer.GetPackageVersionsAsync(packageId));
+            }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
+
+            app.MapGet("/api/packages/catalog/{packageId:guid}/versions/{versionNumber:int}", async (
+                Guid packageId,
+                int versionNumber,
+                ManagedPackageCatalogServer catalogServer) =>
+            {
+                ManagedPackageVersionInfoType? version = await catalogServer.GetPackageVersionAsync(
+                    packageId,
+                    versionNumber);
+
+                return version == null ? Results.NotFound() : Results.Ok(version);
+            }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
+
+            app.MapPost("/api/packages/catalog/{packageId:guid}/rollback", async (
+                Guid packageId,
+                ManagedPackageRollbackRequestType request,
+                ClaimsPrincipal principal,
+                ManagedPackageCatalogServer catalogServer) =>
+            {
+                (ManagedPackageInfoType? package, string? error) = await catalogServer.RollbackPackageAsync(
+                    packageId,
+                    request.VersionNumber,
+                    actor: AuditLogServer.FromPrincipal(principal));
+
+                if (error != null)
+                {
+                    return error is "Package not found." or "Version not found."
+                        ? Results.NotFound(new { success = false, message = error })
+                        : Results.BadRequest(new { success = false, message = error });
+                }
+
+                return Results.Ok(package);
+            }).RequireAuthorization(ServerPolicies.OperatorOrAbove);
+
             app.MapPost("/api/packages/deploy", async (
                 PackageDeployRequestType request,
                 ClaimsPrincipal principal,
