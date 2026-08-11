@@ -4,59 +4,59 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// ScriptResult - output from ScriptHostServer / IScriptEngine.
+    /// TaskStepDefinition
     /// </summary>
-    public class ScriptResult
+    public sealed class TaskStepDefinitionType
     {
         /// <summary>
-        /// EngineId
+        /// Type - powershell, script, managedPackage, wait, api
         /// </summary>
-        public string EngineId
-        {
-            get;
-            set;
-        } = "";
-
-        /// <summary>
-        /// Success
-        /// </summary>
-        public bool Success
+        public string? Type
         {
             get;
             set;
         }
 
         /// <summary>
-        /// ExitCode
+        /// Engine - for script steps (default powershell)
         /// </summary>
-        public int ExitCode
+        public string? Engine
         {
             get;
             set;
         }
 
         /// <summary>
-        /// StdOut
+        /// Script - for powershell / script steps
         /// </summary>
-        public string? StdOut
+        public string? Script
         {
             get;
             set;
         }
 
         /// <summary>
-        /// StdErr
+        /// Command - for managedPackage or api steps
         /// </summary>
-        public string? StdErr
+        public string? Command
         {
             get;
             set;
         }
 
         /// <summary>
-        /// ErrorMessage
+        /// ApiName - for api steps
         /// </summary>
-        public string? ErrorMessage
+        public string? ApiName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Seconds - for wait steps
+        /// </summary>
+        public int Seconds
         {
             get;
             set;

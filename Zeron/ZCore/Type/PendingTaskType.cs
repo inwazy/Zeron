@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// PendingTaskType
     /// </summary>
-    public class PendingTaskType
+    public sealed class PendingTaskType
     {
         /// <summary>
         /// AssignmentId

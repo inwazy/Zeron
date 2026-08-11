@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ManagedPackageUpsertRequestType
     /// </summary>
-    public class ManagedPackageUpsertRequestType
+    public sealed class ManagedPackageUpsertRequestType
     {
         /// <summary>
         /// Name

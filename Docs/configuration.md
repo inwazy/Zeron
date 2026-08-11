@@ -73,6 +73,12 @@ Start from `App.Sample.config` (production-shaped) or the published sample next 
 | `script_powershell_enabled` | Enable built-in PowerShell script engine (`true` default) |
 | `script_powershell_exe` | PowerShell executable (`powershell.exe` default) |
 | `script_default_timeout_ms` | Default script timeout in ms (`300000`) |
+| `script_engine_{id}_enabled` | Register external process engine `{id}` (`true` to enable) |
+| `script_engine_{id}_exe` | Executable for that engine |
+| `script_engine_{id}_args` | Args template (`{scriptPath}`, `{arguments}`, `{script}`) |
+| `script_engine_{id}_platforms` | e.g. `windows,linux,macos` |
+| `script_engine_{id}_inline_mode` | `stdin` / `tempfile` / `none` |
+| `script_engine_{id}_display` | Optional display name |
 | `mail_enabled` | `true` to enable agent-side SMTP (`MailerServer`) |
 | `mail_host` / `mail_port` | SMTP server |
 | `mail_user_login` / `mail_user_password` | SMTP credentials (optional if relay allows anonymous) |

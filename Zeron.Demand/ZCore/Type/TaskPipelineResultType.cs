@@ -6,7 +6,7 @@ namespace Zeron.Demand.ZCore.Type
     /// <summary>
     /// TaskPipelineResultType
     /// </summary>
-    internal class TaskPipelineResultType
+    internal sealed class TaskPipelineResultType
     {
         /// <summary>
         /// TaskName

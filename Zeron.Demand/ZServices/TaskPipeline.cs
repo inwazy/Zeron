@@ -61,7 +61,7 @@ namespace Zeron.Demand.ZServices
         private static string RunTask(
             string? taskName)
         {
-            SchedulerTaskDefinition? task = TaskPipelineParser.FindTask(SchedulerServer.GetTasks(), taskName);
+            SchedulerTaskDefinitionType? task = TaskPipelineParser.FindTask(SchedulerServer.GetTasks(), taskName);
 
             if (task == null)
             {

@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// CatalogSyncPushRequestType - request agents to pull ManagedPackage catalog.
     /// </summary>
-    public class CatalogSyncPushRequestType
+    public sealed class CatalogSyncPushRequestType
     {
         /// <summary>
         /// AgentKeys - when empty, targets are chosen by OnlyUnhealthy / online filter.

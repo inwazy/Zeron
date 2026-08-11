@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ChangePasswordRequestType
     /// </summary>
-    public class ChangePasswordRequestType
+    public sealed class ChangePasswordRequestType
     {
         /// <summary>
         /// CurrentPassword

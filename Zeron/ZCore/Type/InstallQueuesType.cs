@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// InstallQueuesType
     /// </summary>
-    public class InstallQueuesType
+    public sealed class InstallQueuesType
     {
         /// <summary>
         /// RepoUrl

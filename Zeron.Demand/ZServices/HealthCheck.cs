@@ -29,7 +29,7 @@ namespace Zeron.Demand.ZServices
         {
             try
             {
-                InstallJobStatus installStatus = InstallJobTracker.GetStatus();
+                InstallJobStatusType installStatus = InstallJobTracker.GetStatus();
 
                 var result = new
                 {

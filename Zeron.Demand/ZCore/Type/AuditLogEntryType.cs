@@ -6,7 +6,7 @@ namespace Zeron.Demand.ZCore.Type
     /// <summary>
     /// AuditLogEntryType
     /// </summary>
-    internal class AuditLogEntryType
+    internal sealed class AuditLogEntryType
     {
         /// <summary>
         /// Id

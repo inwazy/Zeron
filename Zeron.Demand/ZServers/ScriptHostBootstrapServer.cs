@@ -16,6 +16,9 @@ namespace Zeron.Demand.ZServers
     /// </summary>
     public class ScriptHostBootstrapServer : ConfigurationTable, IServer
     {
+        // Last loaded appSettings (for external engine keys).
+        private static NameValueCollection? s_Config;
+
         /// <summary>
         /// PowerShellEnabled
         /// </summary>
@@ -56,6 +59,8 @@ namespace Zeron.Demand.ZServers
                 return;
             }
 
+            s_Config = aConfig;
+
             try
             {
                 PowerShellEnabled = bool.Parse(aConfig["script_powershell_enabled"] ?? "true");
@@ -84,6 +89,11 @@ namespace Zeron.Demand.ZServers
             ScriptHostServer.Clear();
             ScriptHostServer.ConfigureDefaultTimeoutMs(DefaultTimeoutMs);
             ScriptHostServer.Register(new PowerShellScriptEngine(PowerShellExe, PowerShellEnabled));
+
+            foreach (ExternalProcessScriptEngine engine in ExternalScriptEngineConfig.CreateEngines(s_Config))
+            {
+                ScriptHostServer.Register(engine);
+            }
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "ScriptHostBootstrapServer ready. Engines={0}",

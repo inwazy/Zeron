@@ -4,86 +4,68 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// InstallJobStatus
+    /// SmtpMailOptionsType - shared SMTP connection and From identity.
     /// </summary>
-    public class InstallJobStatus
+    public sealed class SmtpMailOptionsType
     {
         /// <summary>
-        /// QueueCount
+        /// Host
         /// </summary>
-        public int QueueCount
+        public string? Host
         {
             get;
             set;
         }
 
         /// <summary>
-        /// IsRunning
+        /// Port
         /// </summary>
-        public bool IsRunning
+        public int Port
+        {
+            get;
+            set;
+        } = 587;
+
+        /// <summary>
+        /// EnableSsl
+        /// </summary>
+        public bool EnableSsl
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
+        /// UserName
+        /// </summary>
+        public string? UserName
         {
             get;
             set;
         }
 
         /// <summary>
-        /// CurrentPackage
+        /// Password
         /// </summary>
-        public string? CurrentPackage
+        public string? Password
         {
             get;
             set;
         }
 
         /// <summary>
-        /// CurrentOperation
+        /// FromAddress
         /// </summary>
-        public string? CurrentOperation
+        public string? FromAddress
         {
             get;
             set;
         }
 
         /// <summary>
-        /// LastPackage
+        /// FromDisplayName
         /// </summary>
-        public string? LastPackage
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// LastOperation
-        /// </summary>
-        public string? LastOperation
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// LastSuccess
-        /// </summary>
-        public bool? LastSuccess
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// LastExitCode
-        /// </summary>
-        public int? LastExitCode
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// LastCompletedAt
-        /// </summary>
-        public string? LastCompletedAt
+        public string? FromDisplayName
         {
             get;
             set;

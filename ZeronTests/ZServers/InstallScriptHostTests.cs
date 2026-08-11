@@ -82,12 +82,12 @@ namespace Zeron.ZServers.Tests
 
             public bool IsAvailable() => true;
 
-            public ScriptResult Execute(
-                ScriptRequest request)
+            public ScriptResultType Execute(
+                ScriptRequestType request)
             {
                 Scripts.Add(request.Script ?? "");
 
-                return new ScriptResult
+                return new ScriptResultType
                 {
                     EngineId = Id,
                     Success = true,

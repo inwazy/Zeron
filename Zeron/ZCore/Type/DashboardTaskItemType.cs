@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// DashboardTaskItemType
     /// </summary>
-    public class DashboardTaskItemType
+    public sealed class DashboardTaskItemType
     {
         /// <summary>
         /// Id

@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ManagedPackageVersionInfoType - catalog package version snapshot.
     /// </summary>
-    public class ManagedPackageVersionInfoType
+    public sealed class ManagedPackageVersionInfoType
     {
         /// <summary>
         /// Id

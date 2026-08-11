@@ -97,11 +97,11 @@ namespace Zeron.ZCore
         /// GetStatus
         /// </summary>
         /// <returns>Returns InstallJobStatus.</returns>
-        public static InstallJobStatus GetStatus()
+        public static InstallJobStatusType GetStatus()
         {
             lock (s_Lock)
             {
-                return new InstallJobStatus
+                return new InstallJobStatusType
                 {
                     QueueCount = QueueCountProvider?.Invoke() ?? 0,
                     IsRunning = s_IsRunning,

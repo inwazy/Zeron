@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// UserNotificationInfoType
     /// </summary>
-    public class UserNotificationInfoType
+    public sealed class UserNotificationInfoType
     {
         /// <summary>
         /// Id

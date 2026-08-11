@@ -4,68 +4,59 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// SmtpMailOptions - shared SMTP connection and From identity.
+    /// ScriptRequestType - input for ScriptHostServer / IScriptEngine.
     /// </summary>
-    public class SmtpMailOptions
+    public sealed class ScriptRequestType
     {
         /// <summary>
-        /// Host
+        /// EngineId
         /// </summary>
-        public string? Host
+        public string? EngineId
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Port
+        /// Script - inline script or command text.
         /// </summary>
-        public int Port
-        {
-            get;
-            set;
-        } = 587;
-
-        /// <summary>
-        /// EnableSsl
-        /// </summary>
-        public bool EnableSsl
-        {
-            get;
-            set;
-        } = true;
-
-        /// <summary>
-        /// UserName
-        /// </summary>
-        public string? UserName
+        public string? Script
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Password
+        /// ScriptPath - optional path to a script file.
         /// </summary>
-        public string? Password
+        public string? ScriptPath
         {
             get;
             set;
         }
 
         /// <summary>
-        /// FromAddress
+        /// Arguments - optional args for ScriptPath engines.
         /// </summary>
-        public string? FromAddress
+        public string? Arguments
         {
             get;
             set;
         }
 
         /// <summary>
-        /// FromDisplayName
+        /// TimeoutMs - 0 or negative uses ScriptHostServer default.
         /// </summary>
-        public string? FromDisplayName
+        public int TimeoutMs
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// WorkingDirectory
+        /// </summary>
+        public string? WorkingDirectory
         {
             get;
             set;

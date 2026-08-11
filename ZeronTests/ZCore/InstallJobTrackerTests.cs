@@ -13,7 +13,7 @@ namespace Zeron.ZCore.Tests
         {
             InstallJobTracker.QueueCountProvider = () => 2;
             InstallJobTracker.MarkRunning("ccleaner", "install");
-            InstallJobStatus runningStatus = InstallJobTracker.GetStatus();
+            InstallJobStatusType runningStatus = InstallJobTracker.GetStatus();
 
             Assert.IsTrue(runningStatus.IsRunning);
             Assert.AreEqual("ccleaner", runningStatus.CurrentPackage);
@@ -21,7 +21,7 @@ namespace Zeron.ZCore.Tests
             Assert.AreEqual(2, runningStatus.QueueCount);
 
             InstallJobTracker.MarkCompleted("ccleaner", "install", true, 0);
-            InstallJobStatus completedStatus = InstallJobTracker.GetStatus();
+            InstallJobStatusType completedStatus = InstallJobTracker.GetStatus();
 
             Assert.IsFalse(completedStatus.IsRunning);
             Assert.AreEqual("ccleaner", completedStatus.LastPackage);

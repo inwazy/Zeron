@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ManagedPackageRollbackRequestType
     /// </summary>
-    public class ManagedPackageRollbackRequestType
+    public sealed class ManagedPackageRollbackRequestType
     {
         /// <summary>
         /// VersionNumber - historical version to restore onto the live package.

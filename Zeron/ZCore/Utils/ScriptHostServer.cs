@@ -133,12 +133,12 @@ namespace Zeron.ZCore.Utils
         /// <param name="script"></param>
         /// <param name="timeoutMs"></param>
         /// <returns>Returns ScriptResult.</returns>
-        public static ScriptResult Execute(
+        public static ScriptResultType Execute(
             string? engineId,
             string? script,
             int timeoutMs = 0)
         {
-            return Execute(new ScriptRequest
+            return Execute(new ScriptRequestType
             {
                 EngineId = engineId,
                 Script = script,
@@ -151,8 +151,8 @@ namespace Zeron.ZCore.Utils
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Returns ScriptResult.</returns>
-        public static ScriptResult Execute(
-            ScriptRequest request)
+        public static ScriptResultType Execute(
+            ScriptRequestType request)
         {
             ArgumentNullException.ThrowIfNull(request);
             EnsureBuiltInEngines();
@@ -163,7 +163,7 @@ namespace Zeron.ZCore.Utils
 
             if (!s_Engines.TryGetValue(engineId, out IScriptEngine? engine) || engine == null)
             {
-                return new ScriptResult
+                return new ScriptResultType
                 {
                     EngineId = engineId,
                     Success = false,
@@ -172,7 +172,7 @@ namespace Zeron.ZCore.Utils
                 };
             }
 
-            ScriptRequest normalized = new()
+            ScriptRequestType normalized = new()
             {
                 EngineId = engineId,
                 Script = request.Script,
@@ -188,7 +188,7 @@ namespace Zeron.ZCore.Utils
             }
             catch (Exception e)
             {
-                return new ScriptResult
+                return new ScriptResultType
                 {
                     EngineId = engineId,
                     Success = false,

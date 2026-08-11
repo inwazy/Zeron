@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// UserUpdateRequestType
     /// </summary>
-    public class UserUpdateRequestType
+    public sealed class UserUpdateRequestType
     {
         /// <summary>
         /// Role - Admin, Operator, Viewer, DeviceOwner

@@ -1,74 +1,74 @@
-// Zeron - Scheduled Task Application for Windows OS
+﻿// Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// DashboardAlertItemType
+    /// ExternalProcessScriptEngineOptionsType
     /// </summary>
-    public sealed class DashboardAlertItemType
+    public sealed class ExternalProcessScriptEngineOptionsType
     {
         /// <summary>
         /// Id
         /// </summary>
-        public Guid Id
+        public string Id
+        {
+            get;
+            set;
+        } = "";
+
+        /// <summary>
+        /// DisplayName
+        /// </summary>
+        public string? DisplayName
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Title
+        /// ExecutablePath
         /// </summary>
-        public string Title
+        public string ExecutablePath
         {
             get;
             set;
         } = "";
 
         /// <summary>
-        /// Message
+        /// ArgumentsTemplate - supports {scriptPath}, {arguments}, {script}.
         /// </summary>
-        public string Message
+        public string ArgumentsTemplate
         {
             get;
             set;
-        } = "";
+        } = "{scriptPath} {arguments}";
 
         /// <summary>
-        /// Severity
+        /// Platforms
         /// </summary>
-        public string Severity
+        public IReadOnlyList<string> Platforms
         {
             get;
             set;
-        } = "";
+        } = ["windows"];
 
         /// <summary>
-        /// Status
+        /// InlineMode
         /// </summary>
-        public string Status
+        public ExternalScriptInlineModeType InlineMode
         {
             get;
             set;
-        } = "";
+        } = ExternalScriptInlineModeType.StdIn;
 
         /// <summary>
-        /// AgentKey
+        /// Enabled
         /// </summary>
-        public string? AgentKey
+        public bool Enabled
         {
             get;
             set;
-        }
-
-        /// <summary>
-        /// CreatedAt
-        /// </summary>
-        public DateTime CreatedAt
-        {
-            get;
-            set;
-        }
+        } = true;
     }
 }

@@ -171,7 +171,7 @@ namespace Zeron.Server.ZServers
             string title,
             string message)
         {
-            SmtpMailOptions options = new()
+            SmtpMailOptionsType options = new()
             {
                 Host = m_Settings.SmtpHost,
                 Port = m_Settings.SmtpPort,

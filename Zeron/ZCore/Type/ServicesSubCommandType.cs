@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ServicesSubCommandType
     /// </summary>
-    public class ServicesSubCommandType
+    public sealed class ServicesSubCommandType
     {
         /// <summary>
         /// Option

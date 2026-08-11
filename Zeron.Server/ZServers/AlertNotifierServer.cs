@@ -63,7 +63,7 @@ namespace Zeron.Server.ZServers
         public async Task TrySendEmailAsync(
             AlertEntity alert)
         {
-            SmtpMailOptions options = new()
+            SmtpMailOptionsType options = new()
             {
                 Host = m_Settings.SmtpHost,
                 Port = m_Settings.SmtpPort,

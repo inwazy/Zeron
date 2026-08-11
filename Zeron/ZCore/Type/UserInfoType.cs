@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// UserInfoType
     /// </summary>
-    public class UserInfoType
+    public sealed class UserInfoType
     {
         /// <summary>
         /// Id

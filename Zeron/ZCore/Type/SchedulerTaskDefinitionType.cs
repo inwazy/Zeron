@@ -4,9 +4,9 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// SchedulerTaskDefinition
+    /// SchedulerTaskDefinitionType
     /// </summary>
-    public class SchedulerTaskDefinition
+    public sealed class SchedulerTaskDefinitionType
     {
         /// <summary>
         /// Name
@@ -38,7 +38,7 @@ namespace Zeron.ZCore.Type
         /// <summary>
         /// Steps
         /// </summary>
-        public List<TaskStepDefinition>? Steps
+        public List<TaskStepDefinitionType>? Steps
         {
             get;
             set;

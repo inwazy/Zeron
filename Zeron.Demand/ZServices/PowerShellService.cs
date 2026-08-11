@@ -36,7 +36,7 @@ namespace Zeron.Demand.ZServices
                     return ServiceResponse.SerializeFailure("PowerShell script/command is required.");
                 }
 
-                ScriptResult scriptResult = ScriptHostServer.Execute("powershell", command);
+                ScriptResultType scriptResult = ScriptHostServer.Execute("powershell", command);
                 bool success = scriptResult.Success;
 
                 InstallEventPublisher.Publish(success ? "powershell.completed" : "powershell.failed",

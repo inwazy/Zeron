@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// TaskResultReportType
     /// </summary>
-    public class TaskResultReportType
+    public sealed class TaskResultReportType
     {
         /// <summary>
         /// AssignmentId

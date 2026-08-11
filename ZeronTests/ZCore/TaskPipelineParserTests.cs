@@ -27,7 +27,7 @@ namespace Zeron.ZCore.Tests
             }
             """;
 
-            List<SchedulerTaskDefinition> tasks = TaskPipelineParser.ParseJson(json);
+            List<SchedulerTaskDefinitionType> tasks = TaskPipelineParser.ParseJson(json);
 
             Assert.AreEqual(1, tasks.Count);
             Assert.AreEqual("sample-task", tasks[0].Name);
@@ -52,12 +52,12 @@ namespace Zeron.ZCore.Tests
             }
             """;
 
-            List<SchedulerTaskDefinition> tasks = TaskPipelineParser.ParseJson(json);
+            List<SchedulerTaskDefinitionType> tasks = TaskPipelineParser.ParseJson(json);
 
             Assert.AreEqual(1, tasks.Count);
             Assert.IsNotNull(tasks[0].Steps);
             Assert.AreEqual(1, tasks[0].Steps!.Count);
-            TaskStepDefinition step = tasks[0].Steps[0];
+            TaskStepDefinitionType step = tasks[0].Steps[0];
             Assert.AreEqual("script", step.Type);
             Assert.AreEqual("powershell", step.Engine);
             Assert.AreEqual("Write-Output ok", step.Script);
@@ -66,13 +66,13 @@ namespace Zeron.ZCore.Tests
         [TestMethod()]
         public void FindTaskByNameTest()
         {
-            List<SchedulerTaskDefinition> tasks =
+            List<SchedulerTaskDefinitionType> tasks =
             [
-                new SchedulerTaskDefinition { Name = "alpha", Cron = "0 * * * *" },
-                new SchedulerTaskDefinition { Name = "beta", Cron = "0 0 * * *" }
+                new SchedulerTaskDefinitionType { Name = "alpha", Cron = "0 * * * *" },
+                new SchedulerTaskDefinitionType { Name = "beta", Cron = "0 0 * * *" }
             ];
 
-            SchedulerTaskDefinition? found = TaskPipelineParser.FindTask(tasks, "beta");
+            SchedulerTaskDefinitionType? found = TaskPipelineParser.FindTask(tasks, "beta");
 
             Assert.IsNotNull(found);
             Assert.AreEqual("beta", found!.Name);

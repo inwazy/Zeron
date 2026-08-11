@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// DashboardAgentItemType
     /// </summary>
-    public class DashboardAgentItemType
+    public sealed class DashboardAgentItemType
     {
         /// <summary>
         /// AgentKey

@@ -22,7 +22,7 @@ namespace Zeron.ZCore.Utils
         /// <param name="options"></param>
         /// <returns>Returns bool.</returns>
         public static bool HasConnection(
-            SmtpMailOptions? options)
+            SmtpMailOptionsType? options)
         {
             return options != null
                 && !string.IsNullOrWhiteSpace(options.Host)
@@ -35,7 +35,7 @@ namespace Zeron.ZCore.Utils
         /// <param name="options"></param>
         /// <returns>Returns SmtpClient.</returns>
         public static SmtpClient CreateClient(
-            SmtpMailOptions options)
+            SmtpMailOptionsType options)
         {
             ArgumentNullException.ThrowIfNull(options);
 
@@ -66,7 +66,7 @@ namespace Zeron.ZCore.Utils
         /// <param name="options"></param>
         /// <returns>Returns MailAddress.</returns>
         public static MailAddress CreateFromAddress(
-            SmtpMailOptions options)
+            SmtpMailOptionsType options)
         {
             ArgumentNullException.ThrowIfNull(options);
 
@@ -215,7 +215,7 @@ namespace Zeron.ZCore.Utils
         /// <param name="cancellationToken"></param>
         /// <returns>Returns (ok, error).</returns>
         public static async Task<(bool Ok, Exception? Error)> TrySendAsync(
-            SmtpMailOptions options,
+            SmtpMailOptionsType options,
             IEnumerable<MailAddress> recipients,
             string subject,
             string body,
@@ -257,7 +257,7 @@ namespace Zeron.ZCore.Utils
         /// <param name="cancellationToken"></param>
         /// <returns>Returns (ok, error).</returns>
         public static Task<(bool Ok, Exception? Error)> TrySendAsync(
-            SmtpMailOptions options,
+            SmtpMailOptionsType options,
             string? recipients,
             string subject,
             string body,

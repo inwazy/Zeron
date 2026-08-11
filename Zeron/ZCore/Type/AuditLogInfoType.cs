@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// AuditLogInfoType
     /// </summary>
-    public class AuditLogInfoType
+    public sealed class AuditLogInfoType
     {
         /// <summary>
         /// Id

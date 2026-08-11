@@ -24,7 +24,7 @@ namespace Zeron.ZCore
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns>Returns list of SchedulerTaskDefinition.</returns>
-        public static List<SchedulerTaskDefinition> ParseFile(
+        public static List<SchedulerTaskDefinitionType> ParseFile(
             string? filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
@@ -42,7 +42,7 @@ namespace Zeron.ZCore
         /// </summary>
         /// <param name="json"></param>
         /// <returns>Returns list of SchedulerTaskDefinition.</returns>
-        public static List<SchedulerTaskDefinition> ParseJson(
+        public static List<SchedulerTaskDefinitionType> ParseJson(
             string? json)
         {
             if (string.IsNullOrWhiteSpace(json))
@@ -61,8 +61,8 @@ namespace Zeron.ZCore
         /// <param name="tasks"></param>
         /// <param name="taskName"></param>
         /// <returns>Returns SchedulerTaskDefinition or null.</returns>
-        public static SchedulerTaskDefinition? FindTask(
-            IEnumerable<SchedulerTaskDefinition> tasks, 
+        public static SchedulerTaskDefinitionType? FindTask(
+            IEnumerable<SchedulerTaskDefinitionType> tasks, 
             string? taskName)
         {
             if (string.IsNullOrWhiteSpace(taskName))
@@ -85,7 +85,7 @@ namespace Zeron.ZCore
             /// Tasks
             /// </summary>
             /// <returns>Returns list of SchedulerTaskDefinition.</returns>
-            public List<SchedulerTaskDefinition>? Tasks
+            public List<SchedulerTaskDefinitionType>? Tasks
             {
                 get;
                 set;

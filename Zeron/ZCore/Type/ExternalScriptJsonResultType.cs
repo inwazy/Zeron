@@ -1,12 +1,12 @@
-// Zeron - Scheduled Task Application for Windows OS
+﻿// Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// ManagedPackageCatalogSyncResponseType - payload agents pull from Server.
+    /// ExternalScriptJsonResultType - optional trailing stdout JSON contract.
     /// </summary>
-    public sealed class ManagedPackageCatalogSyncResponseType
+    public sealed class ExternalScriptJsonResultType
     {
         /// <summary>
         /// Success
@@ -15,24 +15,24 @@ namespace Zeron.ZCore.Type
         {
             get;
             set;
-        } = true;
+        }
 
         /// <summary>
-        /// GeneratedAt
+        /// ExitCode
         /// </summary>
-        public DateTime GeneratedAt
+        public int? ExitCode
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Packages
+        /// Message
         /// </summary>
-        public List<ManagedPackageInfoType> Packages
+        public string? Message
         {
             get;
             set;
-        } = [];
+        }
     }
 }

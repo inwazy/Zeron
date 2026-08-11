@@ -6,7 +6,7 @@ namespace Zeron.Demand.ZCore.Type
     /// <summary>
     /// ManagedPackageRepoType
     /// </summary>
-    internal class ManagedPackageRepoType
+    internal sealed class ManagedPackageRepoType
     {
         /// <summary>
         /// Name

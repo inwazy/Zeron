@@ -28,7 +28,7 @@ namespace Zeron.ZServers
         private static readonly System.Timers.Timer s_Timer = new();
 
         // Tasks to be executed.
-        private static List<SchedulerTaskDefinition> s_Tasks = [];
+        private static List<SchedulerTaskDefinitionType> s_Tasks = [];
 
         // Whether the scheduler is enabled.
         private static bool s_Enabled;
@@ -48,7 +48,7 @@ namespace Zeron.ZServers
         /// <summary>
         /// OnTaskDue - callback invoked when a scheduled task is due.
         /// </summary>
-        public static Action<SchedulerTaskDefinition>? OnTaskDue
+        public static Action<SchedulerTaskDefinitionType>? OnTaskDue
         {
             get;
             set;
@@ -121,7 +121,7 @@ namespace Zeron.ZServers
             s_Tasks = TaskPipelineParser.ParseFile(s_TasksFile);
             s_Schedules.Clear();
 
-            foreach (SchedulerTaskDefinition task in s_Tasks)
+            foreach (SchedulerTaskDefinitionType task in s_Tasks)
             {
                 if (task.Name == null || string.IsNullOrWhiteSpace(task.Cron))
                 {
@@ -144,7 +144,7 @@ namespace Zeron.ZServers
         /// GetTasks
         /// </summary>
         /// <returns>Returns task list.</returns>
-        public static IReadOnlyList<SchedulerTaskDefinition> GetTasks()
+        public static IReadOnlyList<SchedulerTaskDefinitionType> GetTasks()
         {
             return s_Tasks;
         }
@@ -161,7 +161,7 @@ namespace Zeron.ZServers
         {
             DateTime now = DateTime.Now;
 
-            foreach (SchedulerTaskDefinition task in s_Tasks)
+            foreach (SchedulerTaskDefinitionType task in s_Tasks)
             {
                 if (!task.Enabled || task.Name == null || !s_Schedules.TryGetValue(task.Name, out CrontabSchedule? schedule))
                 {

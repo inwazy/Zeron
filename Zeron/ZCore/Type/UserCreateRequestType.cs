@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// UserCreateRequestType
     /// </summary>
-    public class UserCreateRequestType
+    public sealed class UserCreateRequestType
     {
         /// <summary>
         /// Username

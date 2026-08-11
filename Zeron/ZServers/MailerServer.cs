@@ -198,7 +198,7 @@ namespace Zeron.ZServers
             m_SmtpClient = null;
             m_MailSender = null;
 
-            SmtpMailOptions options = BuildOptions();
+            SmtpMailOptionsType options = BuildOptions();
 
             if (!Enabled || !SmtpMailServer.HasConnection(options))
             {
@@ -342,9 +342,9 @@ namespace Zeron.ZServers
         /// BuildOptions
         /// </summary>
         /// <returns>Returns SmtpMailOptions.</returns>
-        private static SmtpMailOptions BuildOptions()
+        private static SmtpMailOptionsType BuildOptions()
         {
-            return new SmtpMailOptions
+            return new SmtpMailOptionsType
             {
                 Host = Host,
                 Port = Port,

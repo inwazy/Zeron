@@ -4,59 +4,51 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// TaskStepDefinition
+    /// ApiResponseType
     /// </summary>
-    public class TaskStepDefinition
+    /// <typeparam name="T"></typeparam>
+    public sealed class ApiResponseType<T>
     {
         /// <summary>
-        /// Type - powershell, script, managedPackage, wait, api
+        /// Success
         /// </summary>
-        public string? Type
+        public bool Success
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Engine - for script steps (default powershell)
+        /// Message
         /// </summary>
-        public string? Engine
+        public string? Message
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Script - for powershell / script steps
+        /// Result
         /// </summary>
-        public string? Script
+        public T? Result
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Command - for managedPackage or api steps
+        /// AgentId
         /// </summary>
-        public string? Command
+        public string? AgentId
         {
             get;
             set;
         }
 
         /// <summary>
-        /// ApiName - for api steps
+        /// Timestamp
         /// </summary>
-        public string? ApiName
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Seconds - for wait steps
-        /// </summary>
-        public int Seconds
+        public string? Timestamp
         {
             get;
             set;

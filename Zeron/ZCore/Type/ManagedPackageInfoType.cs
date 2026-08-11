@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ManagedPackageInfoType
     /// </summary>
-    public class ManagedPackageInfoType
+    public sealed class ManagedPackageInfoType
     {
         /// <summary>
         /// Id

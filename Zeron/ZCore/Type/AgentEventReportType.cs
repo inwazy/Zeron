@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// AgentEventReportType
     /// </summary>
-    public class AgentEventReportType
+    public sealed class AgentEventReportType
     {
         /// <summary>
         /// AgentId

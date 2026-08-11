@@ -4,104 +4,86 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// DeviceAgentStatusType - self-service status for a bound Demand agent.
+    /// InstallJobStatusType
     /// </summary>
-    public sealed class DeviceAgentStatusType
+    public sealed class InstallJobStatusType
     {
         /// <summary>
-        /// AgentKey
+        /// QueueCount
         /// </summary>
-        public string? AgentKey
+        public int QueueCount
         {
             get;
             set;
         }
 
         /// <summary>
-        /// MachineName
+        /// IsRunning
         /// </summary>
-        public string? MachineName
+        public bool IsRunning
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Status
+        /// CurrentPackage
         /// </summary>
-        public string? Status
+        public string? CurrentPackage
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Version
+        /// CurrentOperation
         /// </summary>
-        public string? Version
+        public string? CurrentOperation
         {
             get;
             set;
         }
 
         /// <summary>
-        /// IpAddress
+        /// LastPackage
         /// </summary>
-        public string? IpAddress
+        public string? LastPackage
         {
             get;
             set;
         }
 
         /// <summary>
-        /// LastHeartbeatAt
+        /// LastOperation
         /// </summary>
-        public DateTime? LastHeartbeatAt
+        public string? LastOperation
         {
             get;
             set;
         }
 
         /// <summary>
-        /// InstallQueueCount
+        /// LastSuccess
         /// </summary>
-        public int InstallQueueCount
+        public bool? LastSuccess
         {
             get;
             set;
         }
 
         /// <summary>
-        /// InstallRunning
+        /// LastExitCode
         /// </summary>
-        public bool InstallRunning
+        public int? LastExitCode
         {
             get;
             set;
         }
 
         /// <summary>
-        /// SchedulerTaskCount
+        /// LastCompletedAt
         /// </summary>
-        public int SchedulerTaskCount
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// UptimeSeconds
-        /// </summary>
-        public long UptimeSeconds
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// LastCatalogSyncAt
-        /// </summary>
-        public DateTime? LastCatalogSyncAt
+        public string? LastCompletedAt
         {
             get;
             set;
