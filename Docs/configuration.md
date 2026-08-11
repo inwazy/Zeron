@@ -15,6 +15,7 @@
 | `RequireHttpsAgents` | `false` | Reject non-HTTPS agent calls (honors `X-Forwarded-Proto`) |
 | `HeartbeatTimeoutSeconds` | `90` | Seconds without heartbeat before agent marked offline |
 | `CatalogSyncStaleMinutes` | `15` | Online agents whose last catalog sync is older than this are stale on Sync Health |
+| `PublishAgentHeartbeatEvents` | `false` | Emit `agent.heartbeat` on the in-process event bus (noisy; see [Event Bus](./event-bus.md)) |
 | `DispatchIntervalMs` | `5000` | Background task dispatch interval |
 | `ScheduleIntervalMs` | `15000` | Central cron schedule poll interval |
 | `JwtSecret` | (dev secret) | JWT signing key (min 32 chars) |
@@ -24,6 +25,8 @@
 | `DefaultAdminPassword` | `admin123` | Seed admin password (first run only) |
 | `AlertEmailEnabled` | `false` | Send email on new alerts |
 | `AlertEmailTo` | — | Alert recipient address |
+| `InstallResultNotifyEnabled` | `true` | Create My Devices tips when self-service install completes/fails |
+| `InstallResultEmailEnabled` | `false` | Email bound users (with `Users.Email`) on self-service install results (uses `Smtp*`) |
 | `SmtpHost` | — | SMTP server hostname |
 | `SmtpPort` | `587` | SMTP port |
 | `SmtpUser` | — | SMTP username |
@@ -71,6 +74,16 @@ Start from `App.Sample.config` (production-shaped) or the published sample next 
 | `script_powershell_enabled` | Enable built-in PowerShell script engine (`true` default) |
 | `script_powershell_exe` | PowerShell executable (`powershell.exe` default) |
 | `script_default_timeout_ms` | Default script timeout in ms (`300000`) |
+| `script_engine_{id}_enabled` | Register external process engine `{id}` (`true` to enable) |
+| `script_engine_{id}_exe` | Executable for that engine |
+| `script_engine_{id}_args` | Args template (`{scriptPath}`, `{arguments}`, `{script}`) |
+| `script_engine_{id}_platforms` | e.g. `windows,linux,macos` |
+| `script_engine_{id}_inline_mode` | `stdin` / `tempfile` / `none` |
+| `script_engine_{id}_display` | Optional display name |
+| `script_event_listener_enabled` | Run ScriptEventBridge NDJSON listener (`false` default) |
+| `script_event_listener_exe` | Listener executable |
+| `script_event_listener_args` | Listener arguments |
+| `script_event_listener_restart_ms` | Restart backoff after listener exit (`3000`) |
 | `mail_enabled` | `true` to enable agent-side SMTP (`MailerServer`) |
 | `mail_host` / `mail_port` | SMTP server |
 | `mail_user_login` / `mail_user_password` | SMTP credentials (optional if relay allows anonymous) |
@@ -179,6 +192,9 @@ The Server catalog is the central source of ManagedPackage definitions. Demand a
 | `POST /api/packages/catalog` | Operator+ | Create catalog package |
 | `PUT /api/packages/catalog/{id}` | Operator+ | Update catalog package |
 | `DELETE /api/packages/catalog/{id}` | Operator+ | Delete catalog package |
+| `GET /api/packages/catalog/{id}/versions` | Viewer+ | Package version history |
+| `GET /api/packages/catalog/{id}/versions/{n}` | Viewer+ | Single version snapshot |
+| `POST /api/packages/catalog/{id}/rollback` | Operator+ | Restore version `n` onto live package and push sync |
 | `GET /api/packages/catalog/sync` | Agent API key | Full catalog snapshot for Demand |
 | `GET /api/packages/catalog/sync-health` | Viewer+ | Catalog sync health summary per agent |
 | `POST /api/packages/catalog/sync-push` | Operator+ | Push `ManagedPackage sync` to unhealthy / selected / all online agents |
@@ -227,6 +243,9 @@ Dashboard pages: `/packages`, `/packages/catalog`, `/packages/sync-health`, `/pa
 | `GET /api/my/devices/{agentKey}` | DeviceOwner or staff | Single bound agent |
 | `GET /api/my/devices/{agentKey}/install-events` | DeviceOwner or staff | Install events for bound agent |
 | `POST /api/my/devices/{agentKey}/deploy` | DeviceOwner or staff | Self-service install/uninstall (bound agent + Server catalog only) |
+| `GET /api/my/notifications` | DeviceOwner or staff | Install-result tips (`unreadOnly`, `limit`) |
+| `POST /api/my/notifications/{id}/read` | DeviceOwner or staff | Dismiss one tip |
+| `POST /api/my/notifications/read-all` | DeviceOwner or staff | Dismiss all tips |
 
 Demand ManagedPackage local commands (Client / RemoteCommand):
 
@@ -238,7 +257,13 @@ Demand ManagedPackage local commands (Client / RemoteCommand):
 | `clear-override <name>` | Delete local-override row so next sync can recreate Server version |
 | `status` / `install` / `uninstall` | Existing install queue commands |
 
-Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
+Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete/rollback pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
+
+**Catalog versions:** each successful create/update/rollback appends a `ManagedPackageVersions` snapshot (`create` / `update` / `rollback`), including `ScriptEngine` and before/after scripts. Operators can Restore a prior version from Catalog **History**; restore writes a new version row (does not rewrite history) and re-pushes sync. Deleting a package cascades its version rows away.
+
+**ScriptEngine:** catalog field (default `powershell`) selects the Script Host engine for install/uninstall hooks on Demand. Deploy to explicit `AgentIds` fails if the agent does not report that engine as available. See [Script Host](./script-host.md).
+
+**Install result notifications:** when a self-service deploy (`Task.Name` starts with `self-`) finishes with `install.completed` / `install.failed`, Server notifies every active user bound to that agent. Dashboard tips appear on `/my-devices` (`InstallResultNotifyEnabled`). Optional per-user email uses `Users.Email` + SMTP (`InstallResultEmailEnabled`). Staff package deploys are not notified this way.
 
 Dashboard pages: `/my-devices`, `/device-bindings` (Admin).
 
@@ -248,7 +273,7 @@ Server stores attributed operations in `AuditLogs` (Dashboard **Audit** `/audit`
 
 | Action | Source | When |
 |--------|--------|------|
-| `catalog.create` / `update` / `delete` | server | Catalog CRUD |
+| `catalog.create` / `update` / `delete` / `rollback` | server | Catalog CRUD and restore |
 | `package.deploy` | server | Staff package deploy |
 | `package.self_deploy` | server | DeviceOwner self-service deploy |
 | `binding.create` / `binding.delete` | server | Device bindings |

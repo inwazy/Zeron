@@ -82,7 +82,8 @@ namespace Zeron.Server.ZServers
                 Role = user.Role,
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt,
-                MustChangePassword = user.MustChangePassword
+                MustChangePassword = user.MustChangePassword,
+                Email = user.Email
             };
         }
 

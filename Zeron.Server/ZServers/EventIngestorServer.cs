@@ -10,6 +10,7 @@ using Zeron.Server.ZCore;
 using Zeron.Server.ZInterfaces;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server.ZServers
 {
@@ -30,6 +31,9 @@ namespace Zeron.Server.ZServers
         // Optional audit log for agent-originated package ops.
         private readonly AuditLogServer? m_AuditLogServer;
 
+        // Optional install-result notifier for DeviceOwners.
+        private readonly InstallResultNotifierServer? m_InstallResultNotifier;
+
         /// <summary>
         /// EventIngestorServer
         /// </summary>
@@ -37,17 +41,20 @@ namespace Zeron.Server.ZServers
         /// <param name="taskDispatcher"></param>
         /// <param name="dashboardNotifier"></param>
         /// <param name="auditLogServer"></param>
+        /// <param name="installResultNotifier"></param>
         /// <returns>Returns void.</returns>
         public EventIngestorServer(
             ZeronServerDbContext dbContext,
             TaskDispatcherServer taskDispatcher,
             IDashboardNotifier? dashboardNotifier = null,
-            AuditLogServer? auditLogServer = null)
+            AuditLogServer? auditLogServer = null,
+            InstallResultNotifierServer? installResultNotifier = null)
         {
             m_DbContext = dbContext;
             m_TaskDispatcher = taskDispatcher;
             m_DashboardNotifier = dashboardNotifier;
             m_AuditLogServer = auditLogServer;
+            m_InstallResultNotifier = installResultNotifier;
         }
 
         /// <summary>
@@ -88,6 +95,11 @@ namespace Zeron.Server.ZServers
             await TryCompletePackageDeployFromInstallEventAsync(report, cancellationToken);
             await TryWritePackageAuditFromEventAsync(report, agent, cancellationToken);
 
+            if (m_InstallResultNotifier != null)
+            {
+                await m_InstallResultNotifier.NotifyFromInstallEventAsync(report, cancellationToken);
+            }
+
             if (m_DashboardNotifier != null)
             {
                 EventEntity? savedEvent = await m_DbContext.Events
@@ -100,6 +112,17 @@ namespace Zeron.Server.ZServers
                     await m_DashboardNotifier.NotifyEventAsync(savedEvent);
                 }
             }
+
+            ZeronEventBus.PublishObject(
+                ZeronEventTopics.EventIngested,
+                new
+                {
+                    agentKey = report.AgentId,
+                    topic = report.Topic,
+                    payload = report.Payload
+                },
+                source: "server",
+                correlationId: report.AgentId);
 
             return true;
         }

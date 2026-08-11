@@ -68,6 +68,11 @@
                     SHA-256 x64
                     <InputText @bind-Value="m_Form.Sha256x64" />
                 </label>
+                <label>
+                    Script Engine
+                    <InputText @bind-Value="m_Form.ScriptEngine" />
+                    <small class="muted">Script Host engine id for before/after hooks (default powershell).</small>
+                </label>
                 <div class="actions">
                     <button class="btn" @onclick="SaveAsync" disabled="@m_IsBusy">@(m_EditId == null ? "Create" : "Save")</button>
                     @if (m_EditId != null)
@@ -101,6 +106,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Status</th>
+                    <th>Engine</th>
                     <th>URL x64</th>
                     <th>Updated</th>
                     <th></th>
@@ -116,17 +122,19 @@
                                 @(package.IsEnabled ? "enabled" : "disabled")
                             </span>
                         </td>
+                        <td><code>@(string.IsNullOrWhiteSpace(package.ScriptEngine) ? "powershell" : package.ScriptEngine)</code></td>
                         <td class="muted">@(string.IsNullOrWhiteSpace(package.Urlx64) ? "-" : package.Urlx64)</td>
                         <td>@(package.UpdatedAt?.ToLocalTime().ToString("g") ?? "-")</td>
                         <td>
-                            <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
-                                <Authorized>
-                                    <div class="actions">
+                            <div class="actions">
+                                <button class="btn btn-secondary" @onclick="() => ShowHistoryAsync(package)" disabled="@m_IsBusy">History</button>
+                                <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+                                    <Authorized>
                                         <button class="btn btn-secondary" @onclick="() => BeginEdit(package)" disabled="@m_IsBusy">Edit</button>
                                         <button class="btn btn-danger" @onclick="() => DeleteAsync(package)" disabled="@m_IsBusy">Delete</button>
-                                    </div>
-                                </Authorized>
-                            </AuthorizeView>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -134,3 +142,75 @@
         </table>
     }
 </div>
+
+@if (m_HistoryPackage != null)
+{
+    <div class="panel">
+        <div class="panel-header">
+            <h2>History: <code>@m_HistoryPackage.Name</code></h2>
+            <button class="btn btn-secondary" @onclick="CloseHistory" disabled="@m_IsBusy">Close</button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(m_HistoryMessage))
+        {
+            <p class="@(m_HistorySucceeded ? "success-text" : "error")">@m_HistoryMessage</p>
+        }
+
+        @if (m_Versions.Count == 0)
+        {
+            <p class="muted">No versions recorded for this package.</p>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>When</th>
+                        <th>Kind</th>
+                        <th>Actor</th>
+                        <th>Enabled</th>
+                        <th>Engine</th>
+                        <th>URL x64</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (ManagedPackageVersionInfoType version in m_Versions)
+                    {
+                        <tr>
+                            <td>@version.VersionNumber</td>
+                            <td>@version.CreatedAt.ToLocalTime().ToString("g")</td>
+                            <td>
+                                <span class="status @VersionKindClass(version.ChangeKind)">@version.ChangeKind</span>
+                                @if (version.RestoredFromVersion.HasValue)
+                                {
+                                    <small class="muted"> ← v@version.RestoredFromVersion</small>
+                                }
+                            </td>
+                            <td>@(version.ActorUsername ?? "-")</td>
+                            <td>
+                                <span class="status @(version.IsEnabled ? "online" : "offline")">
+                                    @(version.IsEnabled ? "enabled" : "disabled")
+                                </span>
+                            </td>
+                            <td><code>@(string.IsNullOrWhiteSpace(version.ScriptEngine) ? "powershell" : version.ScriptEngine)</code></td>
+                            <td class="muted">@(string.IsNullOrWhiteSpace(version.Urlx64) ? "-" : version.Urlx64)</td>
+                            <td>
+                                <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+                                    <Authorized>
+                                        <button class="btn btn-secondary"
+                                                @onclick="() => RollbackAsync(version.VersionNumber)"
+                                                disabled="@m_IsBusy">
+                                            Restore
+                                        </button>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+}

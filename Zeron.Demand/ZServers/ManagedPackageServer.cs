@@ -173,6 +173,8 @@ namespace Zeron.Demand.ZServers
         {
             if (string.IsNullOrWhiteSpace(ReporterImpl.ServerUrl))
             {
+                PublishCatalogSyncEvent(success: false, applied: -1, error: "Server URL is not configured.");
+
                 return -1;
             }
 
@@ -183,6 +185,7 @@ namespace Zeron.Demand.ZServers
                 if (response == null || !response.Success)
                 {
                     ZNLogger.Common.Warn("ManagedPackageServer catalog sync failed.");
+                    PublishCatalogSyncEvent(success: false, applied: -1, error: "Catalog sync response failed.");
 
                     return -1;
                 }
@@ -195,6 +198,8 @@ namespace Zeron.Demand.ZServers
                     applied,
                     response.Packages.Count));
 
+                PublishCatalogSyncEvent(success: true, applied: applied);
+
                 return applied;
             }
             catch (Exception e)
@@ -202,8 +207,28 @@ namespace Zeron.Demand.ZServers
                 ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
                     "ManagedPackageServer SyncCatalogAsync Error:{0}\n{1}", e.Message, e.StackTrace));
 
+                PublishCatalogSyncEvent(success: false, applied: -1, error: e.Message);
+
                 return -1;
             }
+        }
+
+        /// <summary>
+        /// PublishCatalogSyncEvent
+        /// </summary>
+        private static void PublishCatalogSyncEvent(
+            bool success,
+            int applied,
+            string? error = null)
+        {
+            InstallEventPublisher.PublishObject(ZeronEventTopics.PackageCatalogSync, new
+            {
+                success,
+                synced = success,
+                applied,
+                lastCatalogSyncAt = LastCatalogSyncUtc,
+                error
+            });
         }
 
         /// <summary>
@@ -258,6 +283,7 @@ namespace Zeron.Demand.ZServers
                     result.ScriptInstallAfter = repoResult.ScriptInstallAfter;
                     result.ScriptUnInstallBefore = repoResult.ScriptUnInstallBefore;
                     result.ScriptUnInstallAfter = repoResult.ScriptUnInstallAfter;
+                    result.ScriptEngine = repoResult.ScriptEngine;
                     result.Sha256x86 = repoResult.Sha256x86;
                     result.Sha256x64 = repoResult.Sha256x64;
                     result.Source = repoResult.Source;

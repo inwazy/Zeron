@@ -70,5 +70,14 @@ namespace Zeron.Server.Data.Entities
             get;
             set;
         }
+
+        /// <summary>
+        /// Email - optional address for install-result and similar notifications.
+        /// </summary>
+        public string? Email
+        {
+            get;
+            set;
+        }
     }
 }

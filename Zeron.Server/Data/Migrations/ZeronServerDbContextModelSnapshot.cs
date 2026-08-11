@@ -266,6 +266,9 @@ namespace Zeron.Server.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ScriptEngine")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ScriptInstallAfter")
                         .HasColumnType("TEXT");
 
@@ -301,6 +304,87 @@ namespace Zeron.Server.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("ManagedPackages");
+                });
+
+            modelBuilder.Entity("Zeron.Server.Data.Entities.ManagedPackageVersionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ActorUsername")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ChangeKind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CmdInstallx64")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CmdInstallx86")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CmdUnInstallx64")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CmdUnInstallx86")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PackageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("RestoredFromVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ScriptEngine")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ScriptInstallAfter")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ScriptInstallBefore")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ScriptUnInstallAfter")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ScriptUnInstallBefore")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha256x64")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha256x86")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Urlx64")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Urlx86")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PackageId", "CreatedAt");
+
+                    b.HasIndex("PackageId", "VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("ManagedPackageVersions");
                 });
 
             modelBuilder.Entity("Zeron.Server.Data.Entities.TaskAssignmentEntity", b =>
@@ -508,6 +592,9 @@ namespace Zeron.Server.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Email")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
@@ -534,6 +621,53 @@ namespace Zeron.Server.Data.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Zeron.Server.Data.Entities.UserNotificationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentKey")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PackageName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool?>("Success")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "ReadAt");
+
+                    b.ToTable("UserNotifications");
+                });
+
             modelBuilder.Entity("Zeron.Server.Data.Entities.AgentHeartbeatEntity", b =>
                 {
                     b.HasOne("Zeron.Server.Data.Entities.AgentEntity", "Agent")
@@ -554,6 +688,17 @@ namespace Zeron.Server.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Agent");
+                });
+
+            modelBuilder.Entity("Zeron.Server.Data.Entities.ManagedPackageVersionEntity", b =>
+                {
+                    b.HasOne("Zeron.Server.Data.Entities.ManagedPackageEntity", "Package")
+                        .WithMany()
+                        .HasForeignKey("PackageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Package");
                 });
 
             modelBuilder.Entity("Zeron.Server.Data.Entities.TaskAssignmentEntity", b =>
@@ -587,6 +732,17 @@ namespace Zeron.Server.Data.Migrations
                 });
 
             modelBuilder.Entity("Zeron.Server.Data.Entities.UserAgentBindingEntity", b =>
+                {
+                    b.HasOne("Zeron.Server.Data.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Zeron.Server.Data.Entities.UserNotificationEntity", b =>
                 {
                     b.HasOne("Zeron.Server.Data.Entities.UserEntity", "User")
                         .WithMany()

@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// LoginResponseType
     /// </summary>
-    public class LoginResponseType
+    public sealed class LoginResponseType
     {
         /// <summary>
         /// Success

@@ -34,6 +34,10 @@
                 <option value="@ServerRoles.DeviceOwner">DeviceOwner</option>
             </InputSelect>
         </label>
+        <label>
+            Email (optional)
+            <InputText @bind-Value="m_CreateModel.Email" />
+        </label>
         <div class="actions">
             <button class="btn" @onclick="CreateUserAsync" disabled="@m_IsBusy">Create User</button>
         </div>
@@ -57,6 +61,7 @@
                 <tr>
                     <th>Username</th>
                     <th>Role</th>
+                    <th>Email</th>
                     <th>Status</th>
                     <th>Password</th>
                     <th>Created</th>
@@ -76,6 +81,11 @@
                                 <option value="@ServerRoles.Admin">Admin</option>
                                 <option value="@ServerRoles.DeviceOwner">DeviceOwner</option>
                             </InputSelect>
+                        </td>
+                        <td>
+                            <InputText @bind-Value="row.Email"
+                                       placeholder="notify@example.com"
+                                       disabled="@m_IsBusy" />
                         </td>
                         <td>
                             <span class="status @(row.IsActive ? "online" : "offline")">

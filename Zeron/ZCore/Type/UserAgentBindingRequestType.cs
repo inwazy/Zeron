@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// UserAgentBindingRequestType
     /// </summary>
-    public class UserAgentBindingRequestType
+    public sealed class UserAgentBindingRequestType
     {
         /// <summary>
         /// UserId

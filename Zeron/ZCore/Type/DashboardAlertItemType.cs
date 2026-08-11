@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// DashboardAlertItemType
     /// </summary>
-    public class DashboardAlertItemType
+    public sealed class DashboardAlertItemType
     {
         /// <summary>
         /// Id

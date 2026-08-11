@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ManagedPackageUpsertRequestType
     /// </summary>
-    public class ManagedPackageUpsertRequestType
+    public sealed class ManagedPackageUpsertRequestType
     {
         /// <summary>
         /// Name
@@ -102,6 +102,15 @@ namespace Zeron.ZCore.Type
         /// ScriptUnInstallAfter
         /// </summary>
         public string? ScriptUnInstallAfter
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// ScriptEngine - Script Host engine id for before/after hooks.
+        /// </summary>
+        public string? ScriptEngine
         {
             get;
             set;

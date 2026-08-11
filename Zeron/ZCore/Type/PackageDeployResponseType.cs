@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// PackageDeployResponseType
     /// </summary>
-    public class PackageDeployResponseType
+    public sealed class PackageDeployResponseType
     {
         /// <summary>
         /// Success

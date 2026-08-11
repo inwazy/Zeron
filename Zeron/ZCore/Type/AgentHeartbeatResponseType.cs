@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// AgentHeartbeatResponseType
     /// </summary>
-    public class AgentHeartbeatResponseType
+    public sealed class AgentHeartbeatResponseType
     {
         /// <summary>
         /// Success

@@ -87,12 +87,15 @@ namespace Zeron.Server
             builder.Services.AddScoped<PackageDeployServer>();
             builder.Services.AddScoped<UserAgentBindingServer>();
             builder.Services.AddScoped<DevicePortalServer>();
+            builder.Services.AddScoped<UserNotificationServer>();
+            builder.Services.AddScoped<InstallResultNotifierServer>();
             builder.Services.AddScoped<EventIngestorServer>();
             builder.Services.AddScoped<AlertNotifierServer>();
             builder.Services.AddScoped<AlertRuleServer>();
             builder.Services.AddScoped<DashboardSummaryServer>();
             builder.Services.AddSingleton<CommandPublisherServer>();
             builder.Services.AddSingleton<IDashboardNotifier, DashboardNotifierServer>();
+            builder.Services.AddSingleton<Zeron.ZInterfaces.IZeronEventBus>(_ => Zeron.ZCore.Utils.ZeronEventBus.Current);
             builder.Services.AddHttpContextAccessor();
 
             if (!builder.Environment.IsEnvironment("Testing"))

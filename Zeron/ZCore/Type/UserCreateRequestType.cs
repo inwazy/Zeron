@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// UserCreateRequestType
     /// </summary>
-    public class UserCreateRequestType
+    public sealed class UserCreateRequestType
     {
         /// <summary>
         /// Username
@@ -27,9 +27,18 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
-        /// Role - Admin, Operator, Viewer
+        /// Role - Admin, Operator, Viewer, DeviceOwner
         /// </summary>
         public string? Role
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Email - optional notification address
+        /// </summary>
+        public string? Email
         {
             get;
             set;

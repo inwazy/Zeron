@@ -6,7 +6,7 @@ namespace Zeron.Demand.ZCore.Type
     /// <summary>
     /// TaskStepResultType
     /// </summary>
-    internal class TaskStepResultType
+    internal sealed class TaskStepResultType
     {
         /// <summary>
         /// Type

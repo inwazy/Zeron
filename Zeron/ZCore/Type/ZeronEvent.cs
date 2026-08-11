@@ -4,62 +4,53 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// ScriptResult - output from ScriptHostServer / IScriptEngine.
+    /// ZeronEvent - in-process event bus payload.
     /// </summary>
-    public class ScriptResult
+    public sealed class ZeronEvent
     {
         /// <summary>
-        /// EngineId
+        /// Topic - stable topic string (e.g. package.catalog.sync).
         /// </summary>
-        public string EngineId
+        public string Topic
         {
             get;
             set;
         } = "";
 
         /// <summary>
-        /// Success
+        /// Source - publisher label (server, agent, script-host, …).
         /// </summary>
-        public bool Success
+        public string? Source
         {
             get;
             set;
         }
 
         /// <summary>
-        /// ExitCode
+        /// PayloadJson
         /// </summary>
-        public int ExitCode
+        public string? PayloadJson
         {
             get;
             set;
         }
 
         /// <summary>
-        /// StdOut
+        /// CorrelationId
         /// </summary>
-        public string? StdOut
+        public string? CorrelationId
         {
             get;
             set;
         }
 
         /// <summary>
-        /// StdErr
+        /// TimestampUtc
         /// </summary>
-        public string? StdErr
+        public DateTime TimestampUtc
         {
             get;
             set;
-        }
-
-        /// <summary>
-        /// ErrorMessage
-        /// </summary>
-        public string? ErrorMessage
-        {
-            get;
-            set;
-        }
+        } = DateTime.UtcNow;
     }
 }

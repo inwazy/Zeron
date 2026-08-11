@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// PackageDeployRequestType
     /// </summary>
-    public class PackageDeployRequestType
+    public sealed class PackageDeployRequestType
     {
         /// <summary>
         /// Operation - install or uninstall

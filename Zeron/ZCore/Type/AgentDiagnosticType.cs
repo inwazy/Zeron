@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// AgentDiagnosticType
     /// </summary>
-    public class AgentDiagnosticType
+    public sealed class AgentDiagnosticType
     {
         /// <summary>
         /// AgentKey

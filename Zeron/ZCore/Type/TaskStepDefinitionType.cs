@@ -4,21 +4,30 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// ScriptRequest - input for ScriptHostServer / IScriptEngine.
+    /// TaskStepDefinition
     /// </summary>
-    public class ScriptRequest
+    public sealed class TaskStepDefinitionType
     {
         /// <summary>
-        /// EngineId
+        /// Type - powershell, script, managedPackage, wait, api
         /// </summary>
-        public string? EngineId
+        public string? Type
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Script - inline script or command text.
+        /// Engine - for script steps (default powershell)
+        /// </summary>
+        public string? Engine
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Script - for powershell / script steps
         /// </summary>
         public string? Script
         {
@@ -27,36 +36,27 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
-        /// ScriptPath - optional path to a script file.
+        /// Command - for managedPackage or api steps
         /// </summary>
-        public string? ScriptPath
+        public string? Command
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Arguments - optional args for ScriptPath engines.
+        /// ApiName - for api steps
         /// </summary>
-        public string? Arguments
+        public string? ApiName
         {
             get;
             set;
         }
 
         /// <summary>
-        /// TimeoutMs - 0 or negative uses ScriptHostServer default.
+        /// Seconds - for wait steps
         /// </summary>
-        public int TimeoutMs
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// WorkingDirectory
-        /// </summary>
-        public string? WorkingDirectory
+        public int Seconds
         {
             get;
             set;

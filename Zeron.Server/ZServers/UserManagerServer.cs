@@ -106,6 +106,7 @@ namespace Zeron.Server.ZServers
                 Role = role,
                 IsActive = true,
                 MustChangePassword = true,
+                Email = NormalizeEmail(request.Email),
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -190,6 +191,11 @@ namespace Zeron.Server.ZServers
                 user.MustChangePassword = true;
             }
 
+            if (request.UpdateEmail)
+            {
+                user.Email = NormalizeEmail(request.Email);
+            }
+
             await m_DbContext.SaveChangesAsync(cancellationToken);
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
@@ -249,6 +255,22 @@ namespace Zeron.Server.ZServers
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// NormalizeEmail
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns>Returns trimmed email or null.</returns>
+        private static string? NormalizeEmail(
+            string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return null;
+            }
+
+            return email.Trim();
         }
     }
 }

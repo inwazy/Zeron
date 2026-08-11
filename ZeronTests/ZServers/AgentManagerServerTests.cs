@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore;
+using Zeron.ZCore;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server.ZServers.Tests
 {
@@ -98,6 +100,50 @@ namespace Zeron.Server.ZServers.Tests
 
             Assert.IsNotNull(agent);
             Assert.AreEqual("offline", agent!.Status);
+        }
+
+        /// <summary>
+        /// ProcessHeartbeatAsync publishes agent.connected when coming online.
+        /// </summary>
+        [TestMethod()]
+        public async Task ProcessHeartbeatAsyncPublishesAgentConnectedTest()
+        {
+            ZeronEventBus.Current.Clear();
+            List<string> topics = [];
+
+            using IDisposable sub = ZeronEventBus.Current.Subscribe(
+                ZeronEventTopics.AgentConnected,
+                evt => topics.Add(evt.Topic));
+
+            string dbName = Guid.NewGuid().ToString();
+            await using ZeronServerDbContext dbContext = CreateContext(dbName);
+            AgentManagerServer agentManager = new(dbContext);
+
+            await agentManager.ProcessHeartbeatAsync(
+                new AgentHeartbeatRequestType
+                {
+                    AgentId = "agent-connected-001",
+                    MachineName = "HOST",
+                    UptimeSeconds = 1,
+                    Version = "1.0.0"
+                },
+                "127.0.0.1");
+
+            Assert.AreEqual(1, topics.Count);
+            Assert.AreEqual(ZeronEventTopics.AgentConnected, topics[0]);
+
+            await agentManager.ProcessHeartbeatAsync(
+                new AgentHeartbeatRequestType
+                {
+                    AgentId = "agent-connected-001",
+                    MachineName = "HOST",
+                    UptimeSeconds = 2,
+                    Version = "1.0.0"
+                },
+                "127.0.0.1");
+
+            Assert.AreEqual(1, topics.Count);
+            ZeronEventBus.Current.Clear();
         }
 
         /// <summary>

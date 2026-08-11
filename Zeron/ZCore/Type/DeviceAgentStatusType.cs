@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// DeviceAgentStatusType - self-service status for a bound Demand agent.
     /// </summary>
-    public class DeviceAgentStatusType
+    public sealed class DeviceAgentStatusType
     {
         /// <summary>
         /// AgentKey

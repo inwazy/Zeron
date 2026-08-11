@@ -36,7 +36,7 @@ namespace Zeron.ZInterfaces
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Returns ScriptResult.</returns>
-        ScriptResult Execute(
-            ScriptRequest request);
+        ScriptResultType Execute(
+            ScriptRequestType request);
     }
 }

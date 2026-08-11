@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// UserInfoType
     /// </summary>
-    public class UserInfoType
+    public sealed class UserInfoType
     {
         /// <summary>
         /// Id
@@ -57,6 +57,15 @@ namespace Zeron.ZCore.Type
         /// MustChangePassword
         /// </summary>
         public bool MustChangePassword
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Email
+        /// </summary>
+        public string? Email
         {
             get;
             set;

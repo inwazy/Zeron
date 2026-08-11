@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// HealthStatusType
     /// </summary>
-    public class HealthStatusType
+    public sealed class HealthStatusType
     {
         /// <summary>
         /// Status - healthy, unhealthy, degraded

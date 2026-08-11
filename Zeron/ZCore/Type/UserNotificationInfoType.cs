@@ -4,86 +4,86 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// InstallJobStatus
+    /// UserNotificationInfoType
     /// </summary>
-    public class InstallJobStatus
+    public sealed class UserNotificationInfoType
     {
         /// <summary>
-        /// QueueCount
+        /// Id
         /// </summary>
-        public int QueueCount
+        public string? Id
         {
             get;
             set;
         }
 
         /// <summary>
-        /// IsRunning
+        /// Kind
         /// </summary>
-        public bool IsRunning
+        public string? Kind
         {
             get;
             set;
         }
 
         /// <summary>
-        /// CurrentPackage
+        /// Title
         /// </summary>
-        public string? CurrentPackage
+        public string? Title
         {
             get;
             set;
         }
 
         /// <summary>
-        /// CurrentOperation
+        /// Message
         /// </summary>
-        public string? CurrentOperation
+        public string? Message
         {
             get;
             set;
         }
 
         /// <summary>
-        /// LastPackage
+        /// AgentKey
         /// </summary>
-        public string? LastPackage
+        public string? AgentKey
         {
             get;
             set;
         }
 
         /// <summary>
-        /// LastOperation
+        /// PackageName
         /// </summary>
-        public string? LastOperation
+        public string? PackageName
         {
             get;
             set;
         }
 
         /// <summary>
-        /// LastSuccess
+        /// Success
         /// </summary>
-        public bool? LastSuccess
+        public bool? Success
         {
             get;
             set;
         }
 
         /// <summary>
-        /// LastExitCode
+        /// CreatedAt
         /// </summary>
-        public int? LastExitCode
+        public DateTime CreatedAt
         {
             get;
             set;
         }
 
         /// <summary>
-        /// LastCompletedAt
+        /// IsRead
         /// </summary>
-        public string? LastCompletedAt
+        public bool IsRead
         {
             get;
             set;

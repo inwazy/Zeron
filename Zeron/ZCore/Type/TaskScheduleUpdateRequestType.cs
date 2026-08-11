@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// TaskScheduleUpdateRequestType
     /// </summary>
-    public class TaskScheduleUpdateRequestType
+    public sealed class TaskScheduleUpdateRequestType
     {
         /// <summary>
         /// Name

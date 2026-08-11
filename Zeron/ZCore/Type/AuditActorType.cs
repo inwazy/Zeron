@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// AuditActorType - who performed an audited action.
     /// </summary>
-    public class AuditActorType
+    public sealed class AuditActorType
     {
         /// <summary>
         /// UserId

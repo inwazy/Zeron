@@ -80,14 +80,6 @@ namespace Zeron.Demand.ZServices
                         lastCatalogSyncAt = ManagedPackageServer.LastCatalogSyncUtc
                     };
 
-                    InstallEventPublisher.PublishObject("package.catalog.sync", new
-                    {
-                        success = synced,
-                        synced,
-                        applied,
-                        lastCatalogSyncAt = ManagedPackageServer.LastCatalogSyncUtc
-                    });
-
                     return JsonConvert.SerializeObject(response);
                 }
 
@@ -191,6 +183,7 @@ namespace Zeron.Demand.ZServices
                     Operation = commands.Option,
                     ScriptBefore = scriptBefore,
                     ScriptAfter = scriptAfter,
+                    ScriptEngine = string.IsNullOrWhiteSpace(repo.ScriptEngine) ? "powershell" : repo.ScriptEngine.Trim(),
                     AssignmentId = RemoteCommandContext.AssignmentId,
                     ExpectedSha256 = string.IsNullOrWhiteSpace(expectedSha) ? null : expectedSha.Trim().ToLowerInvariant()
                 };

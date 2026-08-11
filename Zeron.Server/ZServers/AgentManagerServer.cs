@@ -6,9 +6,11 @@ using System.Globalization;
 using System.Text.Json;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore;
 using Zeron.Server.ZInterfaces;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server.ZServers
 {
@@ -26,21 +28,27 @@ namespace Zeron.Server.ZServers
         // AlertRuleServer
         private readonly AlertRuleServer? m_AlertRuleServer;
 
+        // Settings
+        private readonly ServerSettings? m_Settings;
+
         /// <summary>
         /// AgentManagerServer
         /// </summary>
         /// <param name="dbContext"></param>
         /// <param name="dashboardNotifier"></param>
         /// <param name="alertRuleServer"></param>
+        /// <param name="settings"></param>
         /// <returns>Returns void.</returns>
         public AgentManagerServer(
             ZeronServerDbContext dbContext,
             IDashboardNotifier? dashboardNotifier = null,
-            AlertRuleServer? alertRuleServer = null)
+            AlertRuleServer? alertRuleServer = null,
+            ServerSettings? settings = null)
         {
             m_DbContext = dbContext;
             m_DashboardNotifier = dashboardNotifier;
             m_AlertRuleServer = alertRuleServer;
+            m_Settings = settings;
         }
 
         /// <summary>
@@ -109,6 +117,35 @@ namespace Zeron.Server.ZServers
                 "AgentManagerServer heartbeat from {0} ({1}), status=online",
                 agent.AgentKey,
                 agent.MachineName));
+
+            if (wasOffline)
+            {
+                ZeronEventBus.PublishObject(
+                    ZeronEventTopics.AgentConnected,
+                    new
+                    {
+                        agentKey = agent.AgentKey,
+                        machineName = agent.MachineName,
+                        ipAddress = agent.IpAddress,
+                        version = agent.Version
+                    },
+                    source: "server",
+                    correlationId: agent.AgentKey);
+            }
+
+            if (m_Settings?.PublishAgentHeartbeatEvents == true)
+            {
+                ZeronEventBus.PublishObject(
+                    ZeronEventTopics.AgentHeartbeat,
+                    new
+                    {
+                        agentKey = agent.AgentKey,
+                        machineName = agent.MachineName,
+                        uptimeSeconds = request.UptimeSeconds
+                    },
+                    source: "server",
+                    correlationId: agent.AgentKey);
+            }
 
             if (m_DashboardNotifier != null)
             {
@@ -192,6 +229,20 @@ namespace Zeron.Server.ZServers
                 await m_DbContext.SaveChangesAsync(cancellationToken);
                 ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                     "AgentManagerServer marked {0} agent(s) offline.", staleAgents.Count));
+
+                foreach (AgentEntity agent in staleAgents)
+                {
+                    ZeronEventBus.PublishObject(
+                        ZeronEventTopics.AgentOffline,
+                        new
+                        {
+                            agentKey = agent.AgentKey,
+                            machineName = agent.MachineName,
+                            lastHeartbeatAt = agent.LastHeartbeatAt
+                        },
+                        source: "server",
+                        correlationId: agent.AgentKey);
+                }
 
                 if (m_DashboardNotifier != null)
                 {

@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// DashboardSummaryType
     /// </summary>
-    public class DashboardSummaryType
+    public sealed class DashboardSummaryType
     {
         /// <summary>
         /// AgentsOnline

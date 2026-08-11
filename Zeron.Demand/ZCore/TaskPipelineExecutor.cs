@@ -21,7 +21,7 @@ namespace Zeron.Demand.ZCore
         /// <param name="task"></param>
         /// <returns>Returns execution result.</returns>
         public static TaskPipelineResultType ExecuteTask(
-            SchedulerTaskDefinition task)
+            SchedulerTaskDefinitionType task)
         {
             TaskPipelineResultType result = new()
             {
@@ -44,7 +44,7 @@ namespace Zeron.Demand.ZCore
                 timestamp = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)
             }));
 
-            foreach (TaskStepDefinition step in task.Steps)
+            foreach (TaskStepDefinitionType step in task.Steps)
             {
                 TaskStepResultType stepResult = ExecuteStep(step);
                 result.Steps.Add(stepResult);
@@ -78,7 +78,7 @@ namespace Zeron.Demand.ZCore
         /// <param name="step"></param>
         /// <returns>Returns step result.</returns>
         public static TaskStepResultType ExecuteStep(
-            TaskStepDefinition step)
+            TaskStepDefinitionType step)
         {
             string stepType = step.Type?.Trim().ToLowerInvariant() ?? "";
 
@@ -109,11 +109,11 @@ namespace Zeron.Demand.ZCore
         /// <param name="resultType"></param>
         /// <returns>Returns step result.</returns>
         private static TaskStepResultType ExecuteScriptStep(
-            TaskStepDefinition step,
+            TaskStepDefinitionType step,
             string engineId,
             string resultType)
         {
-            ScriptResult scriptResult = ScriptHostServer.Execute(engineId, step.Script);
+            ScriptResultType scriptResult = ScriptHostServer.Execute(engineId, step.Script);
 
             return new TaskStepResultType
             {
@@ -132,7 +132,7 @@ namespace Zeron.Demand.ZCore
         /// <param name="step"></param>
         /// <returns>Returns step result.</returns>
         private static TaskStepResultType ExecuteWaitStep(
-            TaskStepDefinition step)
+            TaskStepDefinitionType step)
         {
             int seconds = step.Seconds > 0 ? step.Seconds : 1;
             Thread.Sleep(TimeSpan.FromSeconds(seconds));

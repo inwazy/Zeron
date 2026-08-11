@@ -22,7 +22,7 @@ namespace Zeron.ZCore.Utils.Tests
             ScriptHostServer.Clear();
             ScriptHostServer.Register(new PowerShellScriptEngine(enabled: true));
 
-            ScriptResult result = ScriptHostServer.Execute("powershell", "");
+            ScriptResultType result = ScriptHostServer.Execute("powershell", "");
 
             Assert.IsTrue(result.Success);
             Assert.AreEqual("powershell", result.EngineId);
@@ -34,7 +34,7 @@ namespace Zeron.ZCore.Utils.Tests
             ScriptHostServer.Clear();
             ScriptHostServer.Register(new PowerShellScriptEngine(enabled: true));
 
-            ScriptResult result = ScriptHostServer.Execute("thinbasic", "MsgBox 1");
+            ScriptResultType result = ScriptHostServer.Execute("thinbasic", "MsgBox 1");
 
             Assert.IsFalse(result.Success);
             Assert.AreEqual("thinbasic", result.EngineId);
@@ -88,10 +88,10 @@ namespace Zeron.ZCore.Utils.Tests
 
             public bool IsAvailable() => m_Available;
 
-            public ScriptResult Execute(
-                ScriptRequest request)
+            public ScriptResultType Execute(
+                ScriptRequestType request)
             {
-                return new ScriptResult
+                return new ScriptResultType
                 {
                     EngineId = Id,
                     Success = m_Succeed,

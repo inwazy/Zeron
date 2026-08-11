@@ -6,7 +6,7 @@ namespace Zeron.Demand.ZCore.Type
     /// <summary>
     /// ManagedPackageLocalInfoType - local catalog row summary.
     /// </summary>
-    internal class ManagedPackageLocalInfoType
+    internal sealed class ManagedPackageLocalInfoType
     {
         /// <summary>
         /// Name

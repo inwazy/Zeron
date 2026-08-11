@@ -4,11 +4,19 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// ApiResponse
+    /// ScriptResultType - output from ScriptHostServer / IScriptEngine.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class ApiResponse<T>
+    public sealed class ScriptResultType
     {
+        /// <summary>
+        /// EngineId
+        /// </summary>
+        public string EngineId
+        {
+            get;
+            set;
+        } = "";
+
         /// <summary>
         /// Success
         /// </summary>
@@ -19,36 +27,36 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
-        /// Message
+        /// ExitCode
         /// </summary>
-        public string? Message
+        public int ExitCode
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Result
+        /// StdOut
         /// </summary>
-        public T? Result
+        public string? StdOut
         {
             get;
             set;
         }
 
         /// <summary>
-        /// AgentId
+        /// StdErr
         /// </summary>
-        public string? AgentId
+        public string? StdErr
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Timestamp
+        /// ErrorMessage
         /// </summary>
-        public string? Timestamp
+        public string? ErrorMessage
         {
             get;
             set;

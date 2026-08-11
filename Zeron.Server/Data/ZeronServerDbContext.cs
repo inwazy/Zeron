@@ -72,6 +72,11 @@ namespace Zeron.Server.Data
         public DbSet<ManagedPackageEntity> ManagedPackages => Set<ManagedPackageEntity>();
 
         /// <summary>
+        /// ManagedPackageVersions
+        /// </summary>
+        public DbSet<ManagedPackageVersionEntity> ManagedPackageVersions => Set<ManagedPackageVersionEntity>();
+
+        /// <summary>
         /// UserAgentBindings
         /// </summary>
         public DbSet<UserAgentBindingEntity> UserAgentBindings => Set<UserAgentBindingEntity>();
@@ -80,6 +85,11 @@ namespace Zeron.Server.Data
         /// AuditLogs
         /// </summary>
         public DbSet<AuditLogEntity> AuditLogs => Set<AuditLogEntity>();
+
+        /// <summary>
+        /// UserNotifications
+        /// </summary>
+        public DbSet<UserNotificationEntity> UserNotifications => Set<UserNotificationEntity>();
 
         /// <summary>
         /// OnModelCreating
@@ -135,6 +145,16 @@ namespace Zeron.Server.Data
                 entity.HasIndex(package => package.IsEnabled);
             });
 
+            modelBuilder.Entity<ManagedPackageVersionEntity>(entity =>
+            {
+                entity.HasIndex(version => new { version.PackageId, version.VersionNumber }).IsUnique();
+                entity.HasIndex(version => new { version.PackageId, version.CreatedAt });
+                entity.HasOne(version => version.Package)
+                    .WithMany()
+                    .HasForeignKey(version => version.PackageId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             modelBuilder.Entity<UserAgentBindingEntity>(entity =>
             {
                 entity.HasIndex(binding => new { binding.UserId, binding.AgentKey }).IsUnique();
@@ -152,6 +172,17 @@ namespace Zeron.Server.Data
                 entity.HasIndex(log => log.ActorUsername);
                 entity.HasIndex(log => log.TargetKey);
                 entity.HasIndex(log => log.Source);
+            });
+
+            modelBuilder.Entity<UserNotificationEntity>(entity =>
+            {
+                entity.HasIndex(notification => notification.UserId);
+                entity.HasIndex(notification => notification.CreatedAt);
+                entity.HasIndex(notification => new { notification.UserId, notification.ReadAt });
+                entity.HasOne(notification => notification.User)
+                    .WithMany()
+                    .HasForeignKey(notification => notification.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ManagedPackageCatalogSyncResponseType - payload agents pull from Server.
     /// </summary>
-    public class ManagedPackageCatalogSyncResponseType
+    public sealed class ManagedPackageCatalogSyncResponseType
     {
         /// <summary>
         /// Success

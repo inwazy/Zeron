@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// UserAgentBindingInfoType
     /// </summary>
-    public class UserAgentBindingInfoType
+    public sealed class UserAgentBindingInfoType
     {
         /// <summary>
         /// Id

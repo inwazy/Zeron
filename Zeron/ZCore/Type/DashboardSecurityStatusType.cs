@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// DashboardSecurityStatusType - server transport security posture for Dashboard.
     /// </summary>
-    public class DashboardSecurityStatusType
+    public sealed class DashboardSecurityStatusType
     {
         /// <summary>
         /// CurveEnabled

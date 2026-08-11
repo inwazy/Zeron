@@ -4,59 +4,68 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// TaskStepDefinition
+    /// SmtpMailOptionsType - shared SMTP connection and From identity.
     /// </summary>
-    public class TaskStepDefinition
+    public sealed class SmtpMailOptionsType
     {
         /// <summary>
-        /// Type - powershell, script, managedPackage, wait, api
+        /// Host
         /// </summary>
-        public string? Type
+        public string? Host
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Engine - for script steps (default powershell)
+        /// Port
         /// </summary>
-        public string? Engine
+        public int Port
+        {
+            get;
+            set;
+        } = 587;
+
+        /// <summary>
+        /// EnableSsl
+        /// </summary>
+        public bool EnableSsl
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
+        /// UserName
+        /// </summary>
+        public string? UserName
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Script - for powershell / script steps
+        /// Password
         /// </summary>
-        public string? Script
+        public string? Password
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Command - for managedPackage or api steps
+        /// FromAddress
         /// </summary>
-        public string? Command
+        public string? FromAddress
         {
             get;
             set;
         }
 
         /// <summary>
-        /// ApiName - for api steps
+        /// FromDisplayName
         /// </summary>
-        public string? ApiName
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Seconds - for wait steps
-        /// </summary>
-        public int Seconds
+        public string? FromDisplayName
         {
             get;
             set;

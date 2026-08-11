@@ -24,6 +24,11 @@ namespace Zeron.Server.ZCore
         public const string CatalogDelete = "catalog.delete";
 
         /// <summary>
+        /// CatalogRollback
+        /// </summary>
+        public const string CatalogRollback = "catalog.rollback";
+
+        /// <summary>
         /// PackageDeploy
         /// </summary>
         public const string PackageDeploy = "package.deploy";

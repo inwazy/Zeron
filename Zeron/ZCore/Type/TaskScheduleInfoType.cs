@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// TaskScheduleInfoType
     /// </summary>
-    public class TaskScheduleInfoType
+    public sealed class TaskScheduleInfoType
     {
         /// <summary>
         /// Id

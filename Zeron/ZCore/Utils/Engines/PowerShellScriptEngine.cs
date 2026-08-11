@@ -104,14 +104,14 @@ namespace Zeron.ZCore.Utils.Engines
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Returns ScriptResult.</returns>
-        public ScriptResult Execute(
-            ScriptRequest request)
+        public ScriptResultType Execute(
+            ScriptRequestType request)
         {
             ArgumentNullException.ThrowIfNull(request);
 
             if (string.IsNullOrWhiteSpace(request.Script) && string.IsNullOrWhiteSpace(request.ScriptPath))
             {
-                return new ScriptResult
+                return new ScriptResultType
                 {
                     EngineId = Id,
                     Success = true,
@@ -170,7 +170,7 @@ namespace Zeron.ZCore.Utils.Engines
                     {
                     }
 
-                    return new ScriptResult
+                    return new ScriptResultType
                     {
                         EngineId = Id,
                         Success = false,
@@ -193,7 +193,7 @@ namespace Zeron.ZCore.Utils.Engines
                         "PowerShellScriptEngine exit code {0}", process.ExitCode));
                 }
 
-                return new ScriptResult
+                return new ScriptResultType
                 {
                     EngineId = Id,
                     Success = success,
@@ -218,7 +218,7 @@ namespace Zeron.ZCore.Utils.Engines
         /// <param name="request"></param>
         /// <returns>Returns string.</returns>
         private static string BuildArguments(
-            ScriptRequest request)
+            ScriptRequestType request)
         {
             if (!string.IsNullOrWhiteSpace(request.ScriptPath))
             {
@@ -271,10 +271,10 @@ namespace Zeron.ZCore.Utils.Engines
         /// </summary>
         /// <param name="message"></param>
         /// <returns>Returns ScriptResult.</returns>
-        private ScriptResult Fail(
+        private ScriptResultType Fail(
             string message)
         {
-            return new ScriptResult
+            return new ScriptResultType
             {
                 EngineId = Id,
                 Success = false,

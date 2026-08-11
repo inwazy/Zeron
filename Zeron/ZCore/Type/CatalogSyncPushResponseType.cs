@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// CatalogSyncPushResponseType
     /// </summary>
-    public class CatalogSyncPushResponseType
+    public sealed class CatalogSyncPushResponseType
     {
         /// <summary>
         /// Success

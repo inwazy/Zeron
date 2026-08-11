@@ -97,6 +97,52 @@ namespace Zeron.Server.Endpoints
                 return Results.Created($"/api/tasks/{response.TaskId}", response);
             }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
 
+            app.MapGet("/api/my/notifications", async (
+                bool? unreadOnly,
+                int? limit,
+                ClaimsPrincipal user,
+                UserNotificationServer notificationServer) =>
+            {
+                if (!TryGetUserId(user, out Guid userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                return Results.Ok(await notificationServer.GetNotificationsAsync(
+                    userId,
+                    unreadOnly ?? false,
+                    limit ?? 20));
+            }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
+
+            app.MapPost("/api/my/notifications/{id:guid}/read", async (
+                Guid id,
+                ClaimsPrincipal user,
+                UserNotificationServer notificationServer) =>
+            {
+                if (!TryGetUserId(user, out Guid userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                bool ok = await notificationServer.MarkReadAsync(userId, id);
+
+                return ok ? Results.Ok(new { success = true }) : Results.NotFound();
+            }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
+
+            app.MapPost("/api/my/notifications/read-all", async (
+                ClaimsPrincipal user,
+                UserNotificationServer notificationServer) =>
+            {
+                if (!TryGetUserId(user, out Guid userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                int count = await notificationServer.MarkAllReadAsync(userId);
+
+                return Results.Ok(new { success = true, count });
+            }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
+
             return app;
         }
 

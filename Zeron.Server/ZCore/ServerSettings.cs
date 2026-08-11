@@ -113,6 +113,15 @@ namespace Zeron.Server.ZCore
         } = 15;
 
         /// <summary>
+        /// PublishAgentHeartbeatEvents - emit agent.heartbeat on the in-process event bus (noisy).
+        /// </summary>
+        public bool PublishAgentHeartbeatEvents
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// DispatchIntervalMs
         /// </summary>
         public int DispatchIntervalMs
@@ -188,6 +197,24 @@ namespace Zeron.Server.ZCore
         /// AlertEmailTo
         /// </summary>
         public string? AlertEmailTo
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// InstallResultNotifyEnabled - create DeviceOwner dashboard tips for self-service install results.
+        /// </summary>
+        public bool InstallResultNotifyEnabled
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
+        /// InstallResultEmailEnabled - email bound users (with Email) on self-service install results.
+        /// </summary>
+        public bool InstallResultEmailEnabled
         {
             get;
             set;

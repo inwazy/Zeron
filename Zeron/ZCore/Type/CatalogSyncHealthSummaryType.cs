@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// CatalogSyncHealthSummaryType
     /// </summary>
-    public class CatalogSyncHealthSummaryType
+    public sealed class CatalogSyncHealthSummaryType
     {
         /// <summary>
         /// Healthy

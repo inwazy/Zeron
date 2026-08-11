@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// DashboardEventItemType
     /// </summary>
-    public class DashboardEventItemType
+    public sealed class DashboardEventItemType
     {
         /// <summary>
         /// Id

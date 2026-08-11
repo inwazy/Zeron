@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// TaskCreateRequestType
     /// </summary>
-    public class TaskCreateRequestType
+    public sealed class TaskCreateRequestType
     {
         /// <summary>
         /// Name

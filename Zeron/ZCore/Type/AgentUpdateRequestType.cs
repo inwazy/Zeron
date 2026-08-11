@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// AgentUpdateRequestType
     /// </summary>
-    public class AgentUpdateRequestType
+    public sealed class AgentUpdateRequestType
     {
         /// <summary>
         /// Status - online, offline, disabled

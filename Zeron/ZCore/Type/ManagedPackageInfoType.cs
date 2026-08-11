@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ManagedPackageInfoType
     /// </summary>
-    public class ManagedPackageInfoType
+    public sealed class ManagedPackageInfoType
     {
         /// <summary>
         /// Id
@@ -111,6 +111,15 @@ namespace Zeron.ZCore.Type
         /// ScriptUnInstallAfter
         /// </summary>
         public string? ScriptUnInstallAfter
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// ScriptEngine - Script Host engine id for before/after hooks (default powershell).
+        /// </summary>
+        public string? ScriptEngine
         {
             get;
             set;

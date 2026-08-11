@@ -135,6 +135,32 @@ namespace Zeron.Server.ZServers
                         Message = disabled
                     };
                 }
+
+                string? engineError = await ValidateTargetAgentsSupportEngineAsync(
+                    catalogPackage.ScriptEngine,
+                    request.AgentIds,
+                    cancellationToken);
+
+                if (engineError != null)
+                {
+                    await WriteDeployAuditAsync(
+                        actor,
+                        auditAction,
+                        false,
+                        engineError,
+                        packageName,
+                        operation,
+                        command,
+                        null,
+                        request,
+                        cancellationToken);
+
+                    return new PackageDeployResponseType
+                    {
+                        Success = false,
+                        Message = engineError
+                    };
+                }
             }
 
             string taskName = string.IsNullOrWhiteSpace(request.Name)
@@ -177,6 +203,89 @@ namespace Zeron.Server.ZServers
                 Operation = operation,
                 PackageName = packageName
             };
+        }
+
+        /// <summary>
+        /// ValidateTargetAgentsSupportEngineAsync - when AgentIds are set, require an available engine.
+        /// Empty SupportedEnginesJson still allows powershell for older agents.
+        /// </summary>
+        private async Task<string?> ValidateTargetAgentsSupportEngineAsync(
+            string? scriptEngine,
+            List<string>? agentIds,
+            CancellationToken cancellationToken)
+        {
+            if (agentIds == null || agentIds.Count == 0)
+            {
+                return null;
+            }
+
+            string engineId = ManagedPackageCatalogServer.NormalizeScriptEngine(scriptEngine);
+            List<string> keys = agentIds
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .Select(item => item.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (keys.Count == 0)
+            {
+                return null;
+            }
+
+            List<AgentEntity> agents = await m_DbContext.Agents
+                .AsNoTracking()
+                .Where(agent => keys.Contains(agent.AgentKey))
+                .ToListAsync(cancellationToken);
+
+            foreach (string key in keys)
+            {
+                AgentEntity? agent = agents.FirstOrDefault(item =>
+                    string.Equals(item.AgentKey, key, StringComparison.OrdinalIgnoreCase));
+
+                if (agent == null)
+                {
+                    return $"Agent '{key}' was not found.";
+                }
+
+                if (!AgentSupportsScriptEngine(agent.SupportedEnginesJson, engineId))
+                {
+                    return $"Agent '{key}' does not report an available script engine '{engineId}'.";
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// AgentSupportsScriptEngine
+        /// </summary>
+        public static bool AgentSupportsScriptEngine(
+            string? supportedEnginesJson,
+            string engineId)
+        {
+            string normalized = ManagedPackageCatalogServer.NormalizeScriptEngine(engineId);
+
+            if (string.IsNullOrWhiteSpace(supportedEnginesJson))
+            {
+                return string.Equals(normalized, "powershell", StringComparison.OrdinalIgnoreCase);
+            }
+
+            try
+            {
+                List<ScriptEngineInfoType>? engines = JsonSerializer.Deserialize<List<ScriptEngineInfoType>>(supportedEnginesJson);
+
+                if (engines == null || engines.Count == 0)
+                {
+                    return string.Equals(normalized, "powershell", StringComparison.OrdinalIgnoreCase);
+                }
+
+                return engines.Any(engine =>
+                    string.Equals(engine.Id, normalized, StringComparison.OrdinalIgnoreCase)
+                    && engine.Available);
+            }
+            catch (JsonException)
+            {
+                return string.Equals(normalized, "powershell", StringComparison.OrdinalIgnoreCase);
+            }
         }
 
         /// <summary>

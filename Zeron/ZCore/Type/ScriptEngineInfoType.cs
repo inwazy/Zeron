@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// ScriptEngineInfoType - engine capability descriptor for heartbeat / HealthCheck.
     /// </summary>
-    public class ScriptEngineInfoType
+    public sealed class ScriptEngineInfoType
     {
         /// <summary>
         /// Id

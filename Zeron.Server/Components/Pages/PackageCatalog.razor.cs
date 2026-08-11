@@ -15,6 +15,12 @@ namespace Zeron.Server.Components.Pages
         // Packages.
         private List<ManagedPackageInfoType> m_Packages = [];
 
+        // History package.
+        private ManagedPackageInfoType? m_HistoryPackage;
+
+        // Versions for history panel.
+        private List<ManagedPackageVersionInfoType> m_Versions = [];
+
         // Form.
         private readonly PackageFormModel m_Form = new();
 
@@ -24,8 +30,14 @@ namespace Zeron.Server.Components.Pages
         // Message.
         private string? m_Message;
 
+        // History message.
+        private string? m_HistoryMessage;
+
         // Succeeded.
         private bool m_Succeeded;
+
+        // History succeeded.
+        private bool m_HistorySucceeded;
 
         // Busy.
         private bool m_IsBusy;
@@ -46,6 +58,13 @@ namespace Zeron.Server.Components.Pages
         private async Task ReloadAsync()
         {
             m_Packages = await CatalogServer.GetPackagesAsync();
+
+            if (m_HistoryPackage != null && Guid.TryParse(m_HistoryPackage.Id, out Guid packageId))
+            {
+                m_Versions = await CatalogServer.GetPackageVersionsAsync(packageId);
+                m_HistoryPackage = m_Packages.FirstOrDefault(item => item.Id == m_HistoryPackage.Id)
+                    ?? m_HistoryPackage;
+            }
         }
 
         /// <summary>
@@ -71,6 +90,7 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdUnInstallx64 = package.CmdUnInstallx64 ?? "";
             m_Form.Sha256x86 = package.Sha256x86 ?? "";
             m_Form.Sha256x64 = package.Sha256x64 ?? "";
+            m_Form.ScriptEngine = string.IsNullOrWhiteSpace(package.ScriptEngine) ? "powershell" : package.ScriptEngine;
             m_Form.IsEnabled = package.IsEnabled;
             m_Message = null;
         }
@@ -84,6 +104,102 @@ namespace Zeron.Server.Components.Pages
             m_EditId = null;
             ResetForm();
             m_Message = null;
+        }
+
+        /// <summary>
+        /// ShowHistoryAsync
+        /// </summary>
+        /// <param name="package"></param>
+        /// <returns>Returns Task.</returns>
+        private async Task ShowHistoryAsync(
+            ManagedPackageInfoType package)
+        {
+            if (!Guid.TryParse(package.Id, out Guid packageId))
+            {
+                return;
+            }
+
+            m_HistoryPackage = package;
+            m_HistoryMessage = null;
+            m_IsBusy = true;
+
+            try
+            {
+                m_Versions = await CatalogServer.GetPackageVersionsAsync(packageId);
+            }
+            finally
+            {
+                m_IsBusy = false;
+            }
+        }
+
+        /// <summary>
+        /// CloseHistory
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private void CloseHistory()
+        {
+            m_HistoryPackage = null;
+            m_Versions = [];
+            m_HistoryMessage = null;
+        }
+
+        /// <summary>
+        /// RollbackAsync
+        /// </summary>
+        /// <param name="versionNumber"></param>
+        /// <returns>Returns Task.</returns>
+        private async Task RollbackAsync(
+            int versionNumber)
+        {
+            if (m_HistoryPackage == null || !Guid.TryParse(m_HistoryPackage.Id, out Guid packageId))
+            {
+                return;
+            }
+
+            m_IsBusy = true;
+            m_HistoryMessage = null;
+
+            try
+            {
+                (ManagedPackageInfoType? package, string? error) = await CatalogServer.RollbackPackageAsync(
+                    packageId,
+                    versionNumber,
+                    actor: await GetActorAsync());
+
+                if (error != null)
+                {
+                    m_HistorySucceeded = false;
+                    m_HistoryMessage = error;
+                    return;
+                }
+
+                m_HistorySucceeded = true;
+                m_HistoryMessage = $"Restored '{package!.Name}' to version {versionNumber} and pushed catalog sync.";
+                m_HistoryPackage = package;
+                await ReloadAsync();
+            }
+            finally
+            {
+                m_IsBusy = false;
+            }
+        }
+
+        /// <summary>
+        /// VersionKindClass
+        /// </summary>
+        /// <param name="changeKind"></param>
+        /// <returns>Returns css class.</returns>
+        private static string VersionKindClass(
+            string? changeKind)
+        {
+            return changeKind switch
+            {
+                "create" => "healthy",
+                "rollback" => "stale",
+                "update" => "pending",
+                _ => "offline"
+            };
         }
 
         /// <summary>
@@ -108,6 +224,7 @@ namespace Zeron.Server.Components.Pages
                     CmdUnInstallx64 = m_Form.CmdUnInstallx64,
                     Sha256x86 = m_Form.Sha256x86,
                     Sha256x64 = m_Form.Sha256x64,
+                    ScriptEngine = m_Form.ScriptEngine,
                     IsEnabled = m_Form.IsEnabled
                 };
 
@@ -195,6 +312,11 @@ namespace Zeron.Server.Components.Pages
                     CancelEdit();
                 }
 
+                if (m_HistoryPackage?.Id == package.Id)
+                {
+                    CloseHistory();
+                }
+
                 await ReloadAsync();
             }
             finally
@@ -228,6 +350,7 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdUnInstallx64 = "";
             m_Form.Sha256x86 = "";
             m_Form.Sha256x64 = "";
+            m_Form.ScriptEngine = "powershell";
             m_Form.IsEnabled = true;
         }
 
@@ -262,6 +385,9 @@ namespace Zeron.Server.Components.Pages
 
             // SHA256 x64.
             public string Sha256x64 { get; set; } = "";
+
+            // Script engine id.
+            public string ScriptEngine { get; set; } = "powershell";
 
             // Enabled.
             public bool IsEnabled { get; set; } = true;

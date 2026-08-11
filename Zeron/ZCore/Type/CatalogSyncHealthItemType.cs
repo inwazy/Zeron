@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// CatalogSyncHealthItemType - per-agent ManagedPackage catalog sync health.
     /// </summary>
-    public class CatalogSyncHealthItemType
+    public sealed class CatalogSyncHealthItemType
     {
         /// <summary>
         /// AgentKey

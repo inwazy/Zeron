@@ -8,6 +8,7 @@ using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server.ZServers
 {
@@ -145,7 +146,15 @@ namespace Zeron.Server.ZServers
             };
 
             ApplyFields(package, request);
+            
+            package.ScriptEngine = NormalizeScriptEngine(package.ScriptEngine);
             m_DbContext.ManagedPackages.Add(package);
+            m_DbContext.ManagedPackageVersions.Add(BuildVersionEntity(
+                package,
+                versionNumber: 1,
+                changeKind: "create",
+                actor,
+                restoredFromVersion: null));
             await m_DbContext.SaveChangesAsync(cancellationToken);
             await NotifyOnlineAgentsToSyncAsync(cancellationToken);
 
@@ -216,7 +225,15 @@ namespace Zeron.Server.ZServers
                 package.IsEnabled = request.IsEnabled.Value;
             }
 
+            package.ScriptEngine = NormalizeScriptEngine(package.ScriptEngine);
             package.UpdatedAt = DateTime.UtcNow;
+            int nextVersion = await GetNextVersionNumberAsync(packageId, cancellationToken);
+            m_DbContext.ManagedPackageVersions.Add(BuildVersionEntity(
+                package,
+                nextVersion,
+                "update",
+                actor,
+                restoredFromVersion: null));
             await m_DbContext.SaveChangesAsync(cancellationToken);
             await NotifyOnlineAgentsToSyncAsync(cancellationToken);
 
@@ -273,6 +290,179 @@ namespace Zeron.Server.ZServers
                 new { packageId });
 
             return null;
+        }
+
+        /// <summary>
+        /// GetPackageVersionsAsync
+        /// </summary>
+        /// <param name="packageId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns version list (newest first).</returns>
+        public async Task<List<ManagedPackageVersionInfoType>> GetPackageVersionsAsync(
+            Guid packageId,
+            CancellationToken cancellationToken = default)
+        {
+            bool exists = await m_DbContext.ManagedPackages
+                .AnyAsync(item => item.Id == packageId, cancellationToken);
+
+            if (!exists)
+            {
+                return [];
+            }
+
+            List<ManagedPackageVersionEntity> versions = await m_DbContext.ManagedPackageVersions
+                .AsNoTracking()
+                .Where(item => item.PackageId == packageId)
+                .OrderByDescending(item => item.VersionNumber)
+                .ToListAsync(cancellationToken);
+
+            return versions.Select(ToVersionInfo).ToList();
+        }
+
+        /// <summary>
+        /// GetPackageVersionAsync
+        /// </summary>
+        /// <param name="packageId"></param>
+        /// <param name="versionNumber"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns version or null.</returns>
+        public async Task<ManagedPackageVersionInfoType?> GetPackageVersionAsync(
+            Guid packageId,
+            int versionNumber,
+            CancellationToken cancellationToken = default)
+        {
+            ManagedPackageVersionEntity? version = await m_DbContext.ManagedPackageVersions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    item => item.PackageId == packageId && item.VersionNumber == versionNumber,
+                    cancellationToken);
+
+            return version == null ? null : ToVersionInfo(version);
+        }
+
+        /// <summary>
+        /// RollbackPackageAsync - restore a historical snapshot and push catalog sync.
+        /// </summary>
+        /// <param name="packageId"></param>
+        /// <param name="versionNumber"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="actor"></param>
+        /// <returns>Returns restored package or error.</returns>
+        public async Task<(ManagedPackageInfoType? Package, string? Error)> RollbackPackageAsync(
+            Guid packageId,
+            int versionNumber,
+            CancellationToken cancellationToken = default,
+            AuditActorType? actor = null)
+        {
+            ManagedPackageEntity? package = await m_DbContext.ManagedPackages
+                .FirstOrDefaultAsync(item => item.Id == packageId, cancellationToken);
+
+            if (package == null)
+            {
+                await WriteCatalogAuditAsync(
+                    AuditActions.CatalogRollback,
+                    false,
+                    "Package not found.",
+                    null,
+                    actor,
+                    cancellationToken);
+                return (null, "Package not found.");
+            }
+
+            ManagedPackageVersionEntity? source = await m_DbContext.ManagedPackageVersions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    item => item.PackageId == packageId && item.VersionNumber == versionNumber,
+                    cancellationToken);
+
+            if (source == null)
+            {
+                await WriteCatalogAuditAsync(
+                    AuditActions.CatalogRollback,
+                    false,
+                    "Version not found.",
+                    package.Name,
+                    actor,
+                    cancellationToken,
+                    new { packageId, versionNumber });
+                return (null, "Version not found.");
+            }
+
+            string restoredName = NormalizeName(source.Name);
+
+            if (restoredName.Length == 0 || restoredName.Contains(' '))
+            {
+                string invalid = "Stored version name is invalid.";
+                await WriteCatalogAuditAsync(
+                    AuditActions.CatalogRollback,
+                    false,
+                    invalid,
+                    package.Name,
+                    actor,
+                    cancellationToken);
+                return (null, invalid);
+            }
+
+            bool nameTaken = await m_DbContext.ManagedPackages
+                .AnyAsync(item => item.Name == restoredName && item.Id != packageId, cancellationToken);
+
+            if (nameTaken)
+            {
+                string taken = "Package name already exists.";
+                await WriteCatalogAuditAsync(
+                    AuditActions.CatalogRollback,
+                    false,
+                    taken,
+                    restoredName,
+                    actor,
+                    cancellationToken,
+                    new { packageId, versionNumber });
+                return (null, taken);
+            }
+
+            ApplySnapshot(package, source);
+            package.UpdatedAt = DateTime.UtcNow;
+
+            int nextVersion = await GetNextVersionNumberAsync(packageId, cancellationToken);
+            m_DbContext.ManagedPackageVersions.Add(BuildVersionEntity(
+                package,
+                nextVersion,
+                "rollback",
+                actor,
+                restoredFromVersion: versionNumber));
+
+            await m_DbContext.SaveChangesAsync(cancellationToken);
+            await NotifyOnlineAgentsToSyncAsync(cancellationToken);
+
+            ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                "ManagedPackageCatalogServer rolled package '{0}' back to version {1} (new version {2}).",
+                package.Name,
+                versionNumber,
+                nextVersion));
+
+            await WriteCatalogAuditAsync(
+                AuditActions.CatalogRollback,
+                true,
+                $"Rolled catalog package '{package.Name}' back to version {versionNumber}.",
+                package.Name,
+                actor,
+                cancellationToken,
+                new { package.Id, versionNumber, newVersion = nextVersion, package.IsEnabled });
+
+            ZeronEventBus.PublishObject(
+                ZeronEventTopics.CatalogRolledBack,
+                new
+                {
+                    packageId = package.Id,
+                    packageName = package.Name,
+                    restoredFromVersion = versionNumber,
+                    newVersion = nextVersion,
+                    scriptEngine = package.ScriptEngine
+                },
+                source: "server",
+                correlationId: package.Id.ToString());
+
+            return (ToInfo(package), null);
         }
 
         /// <summary>
@@ -395,6 +585,11 @@ namespace Zeron.Server.ZServers
                 package.ScriptUnInstallAfter = request.ScriptUnInstallAfter;
             }
 
+            if (request.ScriptEngine != null)
+            {
+                package.ScriptEngine = NormalizeScriptEngine(request.ScriptEngine);
+            }
+
             if (request.Sha256x86 != null)
             {
                 package.Sha256x86 = NormalizeSha(request.Sha256x86);
@@ -409,6 +604,14 @@ namespace Zeron.Server.ZServers
         /// <summary>
         /// WriteCatalogAuditAsync
         /// </summary>
+        /// <param name="action"></param>
+        /// <param name="success"></param>
+        /// <param name="summary"></param>
+        /// <param name="packageName"></param>
+        /// <param name="actor"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="details"></param>
+        /// <returns>Returns void.</returns>
         private async Task WriteCatalogAuditAsync(
             string action,
             bool success,
@@ -500,9 +703,118 @@ namespace Zeron.Server.ZServers
                 ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                     "ManagedPackageCatalogServer requested catalog sync on {0} online agent(s).",
                     targets.Count));
+
+                ZeronEventBus.PublishObject(
+                    ZeronEventTopics.CatalogSyncRequested,
+                    new
+                    {
+                        agentCount = targets.Count,
+                        agentKeys = targets
+                    },
+                    source: "server");
             }
 
             return targets;
+        }
+
+        /// <summary>
+        /// GetNextVersionNumberAsync
+        /// </summary>
+        /// <param name="packageId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns int.</returns>
+        private async Task<int> GetNextVersionNumberAsync(
+            Guid packageId,
+            CancellationToken cancellationToken)
+        {
+            int? max = await m_DbContext.ManagedPackageVersions
+                .Where(item => item.PackageId == packageId)
+                .MaxAsync(item => (int?)item.VersionNumber, cancellationToken);
+
+            return (max ?? 0) + 1;
+        }
+
+        /// <summary>
+        /// BuildVersionEntity
+        /// </summary>
+        /// <param name="package"></param>
+        /// <param name="versionNumber"></param>
+        /// <param name="changeKind"></param>
+        /// <param name="actor"></param>
+        /// <param name="restoredFromVersion"></param>
+        /// <returns>Returns ManagedPackageVersionEntity.</returns>
+        private static ManagedPackageVersionEntity BuildVersionEntity(
+            ManagedPackageEntity package,
+            int versionNumber,
+            string changeKind,
+            AuditActorType? actor,
+            int? restoredFromVersion)
+        {
+            return new ManagedPackageVersionEntity
+            {
+                Id = Guid.NewGuid(),
+                PackageId = package.Id,
+                VersionNumber = versionNumber,
+                CreatedAt = DateTime.UtcNow,
+                ChangeKind = changeKind,
+                ActorUsername = actor?.Username,
+                RestoredFromVersion = restoredFromVersion,
+                Name = package.Name,
+                Urlx86 = package.Urlx86,
+                Urlx64 = package.Urlx64,
+                CmdInstallx86 = package.CmdInstallx86,
+                CmdInstallx64 = package.CmdInstallx64,
+                CmdUnInstallx86 = package.CmdUnInstallx86,
+                CmdUnInstallx64 = package.CmdUnInstallx64,
+                ScriptInstallBefore = package.ScriptInstallBefore,
+                ScriptInstallAfter = package.ScriptInstallAfter,
+                ScriptUnInstallBefore = package.ScriptUnInstallBefore,
+                ScriptUnInstallAfter = package.ScriptUnInstallAfter,
+                ScriptEngine = NormalizeScriptEngine(package.ScriptEngine),
+                Sha256x86 = package.Sha256x86,
+                Sha256x64 = package.Sha256x64,
+                IsEnabled = package.IsEnabled
+            };
+        }
+
+        /// <summary>
+        /// ApplySnapshot - full replace of live package fields from a version row.
+        /// </summary>
+        /// <param name="package"></param>
+        /// <param name="source"></param>
+        /// <returns>Returns void.</returns>
+        private static void ApplySnapshot(
+            ManagedPackageEntity package,
+            ManagedPackageVersionEntity source)
+        {
+            package.Name = NormalizeName(source.Name);
+            package.Urlx86 = source.Urlx86;
+            package.Urlx64 = source.Urlx64;
+            package.CmdInstallx86 = source.CmdInstallx86;
+            package.CmdInstallx64 = source.CmdInstallx64;
+            package.CmdUnInstallx86 = source.CmdUnInstallx86;
+            package.CmdUnInstallx64 = source.CmdUnInstallx64;
+            package.ScriptInstallBefore = source.ScriptInstallBefore;
+            package.ScriptInstallAfter = source.ScriptInstallAfter;
+            package.ScriptUnInstallBefore = source.ScriptUnInstallBefore;
+            package.ScriptUnInstallAfter = source.ScriptUnInstallAfter;
+            package.ScriptEngine = NormalizeScriptEngine(source.ScriptEngine);
+            package.Sha256x86 = source.Sha256x86;
+            package.Sha256x64 = source.Sha256x64;
+            package.IsEnabled = source.IsEnabled;
+        }
+
+        /// <summary>
+        /// NormalizeScriptEngine
+        /// </summary>
+        /// <param name="engine"></param>
+        /// <returns>Returns normalized engine id.</returns>
+        internal static string NormalizeScriptEngine(
+            string? engine)
+        {
+            return string.IsNullOrWhiteSpace(engine)
+                ? "powershell"
+                : engine.Trim().ToLowerInvariant();
         }
 
         /// <summary>
@@ -540,10 +852,46 @@ namespace Zeron.Server.ZServers
                 ScriptInstallAfter = package.ScriptInstallAfter,
                 ScriptUnInstallBefore = package.ScriptUnInstallBefore,
                 ScriptUnInstallAfter = package.ScriptUnInstallAfter,
+                ScriptEngine = NormalizeScriptEngine(package.ScriptEngine),
                 Sha256x86 = package.Sha256x86,
                 Sha256x64 = package.Sha256x64,
                 IsEnabled = package.IsEnabled,
                 UpdatedAt = package.UpdatedAt
+            };
+        }
+
+        /// <summary>
+        /// ToVersionInfo
+        /// </summary>
+        /// <param name="version"></param>
+        /// <returns>Returns ManagedPackageVersionInfoType.</returns>
+        private static ManagedPackageVersionInfoType ToVersionInfo(
+            ManagedPackageVersionEntity version)
+        {
+            return new ManagedPackageVersionInfoType
+            {
+                Id = version.Id.ToString(),
+                PackageId = version.PackageId.ToString(),
+                VersionNumber = version.VersionNumber,
+                CreatedAt = version.CreatedAt,
+                ChangeKind = version.ChangeKind,
+                ActorUsername = version.ActorUsername,
+                RestoredFromVersion = version.RestoredFromVersion,
+                Name = version.Name,
+                Urlx86 = version.Urlx86,
+                Urlx64 = version.Urlx64,
+                CmdInstallx86 = version.CmdInstallx86,
+                CmdInstallx64 = version.CmdInstallx64,
+                CmdUnInstallx86 = version.CmdUnInstallx86,
+                CmdUnInstallx64 = version.CmdUnInstallx64,
+                ScriptInstallBefore = version.ScriptInstallBefore,
+                ScriptInstallAfter = version.ScriptInstallAfter,
+                ScriptUnInstallBefore = version.ScriptUnInstallBefore,
+                ScriptUnInstallAfter = version.ScriptUnInstallAfter,
+                ScriptEngine = NormalizeScriptEngine(version.ScriptEngine),
+                Sha256x86 = version.Sha256x86,
+                Sha256x64 = version.Sha256x64,
+                IsEnabled = version.IsEnabled
             };
         }
     }

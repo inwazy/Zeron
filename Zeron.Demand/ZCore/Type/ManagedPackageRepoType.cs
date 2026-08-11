@@ -6,7 +6,7 @@ namespace Zeron.Demand.ZCore.Type
     /// <summary>
     /// ManagedPackageRepoType
     /// </summary>
-    internal class ManagedPackageRepoType
+    internal sealed class ManagedPackageRepoType
     {
         /// <summary>
         /// Name
@@ -108,6 +108,15 @@ namespace Zeron.Demand.ZCore.Type
         }
 
         /// <summary>
+        /// ScriptEngine - Script Host engine id for before/after hooks.
+        /// </summary>
+        public string? ScriptEngine
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Sha256x86 - optional expected SHA-256 hex for x86 binary.
         /// </summary>
         public string? Sha256x86
@@ -151,6 +160,7 @@ namespace Zeron.Demand.ZCore.Type
             ScriptInstallAfter = "";
             ScriptUnInstallBefore = "";
             ScriptUnInstallAfter = "";
+            ScriptEngine = "";
             Sha256x86 = "";
             Sha256x64 = "";
             Source = "";

@@ -13,11 +13,11 @@ namespace Zeron.ZCore.Utils.Tests
         public void HasConnectionRequiresHostAndFromTest()
         {
             Assert.IsFalse(SmtpMailServer.HasConnection(null));
-            Assert.IsFalse(SmtpMailServer.HasConnection(new SmtpMailOptions
+            Assert.IsFalse(SmtpMailServer.HasConnection(new SmtpMailOptionsType
             {
                 Host = "smtp.example.com"
             }));
-            Assert.IsTrue(SmtpMailServer.HasConnection(new SmtpMailOptions
+            Assert.IsTrue(SmtpMailServer.HasConnection(new SmtpMailOptionsType
             {
                 Host = "smtp.example.com",
                 FromAddress = "ops@example.com"
@@ -43,7 +43,7 @@ namespace Zeron.ZCore.Utils.Tests
         [TestMethod()]
         public void CreateClientAppliesOptionsTest()
         {
-            using SmtpClient client = SmtpMailServer.CreateClient(new SmtpMailOptions
+            using SmtpClient client = SmtpMailServer.CreateClient(new SmtpMailOptionsType
             {
                 Host = "smtp.example.com",
                 Port = 465,
@@ -62,7 +62,7 @@ namespace Zeron.ZCore.Utils.Tests
         [TestMethod()]
         public void CreateFromAddressUsesDisplayNameTest()
         {
-            MailAddress from = SmtpMailServer.CreateFromAddress(new SmtpMailOptions
+            MailAddress from = SmtpMailServer.CreateFromAddress(new SmtpMailOptionsType
             {
                 FromAddress = "ops@example.com",
                 FromDisplayName = "Zeron Ops"
@@ -76,7 +76,7 @@ namespace Zeron.ZCore.Utils.Tests
         public async Task TrySendAsyncRejectsMissingRecipientsTest()
         {
             (bool ok, Exception? error) = await SmtpMailServer.TrySendAsync(
-                new SmtpMailOptions
+                new SmtpMailOptionsType
                 {
                     Host = "smtp.example.com",
                     FromAddress = "ops@example.com"

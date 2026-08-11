@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// DeviceDeployRequestType - self-service install/uninstall for a bound agent.
     /// </summary>
-    public class DeviceDeployRequestType
+    public sealed class DeviceDeployRequestType
     {
         /// <summary>
         /// Operation - install or uninstall.

@@ -6,7 +6,7 @@ namespace Zeron.ZCore.Type
     /// <summary>
     /// LoginRequestType
     /// </summary>
-    public class LoginRequestType
+    public sealed class LoginRequestType
     {
         /// <summary>
         /// Username
