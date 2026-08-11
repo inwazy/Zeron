@@ -29,6 +29,12 @@ Generic (preferred for new work):
 
 If `engine` is omitted on a `script` step, it defaults to `powershell`.
 
+## ManagedPackage install hooks
+
+Catalog packages carry a `ScriptEngine` field (default `powershell`). Demand runs `ScriptInstallBefore` / `ScriptInstallAfter` (and uninstall variants) through `ScriptHostServer` using that engine. The value is included in catalog version snapshots, so **rollback restores engine + scripts together**, then sync pushes the definition to agents.
+
+Package Deploy to specific `AgentIds` rejects targets that do not report the engine as available in heartbeat `supportedEngines` (empty capability JSON still allows `powershell` for older agents). Sync Health remains about catalog freshness, not engine availability.
+
 ## Agent capability reporting
 
 - Heartbeat field: `supportedEngines` (`ScriptEngineInfoType[]`)

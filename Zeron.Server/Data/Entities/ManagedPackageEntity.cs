@@ -117,6 +117,15 @@ namespace Zeron.Server.Data.Entities
         }
 
         /// <summary>
+        /// ScriptEngine - Script Host engine id for before/after hooks (default powershell).
+        /// </summary>
+        public string? ScriptEngine
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Sha256x86 - optional SHA-256 hex for x86 installer.
         /// </summary>
         public string? Sha256x86

@@ -117,6 +117,15 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
+        /// ScriptEngine - Script Host engine id for before/after hooks (default powershell).
+        /// </summary>
+        public string? ScriptEngine
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Sha256x86
         /// </summary>
         public string? Sha256x86

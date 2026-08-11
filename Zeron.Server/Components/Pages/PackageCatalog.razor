@@ -68,6 +68,11 @@
                     SHA-256 x64
                     <InputText @bind-Value="m_Form.Sha256x64" />
                 </label>
+                <label>
+                    Script Engine
+                    <InputText @bind-Value="m_Form.ScriptEngine" />
+                    <small class="muted">Script Host engine id for before/after hooks (default powershell).</small>
+                </label>
                 <div class="actions">
                     <button class="btn" @onclick="SaveAsync" disabled="@m_IsBusy">@(m_EditId == null ? "Create" : "Save")</button>
                     @if (m_EditId != null)
@@ -101,6 +106,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Status</th>
+                    <th>Engine</th>
                     <th>URL x64</th>
                     <th>Updated</th>
                     <th></th>
@@ -116,6 +122,7 @@
                                 @(package.IsEnabled ? "enabled" : "disabled")
                             </span>
                         </td>
+                        <td><code>@(string.IsNullOrWhiteSpace(package.ScriptEngine) ? "powershell" : package.ScriptEngine)</code></td>
                         <td class="muted">@(string.IsNullOrWhiteSpace(package.Urlx64) ? "-" : package.Urlx64)</td>
                         <td>@(package.UpdatedAt?.ToLocalTime().ToString("g") ?? "-")</td>
                         <td>
@@ -163,6 +170,7 @@
                         <th>Kind</th>
                         <th>Actor</th>
                         <th>Enabled</th>
+                        <th>Engine</th>
                         <th>URL x64</th>
                         <th></th>
                     </tr>
@@ -186,6 +194,7 @@
                                     @(version.IsEnabled ? "enabled" : "disabled")
                                 </span>
                             </td>
+                            <td><code>@(string.IsNullOrWhiteSpace(version.ScriptEngine) ? "powershell" : version.ScriptEngine)</code></td>
                             <td class="muted">@(string.IsNullOrWhiteSpace(version.Urlx64) ? "-" : version.Urlx64)</td>
                             <td>
                                 <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">

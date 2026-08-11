@@ -145,6 +145,8 @@ namespace Zeron.Server.ZServers
             };
 
             ApplyFields(package, request);
+            
+            package.ScriptEngine = NormalizeScriptEngine(package.ScriptEngine);
             m_DbContext.ManagedPackages.Add(package);
             m_DbContext.ManagedPackageVersions.Add(BuildVersionEntity(
                 package,
@@ -222,6 +224,7 @@ namespace Zeron.Server.ZServers
                 package.IsEnabled = request.IsEnabled.Value;
             }
 
+            package.ScriptEngine = NormalizeScriptEngine(package.ScriptEngine);
             package.UpdatedAt = DateTime.UtcNow;
             int nextVersion = await GetNextVersionNumberAsync(packageId, cancellationToken);
             m_DbContext.ManagedPackageVersions.Add(BuildVersionEntity(
@@ -568,6 +571,11 @@ namespace Zeron.Server.ZServers
                 package.ScriptUnInstallAfter = request.ScriptUnInstallAfter;
             }
 
+            if (request.ScriptEngine != null)
+            {
+                package.ScriptEngine = NormalizeScriptEngine(request.ScriptEngine);
+            }
+
             if (request.Sha256x86 != null)
             {
                 package.Sha256x86 = NormalizeSha(request.Sha256x86);
@@ -722,6 +730,7 @@ namespace Zeron.Server.ZServers
                 ScriptInstallAfter = package.ScriptInstallAfter,
                 ScriptUnInstallBefore = package.ScriptUnInstallBefore,
                 ScriptUnInstallAfter = package.ScriptUnInstallAfter,
+                ScriptEngine = NormalizeScriptEngine(package.ScriptEngine),
                 Sha256x86 = package.Sha256x86,
                 Sha256x64 = package.Sha256x64,
                 IsEnabled = package.IsEnabled
@@ -746,9 +755,23 @@ namespace Zeron.Server.ZServers
             package.ScriptInstallAfter = source.ScriptInstallAfter;
             package.ScriptUnInstallBefore = source.ScriptUnInstallBefore;
             package.ScriptUnInstallAfter = source.ScriptUnInstallAfter;
+            package.ScriptEngine = NormalizeScriptEngine(source.ScriptEngine);
             package.Sha256x86 = source.Sha256x86;
             package.Sha256x64 = source.Sha256x64;
             package.IsEnabled = source.IsEnabled;
+        }
+
+        /// <summary>
+        /// NormalizeScriptEngine
+        /// </summary>
+        /// <param name="engine"></param>
+        /// <returns>Returns normalized engine id.</returns>
+        internal static string NormalizeScriptEngine(
+            string? engine)
+        {
+            return string.IsNullOrWhiteSpace(engine)
+                ? "powershell"
+                : engine.Trim().ToLowerInvariant();
         }
 
         /// <summary>
@@ -786,6 +809,7 @@ namespace Zeron.Server.ZServers
                 ScriptInstallAfter = package.ScriptInstallAfter,
                 ScriptUnInstallBefore = package.ScriptUnInstallBefore,
                 ScriptUnInstallAfter = package.ScriptUnInstallAfter,
+                ScriptEngine = NormalizeScriptEngine(package.ScriptEngine),
                 Sha256x86 = package.Sha256x86,
                 Sha256x64 = package.Sha256x64,
                 IsEnabled = package.IsEnabled,
@@ -819,6 +843,7 @@ namespace Zeron.Server.ZServers
                 ScriptInstallAfter = version.ScriptInstallAfter,
                 ScriptUnInstallBefore = version.ScriptUnInstallBefore,
                 ScriptUnInstallAfter = version.ScriptUnInstallAfter,
+                ScriptEngine = NormalizeScriptEngine(version.ScriptEngine),
                 Sha256x86 = version.Sha256x86,
                 Sha256x64 = version.Sha256x64,
                 IsEnabled = version.IsEnabled

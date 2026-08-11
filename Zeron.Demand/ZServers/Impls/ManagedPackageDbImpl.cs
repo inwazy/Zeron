@@ -300,6 +300,7 @@ namespace Zeron.Demand.ZServers.Impls
                     "`script_install_after` TEXT, " +
                     "`script_uninstall_before` TEXT, " +
                     "`script_uninstall_after` TEXT, " +
+                    "`script_engine` TEXT, " +
                     "`sha256_x86` TEXT, " +
                     "`sha256_x64` TEXT, " +
                     "`status` INTEGER NOT NULL DEFAULT 1, " +
@@ -311,6 +312,7 @@ namespace Zeron.Demand.ZServers.Impls
             EnsureColumn("source", "TEXT NOT NULL DEFAULT 'local'");
             EnsureColumn("sha256_x86", "TEXT");
             EnsureColumn("sha256_x64", "TEXT");
+            EnsureColumn("script_engine", "TEXT");
         }
 
         /// <summary>
@@ -406,11 +408,11 @@ namespace Zeron.Demand.ZServers.Impls
                 "INSERT INTO `" + m_DbTableName + "` (" +
                 "`name`, `url_x86`, `url_x64`, `cmd_install_x86`, `cmd_install_x64`, " +
                 "`cmd_uninstall_x86`, `cmd_uninstall_x64`, `script_install_before`, `script_install_after`, " +
-                "`script_uninstall_before`, `script_uninstall_after`, `sha256_x86`, `sha256_x64`, `status`, `source`) " +
+                "`script_uninstall_before`, `script_uninstall_after`, `script_engine`, `sha256_x86`, `sha256_x64`, `status`, `source`) " +
                 "VALUES (" +
                 "@name, @url_x86, @url_x64, @cmd_install_x86, @cmd_install_x64, " +
                 "@cmd_uninstall_x86, @cmd_uninstall_x64, @script_install_before, @script_install_after, " +
-                "@script_uninstall_before, @script_uninstall_after, @sha256_x86, @sha256_x64, @status, @source) " +
+                "@script_uninstall_before, @script_uninstall_after, @script_engine, @sha256_x86, @sha256_x64, @status, @source) " +
                 "ON CONFLICT(`name`) DO UPDATE SET " +
                 "`url_x86`=excluded.`url_x86`, " +
                 "`url_x64`=excluded.`url_x64`, " +
@@ -422,6 +424,7 @@ namespace Zeron.Demand.ZServers.Impls
                 "`script_install_after`=excluded.`script_install_after`, " +
                 "`script_uninstall_before`=excluded.`script_uninstall_before`, " +
                 "`script_uninstall_after`=excluded.`script_uninstall_after`, " +
+                "`script_engine`=excluded.`script_engine`, " +
                 "`sha256_x86`=excluded.`sha256_x86`, " +
                 "`sha256_x64`=excluded.`sha256_x64`, " +
                 "`status`=excluded.`status`, " +
@@ -439,6 +442,9 @@ namespace Zeron.Demand.ZServers.Impls
             cmd.Parameters.AddWithValue("@script_install_after", package.ScriptInstallAfter ?? "");
             cmd.Parameters.AddWithValue("@script_uninstall_before", package.ScriptUnInstallBefore ?? "");
             cmd.Parameters.AddWithValue("@script_uninstall_after", package.ScriptUnInstallAfter ?? "");
+            cmd.Parameters.AddWithValue(
+                "@script_engine",
+                string.IsNullOrWhiteSpace(package.ScriptEngine) ? "powershell" : package.ScriptEngine.Trim().ToLowerInvariant());
             cmd.Parameters.AddWithValue("@sha256_x86", NormalizeSha(package.Sha256x86));
             cmd.Parameters.AddWithValue("@sha256_x64", NormalizeSha(package.Sha256x64));
             cmd.Parameters.AddWithValue("@status", package.IsEnabled ? 1 : 0);
@@ -510,6 +516,7 @@ namespace Zeron.Demand.ZServers.Impls
             result.ScriptInstallAfter = ReadString(reader, "script_install_after");
             result.ScriptUnInstallBefore = ReadString(reader, "script_uninstall_before");
             result.ScriptUnInstallAfter = ReadString(reader, "script_uninstall_after");
+            result.ScriptEngine = HasColumn(reader, "script_engine") ? ReadString(reader, "script_engine") : "";
             result.Sha256x86 = HasColumn(reader, "sha256_x86") ? ReadString(reader, "sha256_x86") : "";
             result.Sha256x64 = HasColumn(reader, "sha256_x64") ? ReadString(reader, "sha256_x64") : "";
             result.Source = HasColumn(reader, "source") ? ReadString(reader, "source") : "";

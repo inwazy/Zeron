@@ -248,7 +248,9 @@ Demand ManagedPackage local commands (Client / RemoteCommand):
 
 Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete/rollback pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
 
-**Catalog versions:** each successful create/update/rollback appends a `ManagedPackageVersions` snapshot (`create` / `update` / `rollback`). Operators can Restore a prior version from Catalog **History**; restore writes a new version row (does not rewrite history) and re-pushes sync. Deleting a package cascades its version rows away.
+**Catalog versions:** each successful create/update/rollback appends a `ManagedPackageVersions` snapshot (`create` / `update` / `rollback`), including `ScriptEngine` and before/after scripts. Operators can Restore a prior version from Catalog **History**; restore writes a new version row (does not rewrite history) and re-pushes sync. Deleting a package cascades its version rows away.
+
+**ScriptEngine:** catalog field (default `powershell`) selects the Script Host engine for install/uninstall hooks on Demand. Deploy to explicit `AgentIds` fails if the agent does not report that engine as available. See [Script Host](./script-host.md).
 
 **Install result notifications:** when a self-service deploy (`Task.Name` starts with `self-`) finishes with `install.completed` / `install.failed`, Server notifies every active user bound to that agent. Dashboard tips appear on `/my-devices` (`InstallResultNotifyEnabled`). Optional per-user email uses `Users.Email` + SMTP (`InstallResultEmailEnabled`). Staff package deploys are not notified this way.
 

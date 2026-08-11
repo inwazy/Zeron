@@ -415,7 +415,7 @@ namespace Zeron.ZServers
         private static bool RunBeforeScript(
             InstallQueuesType queuesType)
         {
-            return ScriptExecutor.Execute(queuesType.ScriptBefore);
+            return ScriptHostServer.Execute(queuesType.ScriptEngine, queuesType.ScriptBefore).Success;
         }
 
         /// <summary>
@@ -437,7 +437,7 @@ namespace Zeron.ZServers
         private static bool RunAfterScript(
             InstallQueuesType queuesType)
         {
-            return ScriptExecutor.Execute(queuesType.ScriptAfter);
+            return ScriptHostServer.Execute(queuesType.ScriptEngine, queuesType.ScriptAfter).Success;
         }
 
         /// <summary>

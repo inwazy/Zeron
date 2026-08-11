@@ -171,6 +171,15 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
+        /// ScriptEngine
+        /// </summary>
+        public string? ScriptEngine
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Sha256x86
         /// </summary>
         public string? Sha256x86

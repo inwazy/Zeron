@@ -81,6 +81,15 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
+        /// ScriptEngine - Script Host engine id (default powershell when empty).
+        /// </summary>
+        public string? ScriptEngine
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// AssignmentId - optional Zeron.Server task assignment for completion tracking.
         /// </summary>
         public string? AssignmentId
@@ -112,6 +121,7 @@ namespace Zeron.ZCore.Type
             Operation = "";
             ScriptBefore = "";
             ScriptAfter = "";
+            ScriptEngine = null;
             AssignmentId = null;
             ExpectedSha256 = null;
         }

@@ -90,6 +90,7 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdUnInstallx64 = package.CmdUnInstallx64 ?? "";
             m_Form.Sha256x86 = package.Sha256x86 ?? "";
             m_Form.Sha256x64 = package.Sha256x64 ?? "";
+            m_Form.ScriptEngine = string.IsNullOrWhiteSpace(package.ScriptEngine) ? "powershell" : package.ScriptEngine;
             m_Form.IsEnabled = package.IsEnabled;
             m_Message = null;
         }
@@ -223,6 +224,7 @@ namespace Zeron.Server.Components.Pages
                     CmdUnInstallx64 = m_Form.CmdUnInstallx64,
                     Sha256x86 = m_Form.Sha256x86,
                     Sha256x64 = m_Form.Sha256x64,
+                    ScriptEngine = m_Form.ScriptEngine,
                     IsEnabled = m_Form.IsEnabled
                 };
 
@@ -348,6 +350,7 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdUnInstallx64 = "";
             m_Form.Sha256x86 = "";
             m_Form.Sha256x64 = "";
+            m_Form.ScriptEngine = "powershell";
             m_Form.IsEnabled = true;
         }
 
@@ -382,6 +385,9 @@ namespace Zeron.Server.Components.Pages
 
             // SHA256 x64.
             public string Sha256x64 { get; set; } = "";
+
+            // Script engine id.
+            public string ScriptEngine { get; set; } = "powershell";
 
             // Enabled.
             public bool IsEnabled { get; set; } = true;

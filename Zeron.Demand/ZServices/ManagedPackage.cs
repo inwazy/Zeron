@@ -191,6 +191,7 @@ namespace Zeron.Demand.ZServices
                     Operation = commands.Option,
                     ScriptBefore = scriptBefore,
                     ScriptAfter = scriptAfter,
+                    ScriptEngine = string.IsNullOrWhiteSpace(repo.ScriptEngine) ? "powershell" : repo.ScriptEngine.Trim(),
                     AssignmentId = RemoteCommandContext.AssignmentId,
                     ExpectedSha256 = string.IsNullOrWhiteSpace(expectedSha) ? null : expectedSha.Trim().ToLowerInvariant()
                 };

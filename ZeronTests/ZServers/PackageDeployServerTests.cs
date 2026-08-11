@@ -95,6 +95,62 @@ namespace Zeron.Server.ZServers.Tests
         }
 
         /// <summary>
+        /// DeployAsync rejects agents that lack the package script engine.
+        /// </summary>
+        [TestMethod()]
+        public async Task DeployAsyncRejectsAgentMissingScriptEngineTest()
+        {
+            await using ZeronServerDbContext dbContext = CreateContext();
+            ManagedPackageCatalogServer catalog = new(dbContext);
+
+            await catalog.CreatePackageAsync(new ManagedPackageUpsertRequestType
+            {
+                Name = "engine-gate",
+                Urlx64 = "https://example.com/pkg.exe",
+                ScriptEngine = "mytool",
+                IsEnabled = true
+            });
+
+            dbContext.Agents.Add(new AgentEntity
+            {
+                Id = Guid.NewGuid(),
+                AgentKey = "no-engine-agent",
+                Status = "online",
+                MachineName = "HOST",
+                RegisteredAt = DateTime.UtcNow,
+                LastHeartbeatAt = DateTime.UtcNow,
+                SupportedEnginesJson = """[{"Id":"powershell","DisplayName":"PowerShell","Platforms":["windows"],"Available":true}]"""
+            });
+            await dbContext.SaveChangesAsync();
+
+            PackageDeployServer deployServer = CreateDeployServer(dbContext, catalog);
+
+            PackageDeployResponseType response = await deployServer.DeployAsync(new PackageDeployRequestType
+            {
+                Operation = "install",
+                PackageName = "engine-gate",
+                TargetType = "agent",
+                AgentIds = ["no-engine-agent"]
+            });
+
+            Assert.IsFalse(response.Success);
+            Assert.IsTrue(response.Message!.Contains("mytool", StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// AgentSupportsScriptEngine allows powershell when capability JSON is empty.
+        /// </summary>
+        [TestMethod()]
+        public void AgentSupportsScriptEngineAllowsPowershellWhenEmptyTest()
+        {
+            Assert.IsTrue(PackageDeployServer.AgentSupportsScriptEngine(null, "powershell"));
+            Assert.IsFalse(PackageDeployServer.AgentSupportsScriptEngine(null, "mytool"));
+            Assert.IsTrue(PackageDeployServer.AgentSupportsScriptEngine(
+                """[{"Id":"mytool","Available":true}]""",
+                "mytool"));
+        }
+
+        /// <summary>
         /// BuildCommand formats install/uninstall commands.
         /// </summary>
         [TestMethod()]

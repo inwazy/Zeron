@@ -119,6 +119,51 @@ namespace Zeron.Server.ZServers.Tests
         }
 
         /// <summary>
+        /// ScriptEngine is snapshotted and restored on rollback.
+        /// </summary>
+        [TestMethod()]
+        public async Task RollbackRestoresScriptEngineTest()
+        {
+            await using ZeronServerDbContext dbContext = CreateContext();
+            ManagedPackageCatalogServer catalog = new(dbContext);
+
+            (ManagedPackageInfoType? created, string? createError) = await catalog.CreatePackageAsync(new ManagedPackageUpsertRequestType
+            {
+                Name = "engine-pkg",
+                Urlx64 = "https://example.com/a.exe",
+                ScriptEngine = "powershell",
+                IsEnabled = true
+            });
+
+            Assert.IsNull(createError);
+            Assert.AreEqual("powershell", created!.ScriptEngine);
+            Guid packageId = Guid.Parse(created.Id!);
+
+            (ManagedPackageInfoType? updated, string? updateError) = await catalog.UpdatePackageAsync(
+                packageId,
+                new ManagedPackageUpsertRequestType
+                {
+                    ScriptEngine = "mytool"
+                });
+
+            Assert.IsNull(updateError);
+            Assert.AreEqual("mytool", updated!.ScriptEngine);
+
+            (ManagedPackageInfoType? restored, string? rollbackError) = await catalog.RollbackPackageAsync(
+                packageId,
+                versionNumber: 1);
+
+            Assert.IsNull(rollbackError);
+            Assert.AreEqual("powershell", restored!.ScriptEngine);
+
+            List<ManagedPackageVersionInfoType> versions = await catalog.GetPackageVersionsAsync(packageId);
+
+            Assert.AreEqual("powershell", versions[0].ScriptEngine);
+            Assert.AreEqual("mytool", versions[1].ScriptEngine);
+            Assert.AreEqual("powershell", versions[2].ScriptEngine);
+        }
+
+        /// <summary>
         /// DeletePackageAsync removes version history (cascade).
         /// </summary>
         [TestMethod()]

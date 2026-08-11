@@ -258,6 +258,7 @@ namespace Zeron.Demand.ZServers
                     result.ScriptInstallAfter = repoResult.ScriptInstallAfter;
                     result.ScriptUnInstallBefore = repoResult.ScriptUnInstallBefore;
                     result.ScriptUnInstallAfter = repoResult.ScriptUnInstallAfter;
+                    result.ScriptEngine = repoResult.ScriptEngine;
                     result.Sha256x86 = repoResult.Sha256x86;
                     result.Sha256x64 = repoResult.Sha256x64;
                     result.Source = repoResult.Source;
