@@ -10,6 +10,7 @@ using Zeron.Server.ZCore;
 using Zeron.Server.ZInterfaces;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server.ZServers
 {
@@ -111,6 +112,17 @@ namespace Zeron.Server.ZServers
                     await m_DashboardNotifier.NotifyEventAsync(savedEvent);
                 }
             }
+
+            ZeronEventBus.PublishObject(
+                ZeronEventTopics.EventIngested,
+                new
+                {
+                    agentKey = report.AgentId,
+                    topic = report.Topic,
+                    payload = report.Payload
+                },
+                source: "server",
+                correlationId: report.AgentId);
 
             return true;
         }

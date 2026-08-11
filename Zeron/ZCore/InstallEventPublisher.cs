@@ -4,6 +4,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Zeron.ZCore.Utils;
 using Zeron.ZServers;
 
 namespace Zeron.ZCore
@@ -11,6 +12,7 @@ namespace Zeron.ZCore
     /// <summary>
     /// InstallEventPublisher - optional callback wired by the host to broadcast events.
     /// Automatically enriches JSON payloads with agentId and timestamp.
+    /// Dual-writes to ZeronEventBus for in-process observers.
     /// </summary>
     public static class InstallEventPublisher
     {
@@ -33,7 +35,17 @@ namespace Zeron.ZCore
             string topic, 
             string message)
         {
-            PublishHandler?.Invoke(topic, EnrichMessage(message));
+            string enriched = EnrichMessage(message);
+
+            try
+            {
+                ZeronEventBus.Current.Publish(topic, enriched, source: "agent");
+            }
+            catch (Exception)
+            {
+            }
+
+            PublishHandler?.Invoke(topic, enriched);
         }
 
         /// <summary>

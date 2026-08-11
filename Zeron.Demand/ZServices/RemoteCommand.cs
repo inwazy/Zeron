@@ -6,6 +6,7 @@ using Zeron.Demand.ZCore;
 using Zeron.Demand.ZServers;
 using Zeron.ZAttribute;
 using Zeron.ZCore;
+using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
 using Zeron.ZServers;
 
@@ -66,6 +67,18 @@ namespace Zeron.Demand.ZServices
                     && !string.Equals(assignmentId, Guid.Empty.ToString(), StringComparison.OrdinalIgnoreCase);
 
                 RemoteCommandContext.AssignmentId = trackAssignment ? assignmentId : null;
+                string correlationId = trackAssignment ? assignmentId! : Guid.NewGuid().ToString("N");
+
+                ZeronEventBus.PublishObject(
+                    ZeronEventTopics.CommandReceived,
+                    new
+                    {
+                        targetApi,
+                        command,
+                        assignmentId = trackAssignment ? assignmentId : null
+                    },
+                    source: "agent",
+                    correlationId: correlationId);
 
                 try
                 {
@@ -81,13 +94,16 @@ namespace Zeron.Demand.ZServices
                         ReporterServer.ReportTaskResult(assignmentId, success, response, success ? null : response);
                     }
 
-                    InstallEventPublisher.PublishObject("remotecommand.executed", new
+                    var completedPayload = new
                     {
                         targetApi,
                         command,
                         success,
                         assignmentId = trackAssignment ? assignmentId : null
-                    });
+                    };
+
+                    InstallEventPublisher.PublishObject("remotecommand.executed", completedPayload);
+                    InstallEventPublisher.PublishObject(ZeronEventTopics.CommandCompleted, completedPayload);
 
                     return response;
                 }

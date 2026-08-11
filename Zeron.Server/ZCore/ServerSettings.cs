@@ -113,6 +113,15 @@ namespace Zeron.Server.ZCore
         } = 15;
 
         /// <summary>
+        /// PublishAgentHeartbeatEvents - emit agent.heartbeat on the in-process event bus (noisy).
+        /// </summary>
+        public bool PublishAgentHeartbeatEvents
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// DispatchIntervalMs
         /// </summary>
         public int DispatchIntervalMs

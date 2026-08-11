@@ -8,7 +8,8 @@ Central documentation for building, deploying, configuring, and operating Zeron.
 | [Configuration Reference](./configuration.md) | Server and agent settings |
 | [Agent Connection Guide](./agent-connection.md) | Heartbeat flow, diagnostics, and troubleshooting |
 | [Testing Guide](./testing.md) | Unit tests, E2E integration tests, and EF migrations |
-| [Script Host](./script-host.md) | Pluggable script engines (PowerShell; AutoIt/ThinBasic later) |
+| [Script Host](./script-host.md) | Pluggable script engines (PowerShell + external process) |
+| [Event Bus](./event-bus.md) | In-process events + script observe bridge |
 
 ## Quick Links
 

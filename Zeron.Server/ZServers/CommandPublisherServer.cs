@@ -107,6 +107,18 @@ namespace Zeron.Server.ZServers
                 string topic = "remotecommand." + agentKey;
                 m_PublisherSocket.SendMoreFrame(topic).SendFrame(Encoding.UTF8.GetBytes(json));
 
+                ZeronEventBus.PublishObject(
+                    ZeronEventTopics.TaskDispatched,
+                    new
+                    {
+                        agentKey,
+                        assignmentId,
+                        targetApi,
+                        command
+                    },
+                    source: "server",
+                    correlationId: assignmentId == Guid.Empty ? null : assignmentId.ToString());
+
                 ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                     "CommandPublisherServer dispatched {0} to agent {1}", targetApi, agentKey));
 

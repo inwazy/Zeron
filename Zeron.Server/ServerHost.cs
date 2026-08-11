@@ -95,6 +95,7 @@ namespace Zeron.Server
             builder.Services.AddScoped<DashboardSummaryServer>();
             builder.Services.AddSingleton<CommandPublisherServer>();
             builder.Services.AddSingleton<IDashboardNotifier, DashboardNotifierServer>();
+            builder.Services.AddSingleton<Zeron.ZInterfaces.IZeronEventBus>(_ => Zeron.ZCore.Utils.ZeronEventBus.Current);
             builder.Services.AddHttpContextAccessor();
 
             if (!builder.Environment.IsEnvironment("Testing"))

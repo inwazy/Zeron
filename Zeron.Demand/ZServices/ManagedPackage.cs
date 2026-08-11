@@ -80,14 +80,6 @@ namespace Zeron.Demand.ZServices
                         lastCatalogSyncAt = ManagedPackageServer.LastCatalogSyncUtc
                     };
 
-                    InstallEventPublisher.PublishObject("package.catalog.sync", new
-                    {
-                        success = synced,
-                        synced,
-                        applied,
-                        lastCatalogSyncAt = ManagedPackageServer.LastCatalogSyncUtc
-                    });
-
                     return JsonConvert.SerializeObject(response);
                 }
 

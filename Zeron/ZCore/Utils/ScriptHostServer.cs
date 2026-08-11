@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using Zeron.ZCore.Type;
 using Zeron.ZCore.Utils.Engines;
 using Zeron.ZInterfaces;
+using Zeron.ZCore;
 
 namespace Zeron.ZCore.Utils
 {
@@ -182,12 +183,47 @@ namespace Zeron.ZCore.Utils
                 TimeoutMs = request.TimeoutMs > 0 ? request.TimeoutMs : s_DefaultTimeoutMs
             };
 
+            string correlationId = Guid.NewGuid().ToString("N");
+
             try
             {
-                return engine.Execute(normalized);
+                ZeronEventBus.PublishObject(
+                    ZeronEventTopics.ScriptStarted,
+                    new { engineId, correlationId },
+                    source: "script-host",
+                    correlationId: correlationId);
+
+                ScriptResultType result = engine.Execute(normalized);
+
+                ZeronEventBus.PublishObject(
+                    result.Success ? ZeronEventTopics.ScriptCompleted : ZeronEventTopics.ScriptFailed,
+                    new
+                    {
+                        engineId,
+                        correlationId,
+                        success = result.Success,
+                        exitCode = result.ExitCode,
+                        errorMessage = result.ErrorMessage
+                    },
+                    source: "script-host",
+                    correlationId: correlationId);
+
+                return result;
             }
             catch (Exception e)
             {
+                ZeronEventBus.PublishObject(
+                    ZeronEventTopics.ScriptFailed,
+                    new
+                    {
+                        engineId,
+                        correlationId,
+                        success = false,
+                        errorMessage = e.Message
+                    },
+                    source: "script-host",
+                    correlationId: correlationId);
+
                 return new ScriptResultType
                 {
                     EngineId = engineId,

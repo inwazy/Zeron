@@ -8,6 +8,7 @@ using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server.ZServers
 {
@@ -448,6 +449,19 @@ namespace Zeron.Server.ZServers
                 cancellationToken,
                 new { package.Id, versionNumber, newVersion = nextVersion, package.IsEnabled });
 
+            ZeronEventBus.PublishObject(
+                ZeronEventTopics.CatalogRolledBack,
+                new
+                {
+                    packageId = package.Id,
+                    packageName = package.Name,
+                    restoredFromVersion = versionNumber,
+                    newVersion = nextVersion,
+                    scriptEngine = package.ScriptEngine
+                },
+                source: "server",
+                correlationId: package.Id.ToString());
+
             return (ToInfo(package), null);
         }
 
@@ -590,6 +604,14 @@ namespace Zeron.Server.ZServers
         /// <summary>
         /// WriteCatalogAuditAsync
         /// </summary>
+        /// <param name="action"></param>
+        /// <param name="success"></param>
+        /// <param name="summary"></param>
+        /// <param name="packageName"></param>
+        /// <param name="actor"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="details"></param>
+        /// <returns>Returns void.</returns>
         private async Task WriteCatalogAuditAsync(
             string action,
             bool success,
@@ -681,6 +703,15 @@ namespace Zeron.Server.ZServers
                 ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                     "ManagedPackageCatalogServer requested catalog sync on {0} online agent(s).",
                     targets.Count));
+
+                ZeronEventBus.PublishObject(
+                    ZeronEventTopics.CatalogSyncRequested,
+                    new
+                    {
+                        agentCount = targets.Count,
+                        agentKeys = targets
+                    },
+                    source: "server");
             }
 
             return targets;
@@ -689,6 +720,9 @@ namespace Zeron.Server.ZServers
         /// <summary>
         /// GetNextVersionNumberAsync
         /// </summary>
+        /// <param name="packageId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns int.</returns>
         private async Task<int> GetNextVersionNumberAsync(
             Guid packageId,
             CancellationToken cancellationToken)
@@ -703,6 +737,12 @@ namespace Zeron.Server.ZServers
         /// <summary>
         /// BuildVersionEntity
         /// </summary>
+        /// <param name="package"></param>
+        /// <param name="versionNumber"></param>
+        /// <param name="changeKind"></param>
+        /// <param name="actor"></param>
+        /// <param name="restoredFromVersion"></param>
+        /// <returns>Returns ManagedPackageVersionEntity.</returns>
         private static ManagedPackageVersionEntity BuildVersionEntity(
             ManagedPackageEntity package,
             int versionNumber,
@@ -740,6 +780,9 @@ namespace Zeron.Server.ZServers
         /// <summary>
         /// ApplySnapshot - full replace of live package fields from a version row.
         /// </summary>
+        /// <param name="package"></param>
+        /// <param name="source"></param>
+        /// <returns>Returns void.</returns>
         private static void ApplySnapshot(
             ManagedPackageEntity package,
             ManagedPackageVersionEntity source)
@@ -820,6 +863,8 @@ namespace Zeron.Server.ZServers
         /// <summary>
         /// ToVersionInfo
         /// </summary>
+        /// <param name="version"></param>
+        /// <returns>Returns ManagedPackageVersionInfoType.</returns>
         private static ManagedPackageVersionInfoType ToVersionInfo(
             ManagedPackageVersionEntity version)
         {

@@ -15,6 +15,7 @@
 | `RequireHttpsAgents` | `false` | Reject non-HTTPS agent calls (honors `X-Forwarded-Proto`) |
 | `HeartbeatTimeoutSeconds` | `90` | Seconds without heartbeat before agent marked offline |
 | `CatalogSyncStaleMinutes` | `15` | Online agents whose last catalog sync is older than this are stale on Sync Health |
+| `PublishAgentHeartbeatEvents` | `false` | Emit `agent.heartbeat` on the in-process event bus (noisy; see [Event Bus](./event-bus.md)) |
 | `DispatchIntervalMs` | `5000` | Background task dispatch interval |
 | `ScheduleIntervalMs` | `15000` | Central cron schedule poll interval |
 | `JwtSecret` | (dev secret) | JWT signing key (min 32 chars) |
@@ -79,6 +80,10 @@ Start from `App.Sample.config` (production-shaped) or the published sample next 
 | `script_engine_{id}_platforms` | e.g. `windows,linux,macos` |
 | `script_engine_{id}_inline_mode` | `stdin` / `tempfile` / `none` |
 | `script_engine_{id}_display` | Optional display name |
+| `script_event_listener_enabled` | Run ScriptEventBridge NDJSON listener (`false` default) |
+| `script_event_listener_exe` | Listener executable |
+| `script_event_listener_args` | Listener arguments |
+| `script_event_listener_restart_ms` | Restart backoff after listener exit (`3000`) |
 | `mail_enabled` | `true` to enable agent-side SMTP (`MailerServer`) |
 | `mail_host` / `mail_port` | SMTP server |
 | `mail_user_login` / `mail_user_password` | SMTP credentials (optional if relay allows anonymous) |
