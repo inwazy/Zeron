@@ -26,7 +26,7 @@
     <Authorized>
         <div class="panel">
             <h2>@(m_EditId == null ? "Create Package" : "Edit Package")</h2>
-            <div class="form-grid">
+            <div class="form-grid form-grid-wide">
                 <label>
                     Name
                     <InputText @bind-Value="m_Form.Name" disabled="@(m_EditId != null)" />
@@ -73,7 +73,24 @@
                     <InputText @bind-Value="m_Form.ScriptEngine" />
                     <small class="muted">Script Host engine id for before/after hooks (default powershell).</small>
                 </label>
-                <div class="actions">
+                <label class="form-span">
+                    Install Before Script
+                    <InputTextArea @bind-Value="m_Form.ScriptInstallBefore" rows="5" />
+                    <small class="muted">Optional. Runs via Script Host before install.</small>
+                </label>
+                <label class="form-span">
+                    Install After Script
+                    <InputTextArea @bind-Value="m_Form.ScriptInstallAfter" rows="5" />
+                </label>
+                <label class="form-span">
+                    Uninstall Before Script
+                    <InputTextArea @bind-Value="m_Form.ScriptUnInstallBefore" rows="5" />
+                </label>
+                <label class="form-span">
+                    Uninstall After Script
+                    <InputTextArea @bind-Value="m_Form.ScriptUnInstallAfter" rows="5" />
+                </label>
+                <div class="actions form-span">
                     <button class="btn" @onclick="SaveAsync" disabled="@m_IsBusy">@(m_EditId == null ? "Create" : "Save")</button>
                     @if (m_EditId != null)
                     {
@@ -107,6 +124,7 @@
                     <th>Name</th>
                     <th>Status</th>
                     <th>Engine</th>
+                    <th>Scripts</th>
                     <th>URL x64</th>
                     <th>Updated</th>
                     <th></th>
@@ -123,6 +141,7 @@
                             </span>
                         </td>
                         <td><code>@(string.IsNullOrWhiteSpace(package.ScriptEngine) ? "powershell" : package.ScriptEngine)</code></td>
+                        <td>@DescribeScripts(package)</td>
                         <td class="muted">@(string.IsNullOrWhiteSpace(package.Urlx64) ? "-" : package.Urlx64)</td>
                         <td>@(package.UpdatedAt?.ToLocalTime().ToString("g") ?? "-")</td>
                         <td>
@@ -171,6 +190,7 @@
                         <th>Actor</th>
                         <th>Enabled</th>
                         <th>Engine</th>
+                        <th>Scripts</th>
                         <th>URL x64</th>
                         <th></th>
                     </tr>
@@ -195,6 +215,7 @@
                                 </span>
                             </td>
                             <td><code>@(string.IsNullOrWhiteSpace(version.ScriptEngine) ? "powershell" : version.ScriptEngine)</code></td>
+                            <td>@DescribeScripts(version)</td>
                             <td class="muted">@(string.IsNullOrWhiteSpace(version.Urlx64) ? "-" : version.Urlx64)</td>
                             <td>
                                 <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">

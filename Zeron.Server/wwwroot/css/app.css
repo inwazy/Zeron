@@ -337,6 +337,15 @@ th {
     max-width: 520px;
 }
 
+.form-grid.form-grid-wide {
+    max-width: 920px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-grid .form-span {
+    grid-column: 1 / -1;
+}
+
 .form-grid label {
     display: grid;
     gap: 0.35rem;

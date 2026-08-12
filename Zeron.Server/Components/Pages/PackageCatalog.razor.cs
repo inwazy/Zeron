@@ -90,6 +90,10 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdUnInstallx64 = package.CmdUnInstallx64 ?? "";
             m_Form.Sha256x86 = package.Sha256x86 ?? "";
             m_Form.Sha256x64 = package.Sha256x64 ?? "";
+            m_Form.ScriptInstallBefore = package.ScriptInstallBefore ?? "";
+            m_Form.ScriptInstallAfter = package.ScriptInstallAfter ?? "";
+            m_Form.ScriptUnInstallBefore = package.ScriptUnInstallBefore ?? "";
+            m_Form.ScriptUnInstallAfter = package.ScriptUnInstallAfter ?? "";
             m_Form.ScriptEngine = string.IsNullOrWhiteSpace(package.ScriptEngine) ? "powershell" : package.ScriptEngine;
             m_Form.IsEnabled = package.IsEnabled;
             m_Message = null;
@@ -224,6 +228,10 @@ namespace Zeron.Server.Components.Pages
                     CmdUnInstallx64 = m_Form.CmdUnInstallx64,
                     Sha256x86 = m_Form.Sha256x86,
                     Sha256x64 = m_Form.Sha256x64,
+                    ScriptInstallBefore = m_Form.ScriptInstallBefore,
+                    ScriptInstallAfter = m_Form.ScriptInstallAfter,
+                    ScriptUnInstallBefore = m_Form.ScriptUnInstallBefore,
+                    ScriptUnInstallAfter = m_Form.ScriptUnInstallAfter,
                     ScriptEngine = m_Form.ScriptEngine,
                     IsEnabled = m_Form.IsEnabled
                 };
@@ -332,6 +340,7 @@ namespace Zeron.Server.Components.Pages
         private async Task<AuditActorType?> GetActorAsync()
         {
             AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            
             return AuditLogServer.FromPrincipal(authState.User);
         }
 
@@ -350,8 +359,81 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdUnInstallx64 = "";
             m_Form.Sha256x86 = "";
             m_Form.Sha256x64 = "";
+            m_Form.ScriptInstallBefore = "";
+            m_Form.ScriptInstallAfter = "";
+            m_Form.ScriptUnInstallBefore = "";
+            m_Form.ScriptUnInstallAfter = "";
             m_Form.ScriptEngine = "powershell";
             m_Form.IsEnabled = true;
+        }
+
+        /// <summary>
+        /// DescribeScripts
+        /// </summary>
+        /// <param name="package"></param>
+        /// <returns>Returns short script summary.</returns>
+        private static string DescribeScripts(
+            ManagedPackageInfoType package)
+        {
+            return DescribeScripts(
+                package.ScriptInstallBefore,
+                package.ScriptInstallAfter,
+                package.ScriptUnInstallBefore,
+                package.ScriptUnInstallAfter);
+        }
+
+        /// <summary>
+        /// DescribeScripts
+        /// </summary>
+        /// <param name="version"></param>
+        /// <returns>Returns short script summary.</returns>
+        private static string DescribeScripts(
+            ManagedPackageVersionInfoType version)
+        {
+            return DescribeScripts(
+                version.ScriptInstallBefore,
+                version.ScriptInstallAfter,
+                version.ScriptUnInstallBefore,
+                version.ScriptUnInstallAfter);
+        }
+
+        /// <summary>
+        /// DescribeScripts
+        /// </summary>
+        /// <param name="installBefore"></param>
+        /// <param name="installAfter"></param>
+        /// <param name="uninstallBefore"></param>
+        /// <param name="uninstallAfter"></param>
+        /// <returns>Returns short script summary.</returns>
+        private static string DescribeScripts(
+            string? installBefore,
+            string? installAfter,
+            string? uninstallBefore,
+            string? uninstallAfter)
+        {
+            List<string> parts = [];
+
+            if (!string.IsNullOrWhiteSpace(installBefore))
+            {
+                parts.Add("ib");
+            }
+
+            if (!string.IsNullOrWhiteSpace(installAfter))
+            {
+                parts.Add("ia");
+            }
+
+            if (!string.IsNullOrWhiteSpace(uninstallBefore))
+            {
+                parts.Add("ub");
+            }
+
+            if (!string.IsNullOrWhiteSpace(uninstallAfter))
+            {
+                parts.Add("ua");
+            }
+
+            return parts.Count == 0 ? "-" : string.Join("+", parts);
         }
 
         /// <summary>
@@ -385,6 +467,18 @@ namespace Zeron.Server.Components.Pages
 
             // SHA256 x64.
             public string Sha256x64 { get; set; } = "";
+
+            // Install before script.
+            public string ScriptInstallBefore { get; set; } = "";
+
+            // Install after script.
+            public string ScriptInstallAfter { get; set; } = "";
+
+            // Uninstall before script.
+            public string ScriptUnInstallBefore { get; set; } = "";
+
+            // Uninstall after script.
+            public string ScriptUnInstallAfter { get; set; } = "";
 
             // Script engine id.
             public string ScriptEngine { get; set; } = "powershell";
