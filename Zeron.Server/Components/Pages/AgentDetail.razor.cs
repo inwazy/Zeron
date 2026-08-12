@@ -86,6 +86,5 @@ namespace Zeron.Server.Components.Pages
         {
             m_Agent = await AgentManager.UpdateAgentAsync(AgentKey, new AgentUpdateRequestType { Status = "online" });
         }
-
     }
 }

@@ -1,10 +1,7 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-using Microsoft.AspNetCore.Components;
 using Zeron.Server.Data.Entities;
-using Zeron.Server.ZServers;
-using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
 {
@@ -24,6 +21,5 @@ namespace Zeron.Server.Components.Pages
         {
             m_Tasks = await TaskDispatcher.GetTasksAsync();
         }
-
     }
 }

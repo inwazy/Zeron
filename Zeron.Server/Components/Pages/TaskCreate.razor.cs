@@ -1,8 +1,8 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-using Microsoft.AspNetCore.Components;
-using Zeron.Server.ZServers;
+using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore.Type;
 using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
@@ -13,7 +13,7 @@ namespace Zeron.Server.Components.Pages
     public partial class TaskCreate
     {
         // Model.
-        private readonly TaskFormModel m_Model = new();
+        private readonly TaskFormModelType m_Model = new();
 
         // Error.
         private string? m_Error;
@@ -43,7 +43,8 @@ namespace Zeron.Server.Components.Pages
                     AgentIds = string.IsNullOrWhiteSpace(m_Model.AgentId) ? null : [m_Model.AgentId]
                 };
 
-                var task = await TaskDispatcher.CreateTaskAsync(request);
+                TaskEntity task = await TaskDispatcher.CreateTaskAsync(request);
+
                 Navigation.NavigateTo($"/tasks/{task.Id}");
             }
             catch (Exception ex)
@@ -55,34 +56,5 @@ namespace Zeron.Server.Components.Pages
                 m_IsSubmitting = false;
             }
         }
-
-        /// <summary>
-        /// TaskFormModel
-        /// </summary>
-        /// <returns>Returns void.</returns>
-        private sealed class TaskFormModel
-        {
-            // Name.
-            public string Name { get; set; } = "";
-
-            // Description.
-            public string? Description { get; set; }
-
-            // Target API.
-            public string TargetApi { get; set; } = "HealthCheck";
-
-            // Command.
-            public string Command { get; set; } = "";
-
-            // Target type.
-            public string TargetType { get; set; } = "all";
-
-            // Agent ID.
-            public string? AgentId { get; set; }
-
-            // Hostname pattern.
-            public string? HostnamePattern { get; set; }
-        }
-
     }
 }

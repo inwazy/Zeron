@@ -1,8 +1,6 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-using Microsoft.AspNetCore.Components;
-
 namespace Zeron.Server.Components
 {
     /// <summary>
@@ -18,6 +16,5 @@ namespace Zeron.Server.Components
         {
             Navigation.NavigateTo("/login", true);
         }
-
     }
 }

@@ -1,11 +1,9 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using System.Security.Claims;
 using Zeron.Server.ZCore;
-using Zeron.Server.ZServers;
+using Zeron.Server.ZCore.Type;
 using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
@@ -16,10 +14,10 @@ namespace Zeron.Server.Components.Pages
     public partial class Users
     {
         // Rows.
-        private List<UserEditRow> m_Rows = [];
+        private List<UserEditRowType> m_Rows = [];
 
         // Create model.
-        private readonly CreateFormModel m_CreateModel = new();
+        private readonly CreateFormModelType m_CreateModel = new();
 
         // Current user ID.
         private string? m_CurrentUserId;
@@ -58,9 +56,9 @@ namespace Zeron.Server.Components.Pages
         {
             List<UserInfoType> users = await UserManager.GetUsersAsync();
 
-            m_Rows = users
+            m_Rows = [.. users
                 .Where(user => !string.IsNullOrWhiteSpace(user.Id))
-                .Select(user => new UserEditRow
+                .Select(user => new UserEditRowType
                 {
                     Id = user.Id!,
                     Username = user.Username ?? "",
@@ -70,8 +68,7 @@ namespace Zeron.Server.Components.Pages
                     MustChangePassword = user.MustChangePassword,
                     CreatedAt = user.CreatedAt,
                     NewPassword = ""
-                })
-                .ToList();
+                })];
         }
 
         /// <summary>
@@ -97,6 +94,7 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_CreateSucceeded = false;
                     m_CreateMessage = error;
+
                     return;
                 }
 
@@ -106,6 +104,7 @@ namespace Zeron.Server.Components.Pages
                 m_CreateModel.Password = "";
                 m_CreateModel.Email = "";
                 m_CreateModel.Role = ServerRoles.Viewer;
+
                 await ReloadAsync();
             }
             finally
@@ -120,7 +119,7 @@ namespace Zeron.Server.Components.Pages
         /// <param name="row"></param>
         /// <returns>Returns Task.</returns>
         private async Task SaveUserAsync(
-            UserEditRow row)
+            UserEditRowType row)
         {
             if (!Guid.TryParse(row.Id, out Guid userId))
             {
@@ -147,11 +146,13 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_UpdateSucceeded = false;
                     m_UpdateMessage = error;
+
                     return;
                 }
 
                 m_UpdateSucceeded = true;
                 m_UpdateMessage = $"Updated user '{updated!.Username}'.";
+
                 await ReloadAsync();
             }
             finally
@@ -167,7 +168,7 @@ namespace Zeron.Server.Components.Pages
         /// <param name="isActive"></param>
         /// <returns>Returns Task.</returns>
         private async Task SetActiveAsync(
-            UserEditRow row, 
+            UserEditRowType row, 
             bool isActive)
         {
             if (!Guid.TryParse(row.Id, out Guid userId))
@@ -189,6 +190,7 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_UpdateSucceeded = false;
                     m_UpdateMessage = error;
+
                     return;
                 }
 
@@ -196,6 +198,7 @@ namespace Zeron.Server.Components.Pages
                 m_UpdateMessage = isActive
                     ? $"Activated user '{updated!.Username}'."
                     : $"Deactivated user '{updated!.Username}'.";
+
                 await ReloadAsync();
             }
             finally
@@ -212,56 +215,5 @@ namespace Zeron.Server.Components.Pages
         {
             return Guid.TryParse(m_CurrentUserId, out Guid userId) ? userId : null;
         }
-
-        /// <summary>
-        /// CreateFormModel
-        /// </summary>
-        /// <returns>Returns void.</returns>
-        private sealed class CreateFormModel
-        {
-            // Username.
-            public string Username { get; set; } = "";
-
-            // Password.
-            public string Password { get; set; } = "";
-
-            // Email.
-            public string Email { get; set; } = "";
-
-            // Role.
-            public string Role { get; set; } = ServerRoles.Viewer;
-        }
-
-        /// <summary>
-        /// UserEditRow
-        /// </summary>
-        /// <returns>Returns void.</returns>
-        private sealed class UserEditRow
-        {
-            // ID.
-            public string Id { get; set; } = "";
-
-            // Username.
-            public string Username { get; set; } = "";
-
-            // Role.
-            public string Role { get; set; } = ServerRoles.Viewer;
-
-            // Email.
-            public string Email { get; set; } = "";
-
-            // Is active.
-            public bool IsActive { get; set; }
-
-            // Must change password.
-            public bool MustChangePassword { get; set; }
-
-            // Created at.
-            public DateTime? CreatedAt { get; set; }
-
-            // New password.
-            public string NewPassword { get; set; } = "";
-        }
-
     }
 }

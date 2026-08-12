@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.Components.Authorization;
+using Zeron.Server.ZCore.Type;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -22,7 +23,7 @@ namespace Zeron.Server.Components.Pages
         private List<ManagedPackageVersionInfoType> m_Versions = [];
 
         // Form.
-        private readonly PackageFormModel m_Form = new();
+        private readonly PackageFormModelType m_Form = new();
 
         // Edit id.
         private Guid? m_EditId;
@@ -89,6 +90,7 @@ namespace Zeron.Server.Components.Pages
                         packageId,
                         ParseDiffKey(m_DiffLeftKey),
                         ParseDiffKey(m_DiffRightKey));
+
                     m_Diff = diff;
                 }
             }
@@ -237,6 +239,7 @@ namespace Zeron.Server.Components.Pages
                     m_HistorySucceeded = false;
                     m_HistoryMessage = error;
                     m_Diff = null;
+
                     return;
                 }
 
@@ -294,12 +297,14 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_HistorySucceeded = false;
                     m_HistoryMessage = error;
+
                     return;
                 }
 
                 m_HistorySucceeded = true;
                 m_HistoryMessage = $"Restored '{package!.Name}' to version {versionNumber} and pushed catalog sync.";
                 m_HistoryPackage = package;
+
                 await ReloadAsync();
             }
             finally
@@ -367,6 +372,7 @@ namespace Zeron.Server.Components.Pages
                     {
                         m_Succeeded = false;
                         m_Message = error;
+
                         return;
                     }
 
@@ -385,12 +391,14 @@ namespace Zeron.Server.Components.Pages
                     {
                         m_Succeeded = false;
                         m_Message = error;
+
                         return;
                     }
 
                     m_Succeeded = true;
                     m_Message = $"Updated package '{package!.Name}'.";
                     m_EditId = null;
+
                     ResetForm();
                 }
 
@@ -428,6 +436,7 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_Succeeded = false;
                     m_Message = error;
+
                     return;
                 }
 
@@ -553,57 +562,6 @@ namespace Zeron.Server.Components.Pages
             }
 
             return parts.Count == 0 ? "-" : string.Join("+", parts);
-        }
-
-        /// <summary>
-        /// PackageFormModel
-        /// </summary>
-        private sealed class PackageFormModel
-        {
-            // Name.
-            public string Name { get; set; } = "";
-
-            // URL x86.
-            public string Urlx86 { get; set; } = "";
-
-            // URL x64.            
-            public string Urlx64 { get; set; } = "";
-
-            // Command install x86.
-            public string CmdInstallx86 { get; set; } = "";
-
-            // Command install x64.
-            public string CmdInstallx64 { get; set; } = "";
-
-            // Command uninstall x86.
-            public string CmdUnInstallx86 { get; set; } = "";
-
-            // Command uninstall x64.
-            public string CmdUnInstallx64 { get; set; } = "";
-
-            // SHA256 x86.
-            public string Sha256x86 { get; set; } = "";
-
-            // SHA256 x64.
-            public string Sha256x64 { get; set; } = "";
-
-            // Install before script.
-            public string ScriptInstallBefore { get; set; } = "";
-
-            // Install after script.
-            public string ScriptInstallAfter { get; set; } = "";
-
-            // Uninstall before script.
-            public string ScriptUnInstallBefore { get; set; } = "";
-
-            // Uninstall after script.
-            public string ScriptUnInstallAfter { get; set; } = "";
-
-            // Script engine id.
-            public string ScriptEngine { get; set; } = "powershell";
-
-            // Enabled.
-            public bool IsEnabled { get; set; } = true;
         }
     }
 }

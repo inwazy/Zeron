@@ -3,7 +3,6 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
-using Zeron.Server.ZCore;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -43,8 +42,10 @@ namespace Zeron.Server.Components.Pages
         protected override async Task OnInitializedAsync()
         {
             m_PasswordChanged = PasswordChanged == "1";
+
             await ReloadAsync();
             await ConnectHubAsync();
+
             StartRefreshTimer();
         }
 
@@ -138,6 +139,5 @@ namespace Zeron.Server.Components.Pages
                 await m_HubConnection.DisposeAsync();
             }
         }
-
     }
 }
