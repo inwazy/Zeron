@@ -181,6 +181,75 @@
         }
         else
         {
+            <div class="form-grid form-grid-wide" style="margin-bottom: 1rem;">
+                <label>
+                    Compare left
+                    <InputSelect @bind-Value="m_DiffLeftKey">
+                        <option value="current">current (live)</option>
+                        @foreach (ManagedPackageVersionInfoType version in m_Versions.OrderBy(item => item.VersionNumber))
+                        {
+                            <option value="@version.VersionNumber">v@version.VersionNumber (@version.ChangeKind)</option>
+                        }
+                    </InputSelect>
+                </label>
+                <label>
+                    Compare right
+                    <InputSelect @bind-Value="m_DiffRightKey">
+                        <option value="current">current (live)</option>
+                        @foreach (ManagedPackageVersionInfoType version in m_Versions.OrderBy(item => item.VersionNumber))
+                        {
+                            <option value="@version.VersionNumber">v@version.VersionNumber (@version.ChangeKind)</option>
+                        }
+                    </InputSelect>
+                </label>
+                <label class="checkbox-row">
+                    <InputCheckbox @bind-Value="m_DiffChangedOnly" />
+                    Show changed fields only
+                </label>
+                <div class="actions">
+                    <button class="btn" @onclick="CompareAsync" disabled="@m_IsBusy">Compare</button>
+                    @if (m_Diff != null)
+                    {
+                        <button class="btn btn-secondary" @onclick="ClearDiff" disabled="@m_IsBusy">Clear Diff</button>
+                    }
+                </div>
+            </div>
+
+            @if (m_Diff != null)
+            {
+                <div class="panel-header" style="margin-bottom: 0.75rem;">
+                    <h2>Diff: @m_Diff.LeftLabel → @m_Diff.RightLabel</h2>
+                    <span class="muted">@m_Diff.ChangedCount field(s) changed</span>
+                </div>
+
+                @if (VisibleDiffFields.Count == 0)
+                {
+                    <p class="muted">No differences in the selected filter.</p>
+                }
+                else
+                {
+                    <table class="diff-table">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>@m_Diff.LeftLabel</th>
+                                <th>@m_Diff.RightLabel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (ManagedPackageVersionDiffFieldType field in VisibleDiffFields)
+                            {
+                                <tr class="@(field.Changed ? "diff-changed" : "")">
+                                    <td><code>@field.Field</code></td>
+                                    <td><pre class="diff-value">@(string.IsNullOrEmpty(field.Left) ? "∅" : field.Left)</pre></td>
+                                    <td><pre class="diff-value">@(string.IsNullOrEmpty(field.Right) ? "∅" : field.Right)</pre></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+
             <table>
                 <thead>
                     <tr>
@@ -218,15 +287,22 @@
                             <td>@DescribeScripts(version)</td>
                             <td class="muted">@(string.IsNullOrWhiteSpace(version.Urlx64) ? "-" : version.Urlx64)</td>
                             <td>
-                                <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
-                                    <Authorized>
-                                        <button class="btn btn-secondary"
-                                                @onclick="() => RollbackAsync(version.VersionNumber)"
-                                                disabled="@m_IsBusy">
-                                            Restore
-                                        </button>
-                                    </Authorized>
-                                </AuthorizeView>
+                                <div class="actions">
+                                    <button class="btn btn-secondary"
+                                            @onclick="() => CompareToCurrentAsync(version.VersionNumber)"
+                                            disabled="@m_IsBusy">
+                                        Diff
+                                    </button>
+                                    <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
+                                        <Authorized>
+                                            <button class="btn btn-secondary"
+                                                    @onclick="() => RollbackAsync(version.VersionNumber)"
+                                                    disabled="@m_IsBusy">
+                                                Restore
+                                            </button>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                </div>
                             </td>
                         </tr>
                     }

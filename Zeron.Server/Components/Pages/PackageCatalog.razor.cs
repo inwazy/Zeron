@@ -42,9 +42,27 @@ namespace Zeron.Server.Components.Pages
         // Busy.
         private bool m_IsBusy;
 
+        // Diff left key: "current" or version number string.
+        private string m_DiffLeftKey = "current";
+
+        // Diff right key.
+        private string m_DiffRightKey = "current";
+
+        // Diff result.
+        private ManagedPackageVersionDiffType? m_Diff;
+
+        // Show only changed fields.
+        private bool m_DiffChangedOnly = true;
+
         /// <summary>
-        /// OnInitializedAsync
+        /// VisibleDiffFields
         /// </summary>
+        private List<ManagedPackageVersionDiffFieldType> VisibleDiffFields =>
+            m_Diff == null
+                ? []
+                : m_DiffChangedOnly
+                    ? m_Diff.Fields.Where(item => item.Changed).ToList()
+                    : m_Diff.Fields;
         /// <returns>Returns Task.</returns>
         protected override async Task OnInitializedAsync()
         {
@@ -64,6 +82,15 @@ namespace Zeron.Server.Components.Pages
                 m_Versions = await CatalogServer.GetPackageVersionsAsync(packageId);
                 m_HistoryPackage = m_Packages.FirstOrDefault(item => item.Id == m_HistoryPackage.Id)
                     ?? m_HistoryPackage;
+
+                if (m_Diff != null)
+                {
+                    (ManagedPackageVersionDiffType? diff, string? _) = await CatalogServer.ComparePackageVersionsAsync(
+                        packageId,
+                        ParseDiffKey(m_DiffLeftKey),
+                        ParseDiffKey(m_DiffRightKey));
+                    m_Diff = diff;
+                }
             }
         }
 
@@ -125,11 +152,19 @@ namespace Zeron.Server.Components.Pages
 
             m_HistoryPackage = package;
             m_HistoryMessage = null;
+            m_Diff = null;
+            m_DiffChangedOnly = true;
+            m_DiffRightKey = "current";
+            m_DiffLeftKey = "current";
             m_IsBusy = true;
 
             try
             {
                 m_Versions = await CatalogServer.GetPackageVersionsAsync(packageId);
+                m_DiffLeftKey = m_Versions.Count == 0
+                    ? "current"
+                    : m_Versions.Min(item => item.VersionNumber).ToString();
+                m_DiffRightKey = "current";
             }
             finally
             {
@@ -146,6 +181,90 @@ namespace Zeron.Server.Components.Pages
             m_HistoryPackage = null;
             m_Versions = [];
             m_HistoryMessage = null;
+            ClearDiff();
+            m_DiffLeftKey = "current";
+            m_DiffRightKey = "current";
+        }
+
+        /// <summary>
+        /// ClearDiff
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private void ClearDiff()
+        {
+            m_Diff = null;
+        }
+
+        /// <summary>
+        /// CompareToCurrentAsync - quick diff of a historical version against live.
+        /// </summary>
+        /// <param name="versionNumber"></param>
+        /// <returns>Returns Task.</returns>
+        private async Task CompareToCurrentAsync(
+            int versionNumber)
+        {
+            m_DiffLeftKey = versionNumber.ToString();
+            m_DiffRightKey = "current";
+            await CompareAsync();
+        }
+
+        /// <summary>
+        /// CompareAsync
+        /// </summary>
+        /// <returns>Returns Task.</returns>
+        private async Task CompareAsync()
+        {
+            if (m_HistoryPackage == null || !Guid.TryParse(m_HistoryPackage.Id, out Guid packageId))
+            {
+                return;
+            }
+
+            m_IsBusy = true;
+            m_HistoryMessage = null;
+
+            try
+            {
+                int? left = ParseDiffKey(m_DiffLeftKey);
+                int? right = ParseDiffKey(m_DiffRightKey);
+
+                (ManagedPackageVersionDiffType? diff, string? error) = await CatalogServer.ComparePackageVersionsAsync(
+                    packageId,
+                    left,
+                    right);
+
+                if (error != null)
+                {
+                    m_HistorySucceeded = false;
+                    m_HistoryMessage = error;
+                    m_Diff = null;
+                    return;
+                }
+
+                m_Diff = diff;
+                m_HistorySucceeded = true;
+                m_HistoryMessage = $"{diff!.LeftLabel} → {diff.RightLabel}: {diff.ChangedCount} field(s) changed.";
+            }
+            finally
+            {
+                m_IsBusy = false;
+            }
+        }
+
+        /// <summary>
+        /// ParseDiffKey
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>Returns version number or null for current.</returns>
+        private static int? ParseDiffKey(
+            string? key)
+        {
+            if (string.IsNullOrWhiteSpace(key)
+                || string.Equals(key, "current", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return int.TryParse(key, out int versionNumber) ? versionNumber : null;
         }
 
         /// <summary>

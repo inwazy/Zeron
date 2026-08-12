@@ -194,6 +194,7 @@ The Server catalog is the central source of ManagedPackage definitions. Demand a
 | `DELETE /api/packages/catalog/{id}` | Operator+ | Delete catalog package |
 | `GET /api/packages/catalog/{id}/versions` | Viewer+ | Package version history |
 | `GET /api/packages/catalog/{id}/versions/{n}` | Viewer+ | Single version snapshot |
+| `GET /api/packages/catalog/{id}/diff?left=&right=` | Viewer+ | Field diff; omit a side (or both not allowed) — omitted side = live `current` |
 | `POST /api/packages/catalog/{id}/rollback` | Operator+ | Restore version `n` onto live package and push sync |
 | `GET /api/packages/catalog/sync` | Agent API key | Full catalog snapshot for Demand |
 | `GET /api/packages/catalog/sync-health` | Viewer+ | Catalog sync health summary per agent |
@@ -259,7 +260,7 @@ Demand ManagedPackage local commands (Client / RemoteCommand):
 
 Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete/rollback pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
 
-**Catalog versions:** each successful create/update/rollback appends a `ManagedPackageVersions` snapshot (`create` / `update` / `rollback`), including `ScriptEngine` and before/after scripts. Operators can Restore a prior version from Catalog **History**; restore writes a new version row (does not rewrite history) and re-pushes sync. Deleting a package cascades its version rows away.
+**Catalog versions:** each successful create/update/rollback appends a `ManagedPackageVersions` snapshot (`create` / `update` / `rollback`), including `ScriptEngine` and before/after scripts. Operators can Restore a prior version from Catalog **History**; restore writes a new version row (does not rewrite history) and re-pushes sync. History **Compare / Diff** shows field-level differences between any two sides (`vN` or live `current`). Deleting a package cascades its version rows away.
 
 **ScriptEngine:** catalog field (default `powershell`) selects the Script Host engine for install/uninstall hooks on Demand. Deploy to explicit `AgentIds` fails if the agent does not report that engine as available. Catalog Create/Edit exposes before/after script bodies (`ScriptInstallBefore` / `After`, `ScriptUnInstallBefore` / `After`) plus engine id; History shows which hooks are set (`ib`/`ia`/`ub`/`ua`). See [Script Host](./script-host.md).
 
