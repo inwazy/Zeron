@@ -1,0 +1,74 @@
+@page "/account"
+@rendermode InteractiveServer
+@using Zeron.Server.ZServers
+@using Zeron.ZCore.Type
+@attribute [Authorize(Policy = ServerPolicies.DeviceOwnerOrStaff)]
+@inject AuthServer AuthServer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="page-header">
+    <div>
+        <h1>Account</h1>
+        <p>Update your notification email and password.</p>
+    </div>
+    <div class="actions">
+        <a class="btn btn-secondary" href="@m_HomePath">Back</a>
+    </div>
+</div>
+
+@if (m_Profile == null)
+{
+    <div class="panel"><p>Loading account...</p></div>
+}
+else
+{
+    <div class="cards" style="margin-bottom: 1.5rem;">
+        <div class="card"><span>Username</span><strong>@m_Profile.Username</strong></div>
+        <div class="card"><span>Role</span><strong>@m_Profile.Role</strong></div>
+    </div>
+
+    <div class="panel">
+        <h2>Notification Email</h2>
+        <p class="muted">Used for self-service install result emails when <code>InstallResultEmailEnabled</code> is on.</p>
+        <div class="form-grid">
+            <label>
+                Email
+                <InputText @bind-Value="m_Email" autocomplete="email" />
+                <small class="muted">Leave blank to clear.</small>
+            </label>
+            <div class="actions">
+                <button class="btn" @onclick="SaveEmailAsync" disabled="@m_IsBusy">Save Email</button>
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(m_EmailMessage))
+        {
+            <p class="@(m_EmailSucceeded ? "success-text" : "error")">@m_EmailMessage</p>
+        }
+    </div>
+
+    <div class="panel">
+        <h2>Change Password</h2>
+        <div class="form-grid">
+            <label>
+                Current Password
+                <InputText type="password" @bind-Value="m_CurrentPassword" autocomplete="current-password" />
+            </label>
+            <label>
+                New Password
+                <InputText type="password" @bind-Value="m_NewPassword" autocomplete="new-password" />
+                <small class="muted">At least 6 characters.</small>
+            </label>
+            <label>
+                Confirm New Password
+                <InputText type="password" @bind-Value="m_ConfirmPassword" autocomplete="new-password" />
+            </label>
+            <div class="actions">
+                <button class="btn" @onclick="SavePasswordAsync" disabled="@m_IsBusy">Update Password</button>
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(m_PasswordMessage))
+        {
+            <p class="@(m_PasswordSucceeded ? "success-text" : "error")">@m_PasswordMessage</p>
+        }
+    </div>
+}

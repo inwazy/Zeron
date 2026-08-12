@@ -170,7 +170,7 @@ sc start ZeronDemand
 6. Check **Events** and **Alerts** for operational data.
 7. On **Users**, create Operator/Viewer/DeviceOwner accounts as needed.
 8. For package deploy: add packages on Dashboard **Packages → Catalog**, wait for Demand sync (or keep local `source=local` overrides), then use **Packages → Deploy Package**. Task status should go `running` then `completed`/`failed` after install finishes.
-9. For end-user self-service: create a DeviceOwner user, bind their account to an AgentKey on **Device Bindings**, then they can sign in and open **My Devices**.
+9. For end-user self-service: create a DeviceOwner user, bind their account to an AgentKey on **Device Bindings**, then they can sign in, open **My Devices**, and set their notification email / password on **Account** (`/account`).
 
 See [Agent Connection Guide](./agent-connection.md) if agents stay offline or stale.
 

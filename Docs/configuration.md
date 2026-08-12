@@ -123,12 +123,16 @@ Admin users can manage accounts on the Dashboard **Users** page (`/users`).
 | Existing default password | If admin password still matches `DefaultAdminPassword`, it is marked for forced change on startup |
 | Admin-created users | Must change password on first login |
 | Admin password reset | Target user must change password on next login |
-| Self-service | Any logged-in user can open **Change Password** in the sidebar |
+| Self-service | Any logged-in user can open **Account** (`/account`) to change email and password |
 
 Endpoints:
 
-- `POST /account/change-password` — form post (Dashboard)
+- `POST /account/change-password` — form post (forced first-login / MustChangePassword flow)
 - `POST /api/auth/change-password` — JSON API (`currentPassword`, `newPassword`)
+- `POST /api/auth/email` — JSON API (`email`; empty clears). Used for install-result notifications
+- `GET /api/auth/me` — current profile (includes `Email`)
+
+Dashboard page: `/account` (email + password). Forced change still uses `/account/change-password`.
 
 While `MustChangePassword` is true, other Dashboard pages and APIs return redirect / `403` until the password is updated.
 

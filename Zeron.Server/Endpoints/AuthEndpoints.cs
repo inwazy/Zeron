@@ -153,6 +153,28 @@ namespace Zeron.Server.Endpoints
                 return Results.Ok(new { success = true, user });
             }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
 
+            app.MapPost("/api/auth/email", async (
+                UpdateEmailRequestType request,
+                ClaimsPrincipal principal,
+                AuthServer authServer) =>
+            {
+                if (!TryGetUserId(principal, out Guid userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                (UserInfoType? user, string? error) = await authServer.UpdateEmailAsync(
+                    userId,
+                    request.Email);
+
+                if (error != null)
+                {
+                    return Results.BadRequest(new { success = false, message = error });
+                }
+
+                return Results.Ok(new { success = true, user });
+            }).RequireAuthorization(ServerPolicies.DeviceOwnerOrStaff);
+
             app.MapPost("/account/logout", async (HttpContext context) =>
             {
                 await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

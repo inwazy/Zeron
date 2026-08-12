@@ -201,6 +201,42 @@ namespace Zeron.Server.ZServers
         }
 
         /// <summary>
+        /// UpdateEmailAsync - self-service notification email update.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="email"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns updated user or error.</returns>
+        public async Task<(UserInfoType? User, string? Error)> UpdateEmailAsync(
+            Guid userId,
+            string? email,
+            CancellationToken cancellationToken = default)
+        {
+            string? normalized = NormalizeEmail(email);
+
+            if (normalized != null && !IsValidEmail(normalized))
+            {
+                return (null, "Email address is invalid.");
+            }
+
+            UserEntity? user = await m_DbContext.Users
+                .FirstOrDefaultAsync(item => item.Id == userId && item.IsActive, cancellationToken);
+
+            if (user == null)
+            {
+                return (null, "User not found.");
+            }
+
+            user.Email = normalized;
+            await m_DbContext.SaveChangesAsync(cancellationToken);
+
+            ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
+                "AuthServer email updated for user '{0}'.", user.Username));
+
+            return (JwtTokenServer.ToUserInfo(user), null);
+        }
+
+        /// <summary>
         /// GetUserEntityAsync
         /// </summary>
         /// <param name="userId"></param>
@@ -258,6 +294,43 @@ namespace Zeron.Server.ZServers
             string? apiKey)
         {
             return AgentApiKeyServer.Matches(m_Settings.AgentApiKey, apiKey);
+        }
+
+        /// <summary>
+        /// NormalizeEmail
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns>Returns trimmed email or null.</returns>
+        private static string? NormalizeEmail(
+            string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return null;
+            }
+
+            return email.Trim();
+        }
+
+        /// <summary>
+        /// IsValidEmail - lightweight format check for notification addresses.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns>Returns bool.</returns>
+        private static bool IsValidEmail(
+            string email)
+        {
+            if (email.Length > 254 || email.Contains(' ', StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            int at = email.IndexOf('@');
+
+            return at > 0
+                && at < email.Length - 1
+                && email.LastIndexOf('@') == at
+                && email.IndexOf('.', at + 1) > at + 1;
         }
     }
 }

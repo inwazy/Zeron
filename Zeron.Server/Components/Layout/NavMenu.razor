@@ -35,7 +35,7 @@
         <div class="nav-user">
             <span>@context.User.Identity?.Name</span>
             <small>@GetRole(context.User)</small>
-            <a class="btn-link" href="/account/change-password">Change Password</a>
+            <a class="btn-link" href="/account">Account</a>
             <button class="btn-link" type="button" @onclick="OpenAbout">About</button>
             <form method="post" action="/account/logout">
                 <button class="btn-link" type="submit">Logout</button>
