@@ -16,6 +16,7 @@
 | `HeartbeatTimeoutSeconds` | `90` | Seconds without heartbeat before agent marked offline |
 | `CatalogSyncStaleMinutes` | `15` | Online agents whose last catalog sync is older than this are stale on Sync Health |
 | `PublishAgentHeartbeatEvents` | `false` | Emit `agent.heartbeat` on the in-process event bus (noisy; see [Event Bus](./event-bus.md)) |
+| `GatePauseTimeoutMs` | `2000` | Server dispatch gate pause timeout (Cancel on expiry) |
 | `DispatchIntervalMs` | `5000` | Background task dispatch interval |
 | `ScheduleIntervalMs` | `15000` | Central cron schedule poll interval |
 | `JwtSecret` | (dev secret) | JWT signing key (min 32 chars) |
@@ -80,6 +81,8 @@ Start from `App.Sample.config` (production-shaped) or the published sample next 
 | `script_engine_{id}_platforms` | e.g. `windows,linux,macos` |
 | `script_engine_{id}_inline_mode` | `stdin` / `tempfile` / `none` |
 | `script_engine_{id}_display` | Optional display name |
+| `gate_pause_timeout_ms` | Agent gate Pause timeout in ms (`300000`) |
+| `script_plugins_dir` | Directory of `IZeronAgentPlugin` DLLs (`plugins`). Skips `Zeron.*` / `System.*` / `Microsoft.*`. Sample: [`Samples/SampleAgentGatePlugin`](../Samples/SampleAgentGatePlugin/README.md) |
 | `script_event_listener_enabled` | Run ScriptEventBridge NDJSON listener (`false` default) |
 | `script_event_listener_exe` | Listener executable |
 | `script_event_listener_args` | Listener arguments |
@@ -123,12 +126,16 @@ Admin users can manage accounts on the Dashboard **Users** page (`/users`).
 | Existing default password | If admin password still matches `DefaultAdminPassword`, it is marked for forced change on startup |
 | Admin-created users | Must change password on first login |
 | Admin password reset | Target user must change password on next login |
-| Self-service | Any logged-in user can open **Change Password** in the sidebar |
+| Self-service | Any logged-in user can open **Account** (`/account`) to change email and password |
 
 Endpoints:
 
-- `POST /account/change-password` — form post (Dashboard)
+- `POST /account/change-password` — form post (forced first-login / MustChangePassword flow)
 - `POST /api/auth/change-password` — JSON API (`currentPassword`, `newPassword`)
+- `POST /api/auth/email` — JSON API (`email`; empty clears). Used for install-result notifications
+- `GET /api/auth/me` — current profile (includes `Email`)
+
+Dashboard page: `/account` (email + password). Forced change still uses `/account/change-password`.
 
 While `MustChangePassword` is true, other Dashboard pages and APIs return redirect / `403` until the password is updated.
 
@@ -194,6 +201,7 @@ The Server catalog is the central source of ManagedPackage definitions. Demand a
 | `DELETE /api/packages/catalog/{id}` | Operator+ | Delete catalog package |
 | `GET /api/packages/catalog/{id}/versions` | Viewer+ | Package version history |
 | `GET /api/packages/catalog/{id}/versions/{n}` | Viewer+ | Single version snapshot |
+| `GET /api/packages/catalog/{id}/diff?left=&right=` | Viewer+ | Field diff; omit a side (or both not allowed) — omitted side = live `current` |
 | `POST /api/packages/catalog/{id}/rollback` | Operator+ | Restore version `n` onto live package and push sync |
 | `GET /api/packages/catalog/sync` | Agent API key | Full catalog snapshot for Demand |
 | `GET /api/packages/catalog/sync-health` | Viewer+ | Catalog sync health summary per agent |
@@ -259,9 +267,9 @@ Demand ManagedPackage local commands (Client / RemoteCommand):
 
 Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies the digest after download. Catalog create/update/delete/rollback pushes `ManagedPackage sync` to online agents. Heartbeat reports `LastCatalogSyncAt` for My Devices / agent status.
 
-**Catalog versions:** each successful create/update/rollback appends a `ManagedPackageVersions` snapshot (`create` / `update` / `rollback`), including `ScriptEngine` and before/after scripts. Operators can Restore a prior version from Catalog **History**; restore writes a new version row (does not rewrite history) and re-pushes sync. Deleting a package cascades its version rows away.
+**Catalog versions:** each successful create/update/rollback appends a `ManagedPackageVersions` snapshot (`create` / `update` / `rollback`), including `ScriptEngine` and before/after scripts. Operators can Restore a prior version from Catalog **History**; restore writes a new version row (does not rewrite history) and re-pushes sync. History **Compare / Diff** shows field-level differences between any two sides (`vN` or live `current`). Deleting a package cascades its version rows away.
 
-**ScriptEngine:** catalog field (default `powershell`) selects the Script Host engine for install/uninstall hooks on Demand. Deploy to explicit `AgentIds` fails if the agent does not report that engine as available. See [Script Host](./script-host.md).
+**ScriptEngine:** catalog field (default `powershell`) selects the Script Host engine for install/uninstall hooks on Demand. Deploy to explicit `AgentIds` fails if the agent does not report that engine as available. Catalog Create/Edit exposes before/after script bodies (`ScriptInstallBefore` / `After`, `ScriptUnInstallBefore` / `After`) plus engine id; History shows which hooks are set (`ib`/`ia`/`ub`/`ua`). See [Script Host](./script-host.md).
 
 **Install result notifications:** when a self-service deploy (`Task.Name` starts with `self-`) finishes with `install.completed` / `install.failed`, Server notifies every active user bound to that agent. Dashboard tips appear on `/my-devices` (`InstallResultNotifyEnabled`). Optional per-user email uses `Users.Email` + SMTP (`InstallResultEmailEnabled`). Staff package deploys are not notified this way.
 

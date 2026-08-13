@@ -3,7 +3,6 @@
 
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
-using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
@@ -89,6 +88,7 @@ namespace Zeron.Server.Components.Pages
             try
             {
                 await NotificationServer.MarkReadAsync(userId, notificationId);
+
                 m_Notifications = await NotificationServer.GetNotificationsAsync(userId, unreadOnly: true, limit: 10);
             }
             finally
@@ -116,6 +116,7 @@ namespace Zeron.Server.Components.Pages
             try
             {
                 await NotificationServer.MarkAllReadAsync(userId);
+
                 m_Notifications = [];
             }
             finally

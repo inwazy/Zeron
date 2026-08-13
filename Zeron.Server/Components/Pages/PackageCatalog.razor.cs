@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.Components.Authorization;
+using Zeron.Server.ZCore.Type;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -22,7 +23,7 @@ namespace Zeron.Server.Components.Pages
         private List<ManagedPackageVersionInfoType> m_Versions = [];
 
         // Form.
-        private readonly PackageFormModel m_Form = new();
+        private readonly PackageFormModelType m_Form = new();
 
         // Edit id.
         private Guid? m_EditId;
@@ -42,9 +43,27 @@ namespace Zeron.Server.Components.Pages
         // Busy.
         private bool m_IsBusy;
 
+        // Diff left key: "current" or version number string.
+        private string m_DiffLeftKey = "current";
+
+        // Diff right key.
+        private string m_DiffRightKey = "current";
+
+        // Diff result.
+        private ManagedPackageVersionDiffType? m_Diff;
+
+        // Show only changed fields.
+        private bool m_DiffChangedOnly = true;
+
         /// <summary>
-        /// OnInitializedAsync
+        /// VisibleDiffFields
         /// </summary>
+        private List<ManagedPackageVersionDiffFieldType> VisibleDiffFields =>
+            m_Diff == null
+                ? []
+                : m_DiffChangedOnly
+                    ? m_Diff.Fields.Where(item => item.Changed).ToList()
+                    : m_Diff.Fields;
         /// <returns>Returns Task.</returns>
         protected override async Task OnInitializedAsync()
         {
@@ -64,6 +83,16 @@ namespace Zeron.Server.Components.Pages
                 m_Versions = await CatalogServer.GetPackageVersionsAsync(packageId);
                 m_HistoryPackage = m_Packages.FirstOrDefault(item => item.Id == m_HistoryPackage.Id)
                     ?? m_HistoryPackage;
+
+                if (m_Diff != null)
+                {
+                    (ManagedPackageVersionDiffType? diff, string? _) = await CatalogServer.ComparePackageVersionsAsync(
+                        packageId,
+                        ParseDiffKey(m_DiffLeftKey),
+                        ParseDiffKey(m_DiffRightKey));
+
+                    m_Diff = diff;
+                }
             }
         }
 
@@ -90,6 +119,10 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdUnInstallx64 = package.CmdUnInstallx64 ?? "";
             m_Form.Sha256x86 = package.Sha256x86 ?? "";
             m_Form.Sha256x64 = package.Sha256x64 ?? "";
+            m_Form.ScriptInstallBefore = package.ScriptInstallBefore ?? "";
+            m_Form.ScriptInstallAfter = package.ScriptInstallAfter ?? "";
+            m_Form.ScriptUnInstallBefore = package.ScriptUnInstallBefore ?? "";
+            m_Form.ScriptUnInstallAfter = package.ScriptUnInstallAfter ?? "";
             m_Form.ScriptEngine = string.IsNullOrWhiteSpace(package.ScriptEngine) ? "powershell" : package.ScriptEngine;
             m_Form.IsEnabled = package.IsEnabled;
             m_Message = null;
@@ -121,11 +154,19 @@ namespace Zeron.Server.Components.Pages
 
             m_HistoryPackage = package;
             m_HistoryMessage = null;
+            m_Diff = null;
+            m_DiffChangedOnly = true;
+            m_DiffRightKey = "current";
+            m_DiffLeftKey = "current";
             m_IsBusy = true;
 
             try
             {
                 m_Versions = await CatalogServer.GetPackageVersionsAsync(packageId);
+                m_DiffLeftKey = m_Versions.Count == 0
+                    ? "current"
+                    : m_Versions.Min(item => item.VersionNumber).ToString();
+                m_DiffRightKey = "current";
             }
             finally
             {
@@ -142,6 +183,91 @@ namespace Zeron.Server.Components.Pages
             m_HistoryPackage = null;
             m_Versions = [];
             m_HistoryMessage = null;
+            ClearDiff();
+            m_DiffLeftKey = "current";
+            m_DiffRightKey = "current";
+        }
+
+        /// <summary>
+        /// ClearDiff
+        /// </summary>
+        /// <returns>Returns void.</returns>
+        private void ClearDiff()
+        {
+            m_Diff = null;
+        }
+
+        /// <summary>
+        /// CompareToCurrentAsync - quick diff of a historical version against live.
+        /// </summary>
+        /// <param name="versionNumber"></param>
+        /// <returns>Returns Task.</returns>
+        private async Task CompareToCurrentAsync(
+            int versionNumber)
+        {
+            m_DiffLeftKey = versionNumber.ToString();
+            m_DiffRightKey = "current";
+            await CompareAsync();
+        }
+
+        /// <summary>
+        /// CompareAsync
+        /// </summary>
+        /// <returns>Returns Task.</returns>
+        private async Task CompareAsync()
+        {
+            if (m_HistoryPackage == null || !Guid.TryParse(m_HistoryPackage.Id, out Guid packageId))
+            {
+                return;
+            }
+
+            m_IsBusy = true;
+            m_HistoryMessage = null;
+
+            try
+            {
+                int? left = ParseDiffKey(m_DiffLeftKey);
+                int? right = ParseDiffKey(m_DiffRightKey);
+
+                (ManagedPackageVersionDiffType? diff, string? error) = await CatalogServer.ComparePackageVersionsAsync(
+                    packageId,
+                    left,
+                    right);
+
+                if (error != null)
+                {
+                    m_HistorySucceeded = false;
+                    m_HistoryMessage = error;
+                    m_Diff = null;
+
+                    return;
+                }
+
+                m_Diff = diff;
+                m_HistorySucceeded = true;
+                m_HistoryMessage = $"{diff!.LeftLabel} → {diff.RightLabel}: {diff.ChangedCount} field(s) changed.";
+            }
+            finally
+            {
+                m_IsBusy = false;
+            }
+        }
+
+        /// <summary>
+        /// ParseDiffKey
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>Returns version number or null for current.</returns>
+        private static int? ParseDiffKey(
+            string? key)
+        {
+            if (string.IsNullOrWhiteSpace(key)
+                || string.Equals(key, "current", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return int.TryParse(key, out int versionNumber) ? versionNumber : null;
         }
 
         /// <summary>
@@ -171,12 +297,14 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_HistorySucceeded = false;
                     m_HistoryMessage = error;
+
                     return;
                 }
 
                 m_HistorySucceeded = true;
                 m_HistoryMessage = $"Restored '{package!.Name}' to version {versionNumber} and pushed catalog sync.";
                 m_HistoryPackage = package;
+
                 await ReloadAsync();
             }
             finally
@@ -224,6 +352,10 @@ namespace Zeron.Server.Components.Pages
                     CmdUnInstallx64 = m_Form.CmdUnInstallx64,
                     Sha256x86 = m_Form.Sha256x86,
                     Sha256x64 = m_Form.Sha256x64,
+                    ScriptInstallBefore = m_Form.ScriptInstallBefore,
+                    ScriptInstallAfter = m_Form.ScriptInstallAfter,
+                    ScriptUnInstallBefore = m_Form.ScriptUnInstallBefore,
+                    ScriptUnInstallAfter = m_Form.ScriptUnInstallAfter,
                     ScriptEngine = m_Form.ScriptEngine,
                     IsEnabled = m_Form.IsEnabled
                 };
@@ -240,6 +372,7 @@ namespace Zeron.Server.Components.Pages
                     {
                         m_Succeeded = false;
                         m_Message = error;
+
                         return;
                     }
 
@@ -258,12 +391,14 @@ namespace Zeron.Server.Components.Pages
                     {
                         m_Succeeded = false;
                         m_Message = error;
+
                         return;
                     }
 
                     m_Succeeded = true;
                     m_Message = $"Updated package '{package!.Name}'.";
                     m_EditId = null;
+
                     ResetForm();
                 }
 
@@ -301,6 +436,7 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_Succeeded = false;
                     m_Message = error;
+
                     return;
                 }
 
@@ -332,6 +468,7 @@ namespace Zeron.Server.Components.Pages
         private async Task<AuditActorType?> GetActorAsync()
         {
             AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            
             return AuditLogServer.FromPrincipal(authState.User);
         }
 
@@ -350,47 +487,81 @@ namespace Zeron.Server.Components.Pages
             m_Form.CmdUnInstallx64 = "";
             m_Form.Sha256x86 = "";
             m_Form.Sha256x64 = "";
+            m_Form.ScriptInstallBefore = "";
+            m_Form.ScriptInstallAfter = "";
+            m_Form.ScriptUnInstallBefore = "";
+            m_Form.ScriptUnInstallAfter = "";
             m_Form.ScriptEngine = "powershell";
             m_Form.IsEnabled = true;
         }
 
         /// <summary>
-        /// PackageFormModel
+        /// DescribeScripts
         /// </summary>
-        private sealed class PackageFormModel
+        /// <param name="package"></param>
+        /// <returns>Returns short script summary.</returns>
+        private static string DescribeScripts(
+            ManagedPackageInfoType package)
         {
-            // Name.
-            public string Name { get; set; } = "";
+            return DescribeScripts(
+                package.ScriptInstallBefore,
+                package.ScriptInstallAfter,
+                package.ScriptUnInstallBefore,
+                package.ScriptUnInstallAfter);
+        }
 
-            // URL x86.
-            public string Urlx86 { get; set; } = "";
+        /// <summary>
+        /// DescribeScripts
+        /// </summary>
+        /// <param name="version"></param>
+        /// <returns>Returns short script summary.</returns>
+        private static string DescribeScripts(
+            ManagedPackageVersionInfoType version)
+        {
+            return DescribeScripts(
+                version.ScriptInstallBefore,
+                version.ScriptInstallAfter,
+                version.ScriptUnInstallBefore,
+                version.ScriptUnInstallAfter);
+        }
 
-            // URL x64.            
-            public string Urlx64 { get; set; } = "";
+        /// <summary>
+        /// DescribeScripts
+        /// </summary>
+        /// <param name="installBefore"></param>
+        /// <param name="installAfter"></param>
+        /// <param name="uninstallBefore"></param>
+        /// <param name="uninstallAfter"></param>
+        /// <returns>Returns short script summary.</returns>
+        private static string DescribeScripts(
+            string? installBefore,
+            string? installAfter,
+            string? uninstallBefore,
+            string? uninstallAfter)
+        {
+            List<string> parts = [];
 
-            // Command install x86.
-            public string CmdInstallx86 { get; set; } = "";
+            if (!string.IsNullOrWhiteSpace(installBefore))
+            {
+                parts.Add("ib");
+            }
 
-            // Command install x64.
-            public string CmdInstallx64 { get; set; } = "";
+            if (!string.IsNullOrWhiteSpace(installAfter))
+            {
+                parts.Add("ia");
+            }
 
-            // Command uninstall x86.
-            public string CmdUnInstallx86 { get; set; } = "";
+            if (!string.IsNullOrWhiteSpace(uninstallBefore))
+            {
+                parts.Add("ub");
+            }
 
-            // Command uninstall x64.
-            public string CmdUnInstallx64 { get; set; } = "";
+            if (!string.IsNullOrWhiteSpace(uninstallAfter))
+            {
+                parts.Add("ua");
+            }
 
-            // SHA256 x86.
-            public string Sha256x86 { get; set; } = "";
-
-            // SHA256 x64.
-            public string Sha256x64 { get; set; } = "";
-
-            // Script engine id.
-            public string ScriptEngine { get; set; } = "powershell";
-
-            // Enabled.
-            public bool IsEnabled { get; set; } = true;
+            return parts.Count == 0 ? "-" : string.Join("+", parts);
         }
     }
 }

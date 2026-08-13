@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore.Type;
 using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
@@ -30,7 +31,7 @@ namespace Zeron.Server.Components.Pages
         private List<ManagedPackageInfoType> m_Packages = [];
 
         // Deploy form.
-        private readonly DeployFormModel m_Deploy = new();
+        private readonly DeployDeviceFormModelType m_Deploy = new();
 
         // Error.
         private string? m_Error;
@@ -132,21 +133,6 @@ namespace Zeron.Server.Components.Pages
             {
                 m_IsBusy = false;
             }
-        }
-
-        /// <summary>
-        /// DeployFormModel
-        /// </summary>
-        private sealed class DeployFormModel
-        {
-            // Operation.
-            public string Operation { get; set; } = "install";
-
-            // Package name.
-            public string PackageName { get; set; } = "";
-
-            // Extra args.
-            public string? ExtraArgs { get; set; }
         }
     }
 }

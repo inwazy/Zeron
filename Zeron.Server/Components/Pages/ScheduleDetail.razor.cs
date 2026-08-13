@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.Components;
+using Zeron.Server.ZCore.Type;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -20,7 +21,7 @@ namespace Zeron.Server.Components.Pages
         private TaskScheduleInfoType? m_Schedule;
 
         // Edit form model.
-        private readonly EditFormModel m_Edit = new();
+        private readonly EditFormModelType m_Edit = new();
 
         // Message.
         private string? m_Message;
@@ -92,12 +93,14 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_Succeeded = false;
                     m_Message = error;
+
                     return;
                 }
 
                 m_Schedule = updated;
                 m_Succeeded = true;
                 m_Message = "Schedule updated.";
+
                 await ReloadAsync();
             }
             finally
@@ -125,6 +128,7 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_Succeeded = false;
                     m_Message = error;
+
                     return;
                 }
 
@@ -155,6 +159,7 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_Succeeded = false;
                     m_Message = error ?? "Failed to run schedule.";
+
                     return;
                 }
 
@@ -182,6 +187,7 @@ namespace Zeron.Server.Components.Pages
                 {
                     m_Succeeded = false;
                     m_Message = "Schedule not found.";
+
                     return;
                 }
 
@@ -192,37 +198,5 @@ namespace Zeron.Server.Components.Pages
                 m_IsBusy = false;
             }
         }
-
-        /// <summary>
-        /// EditFormModel
-        /// </summary>
-        /// <returns>Returns void.</returns>
-        private sealed class EditFormModel
-        {
-            // Name.
-            public string Name { get; set; } = "";
-
-            // Description.
-            public string Description { get; set; } = "";
-
-            // Cron.
-            public string Cron { get; set; } = "";
-
-            // Target API.
-            public string TargetApi { get; set; } = "";
-
-            // Command.
-            public string Command { get; set; } = "";
-
-            // Target type.
-            public string TargetType { get; set; } = "all";
-
-            // Agent ID.
-            public string AgentId { get; set; } = "";
-
-            // Hostname pattern.
-            public string HostnamePattern { get; set; } = "";
-        }
-
     }
 }

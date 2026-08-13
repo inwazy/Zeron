@@ -337,6 +337,33 @@ th {
     max-width: 520px;
 }
 
+.form-grid.form-grid-wide {
+    max-width: 920px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-grid .form-span {
+    grid-column: 1 / -1;
+}
+
+.diff-table td {
+    vertical-align: top;
+}
+
+.diff-table tr.diff-changed {
+    background: rgba(245, 158, 11, 0.12);
+}
+
+.diff-value {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    max-height: 12rem;
+    overflow: auto;
+}
+
 .form-grid label {
     display: grid;
     gap: 0.35rem;

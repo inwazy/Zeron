@@ -4,9 +4,9 @@
 namespace Zeron.ZCore.Type
 {
     /// <summary>
-    /// ZeronEvent - in-process event bus payload.
+    /// ZeronEventType - in-process event bus payload.
     /// </summary>
-    public sealed class ZeronEvent
+    public sealed class ZeronEventType
     {
         /// <summary>
         /// Topic - stable topic string (e.g. package.catalog.sync).

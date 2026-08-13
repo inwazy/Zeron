@@ -150,6 +150,27 @@ namespace Zeron.Server.Endpoints
                 return version == null ? Results.NotFound() : Results.Ok(version);
             }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
 
+            app.MapGet("/api/packages/catalog/{packageId:guid}/diff", async (
+                Guid packageId,
+                int? left,
+                int? right,
+                ManagedPackageCatalogServer catalogServer) =>
+            {
+                (ManagedPackageVersionDiffType? diff, string? error) = await catalogServer.ComparePackageVersionsAsync(
+                    packageId,
+                    left,
+                    right);
+
+                if (error != null)
+                {
+                    return error is "Package not found." or "Version not found."
+                        ? Results.NotFound(new { success = false, message = error })
+                        : Results.BadRequest(new { success = false, message = error });
+                }
+
+                return Results.Ok(diff);
+            }).RequireAuthorization(ServerPolicies.ViewerOrAbove);
+
             app.MapPost("/api/packages/catalog/{packageId:guid}/rollback", async (
                 Guid packageId,
                 ManagedPackageRollbackRequestType request,

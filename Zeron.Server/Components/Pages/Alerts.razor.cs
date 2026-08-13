@@ -1,10 +1,8 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Zeron.Server.Data.Entities;
-using Zeron.Server.ZCore;
 using Zeron.Server.ZCore.Type;
 using Zeron.Server.ZServers;
 
@@ -84,6 +82,5 @@ namespace Zeron.Server.Components.Pages
                 await m_HubConnection.DisposeAsync();
             }
         }
-
     }
 }

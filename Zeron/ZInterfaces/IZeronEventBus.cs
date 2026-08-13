@@ -18,7 +18,7 @@ namespace Zeron.ZInterfaces
         /// <returns>Returns disposable subscription.</returns>
         IDisposable Subscribe(
             string? topicFilter,
-            Action<ZeronEvent> handler);
+            Action<ZeronEventType> handler);
 
         /// <summary>
         /// Publish
@@ -26,7 +26,7 @@ namespace Zeron.ZInterfaces
         /// <param name="zeronEvent"></param>
         /// <returns>Returns void.</returns>
         void Publish(
-            ZeronEvent zeronEvent);
+            ZeronEventType zeronEvent);
 
         /// <summary>
         /// Publish - convenience overload.

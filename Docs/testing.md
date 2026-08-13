@@ -14,7 +14,7 @@ Test project: `ZeronTests` (MSTest).
 
 | Area | Location | Description |
 |------|----------|-------------|
-| Unit tests | `ZeronTests/ZCore/`, `ZeronTests/ZServers/` | Core utilities, auth, task dispatch, alerts |
+| Unit tests | `ZeronTests/ZCore/`, `ZeronTests/ZServers/`, `ZeronTests/Samples/` | Core utilities, auth, task dispatch, alerts, sample gate plugin |
 | Server E2E | `ZeronTests/Server/ServerE2ETests.cs` | Full HTTP flow via `WebApplicationFactory` |
 | Agent diagnostics | `ZeronTests/ZServers/AgentDiagnosticServerTests.cs` | Connection state logic |
 

@@ -122,6 +122,15 @@ namespace Zeron.Server.ZCore
         }
 
         /// <summary>
+        /// GatePauseTimeoutMs - Server dispatch gate pause timeout (short by default).
+        /// </summary>
+        public int GatePauseTimeoutMs
+        {
+            get;
+            set;
+        } = 2000;
+
+        /// <summary>
         /// DispatchIntervalMs
         /// </summary>
         public int DispatchIntervalMs

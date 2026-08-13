@@ -126,6 +126,65 @@ namespace Zeron.Server.ZServers.Tests
         }
 
         /// <summary>
+        /// UpdateEmailAsync stores and clears notification email.
+        /// </summary>
+        [TestMethod()]
+        public async Task UpdateEmailAsyncStoresAndClearsEmailTest()
+        {
+            string dbName = Guid.NewGuid().ToString();
+            await using ZeronServerDbContext dbContext = CreateContext(dbName);
+            ServerSettings settings = new()
+            {
+                DefaultAdminUsername = "admin",
+                DefaultAdminPassword = "admin123"
+            };
+
+            AuthServer authServer = CreateAuthServer(dbContext, settings);
+            await authServer.SeedDefaultUserAsync();
+
+            LoginResponseType login = await authServer.LoginAsync("admin", "admin123");
+            Guid userId = Guid.Parse(login.User!.Id!);
+
+            (UserInfoType? withEmail, string? setError) = await authServer.UpdateEmailAsync(
+                userId,
+                " owner@example.com ");
+
+            Assert.IsNull(setError);
+            Assert.AreEqual("owner@example.com", withEmail!.Email);
+
+            (UserInfoType? cleared, string? clearError) = await authServer.UpdateEmailAsync(userId, "  ");
+
+            Assert.IsNull(clearError);
+            Assert.IsTrue(string.IsNullOrEmpty(cleared!.Email));
+        }
+
+        /// <summary>
+        /// UpdateEmailAsync rejects invalid addresses.
+        /// </summary>
+        [TestMethod()]
+        public async Task UpdateEmailAsyncRejectsInvalidEmailTest()
+        {
+            string dbName = Guid.NewGuid().ToString();
+            await using ZeronServerDbContext dbContext = CreateContext(dbName);
+            ServerSettings settings = new()
+            {
+                DefaultAdminUsername = "admin",
+                DefaultAdminPassword = "admin123"
+            };
+
+            AuthServer authServer = CreateAuthServer(dbContext, settings);
+            await authServer.SeedDefaultUserAsync();
+
+            LoginResponseType login = await authServer.LoginAsync("admin", "admin123");
+            Guid userId = Guid.Parse(login.User!.Id!);
+
+            (UserInfoType? updated, string? error) = await authServer.UpdateEmailAsync(userId, "not-an-email");
+
+            Assert.IsNull(updated);
+            Assert.AreEqual("Email address is invalid.", error);
+        }
+
+        /// <summary>
         /// ValidateAgentApiKey matches configured key.
         /// </summary>
         [TestMethod()]

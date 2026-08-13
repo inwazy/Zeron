@@ -3,8 +3,6 @@
 
 using Microsoft.AspNetCore.Components;
 using Zeron.Server.Data.Entities;
-using Zeron.Server.ZServers;
-using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
 {
@@ -36,8 +34,8 @@ namespace Zeron.Server.Components.Pages
         private async Task CancelTaskAsync()
         {
             await TaskDispatcher.CancelTaskAsync(TaskId);
+
             m_Task = await TaskDispatcher.GetTaskAsync(TaskId);
         }
-
     }
 }

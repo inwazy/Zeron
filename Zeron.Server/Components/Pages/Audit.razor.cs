@@ -13,10 +13,16 @@ namespace Zeron.Server.Components.Pages
         // Rows.
         private List<AuditLogInfoType> m_Rows = [];
 
-        // Filters.
+        // Action Filters.
         private string m_ActionFilter = "";
+
+        // Actor Filters.
         private string m_ActorFilter = "";
+
+        // Target Filters.
         private string m_TargetFilter = "";
+
+        // Source Filters.
         private string m_SourceFilter = "";
 
         // Busy.

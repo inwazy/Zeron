@@ -119,6 +119,70 @@ namespace Zeron.Server.ZServers.Tests
         }
 
         /// <summary>
+        /// ComparePackageVersionsAsync reports changed fields between versions and current.
+        /// </summary>
+        [TestMethod()]
+        public async Task ComparePackageVersionsAsyncReportsChangesTest()
+        {
+            await using ZeronServerDbContext dbContext = CreateContext();
+            ManagedPackageCatalogServer catalog = new(dbContext);
+
+            (ManagedPackageInfoType? created, string? createError) = await catalog.CreatePackageAsync(new ManagedPackageUpsertRequestType
+            {
+                Name = "diff-pkg",
+                Urlx64 = "https://example.com/old.exe",
+                CmdInstallx64 = "/OLD",
+                ScriptInstallBefore = "Write-Host old",
+                IsEnabled = true
+            });
+
+            Assert.IsNull(createError);
+            Guid packageId = Guid.Parse(created!.Id!);
+
+            await catalog.UpdatePackageAsync(packageId, new ManagedPackageUpsertRequestType
+            {
+                Urlx64 = "https://example.com/new.exe",
+                CmdInstallx64 = "/NEW",
+                ScriptInstallBefore = "Write-Host new",
+                IsEnabled = false
+            });
+
+            (ManagedPackageVersionDiffType? vsCurrent, string? currentError) = await catalog.ComparePackageVersionsAsync(
+                packageId,
+                leftVersionNumber: 1,
+                rightVersionNumber: null);
+
+            Assert.IsNull(currentError);
+            Assert.IsNotNull(vsCurrent);
+            Assert.AreEqual("v1", vsCurrent!.LeftLabel);
+            Assert.AreEqual("current", vsCurrent.RightLabel);
+            Assert.IsTrue(vsCurrent.ChangedCount >= 3);
+            Assert.IsTrue(vsCurrent.Fields.Single(field => field.Field == "Urlx64").Changed);
+            Assert.AreEqual("https://example.com/old.exe", vsCurrent.Fields.Single(field => field.Field == "Urlx64").Left);
+            Assert.AreEqual("https://example.com/new.exe", vsCurrent.Fields.Single(field => field.Field == "Urlx64").Right);
+            Assert.IsTrue(vsCurrent.Fields.Single(field => field.Field == "IsEnabled").Changed);
+            Assert.IsTrue(vsCurrent.Fields.Single(field => field.Field == "ScriptInstallBefore").Changed);
+
+            (ManagedPackageVersionDiffType? v1v2, string? pairError) = await catalog.ComparePackageVersionsAsync(
+                packageId,
+                leftVersionNumber: 1,
+                rightVersionNumber: 2);
+
+            Assert.IsNull(pairError);
+            Assert.IsNotNull(v1v2);
+            Assert.AreEqual("v2", v1v2!.RightLabel);
+            Assert.IsTrue(v1v2.Fields.Single(field => field.Field == "CmdInstallx64").Changed);
+
+            (ManagedPackageVersionDiffType? same, string? sameError) = await catalog.ComparePackageVersionsAsync(
+                packageId,
+                leftVersionNumber: 1,
+                rightVersionNumber: 1);
+
+            Assert.IsNull(same);
+            Assert.AreEqual("Left and right versions must differ.", sameError);
+        }
+
+        /// <summary>
         /// ScriptEngine is snapshotted and restored on rollback.
         /// </summary>
         [TestMethod()]

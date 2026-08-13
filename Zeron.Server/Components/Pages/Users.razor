@@ -1,8 +1,8 @@
 @page "/users"
 @rendermode InteractiveServer
 @using Zeron.Server.ZCore
+@using Zeron.Server.ZCore.Type
 @using Zeron.Server.ZServers
-@using Zeron.ZCore.Type
 @attribute [Authorize(Policy = ServerPolicies.AdminOnly)]
 @inject UserManagerServer UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -70,7 +70,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (UserEditRow row in m_Rows)
+                @foreach (UserEditRowType row in m_Rows)
                 {
                     <tr>
                         <td>@row.Username</td>

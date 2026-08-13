@@ -33,7 +33,7 @@ namespace Zeron.ZCore.Utils
         /// <returns>Returns disposable subscription.</returns>
         public IDisposable Subscribe(
             string? topicFilter,
-            Action<ZeronEvent> handler)
+            Action<ZeronEventType> handler)
         {
             ArgumentNullException.ThrowIfNull(handler);
 
@@ -50,7 +50,7 @@ namespace Zeron.ZCore.Utils
         /// <param name="zeronEvent"></param>
         /// <returns>Returns void.</returns>
         public void Publish(
-            ZeronEvent zeronEvent)
+            ZeronEventType zeronEvent)
         {
             ArgumentNullException.ThrowIfNull(zeronEvent);
 
@@ -99,7 +99,7 @@ namespace Zeron.ZCore.Utils
             string? source = null,
             string? correlationId = null)
         {
-            Publish(new ZeronEvent
+            Publish(new ZeronEventType
             {
                 Topic = topic,
                 PayloadJson = payloadJson,
@@ -211,7 +211,7 @@ namespace Zeron.ZCore.Utils
             public Subscription(
                 Guid id,
                 string topicFilter,
-                Action<ZeronEvent> handler,
+                Action<ZeronEventType> handler,
                 ZeronEventBus bus)
             {
                 m_Id = id;
@@ -231,7 +231,7 @@ namespace Zeron.ZCore.Utils
             /// <summary>
             /// Handler
             /// </summary>
-            public Action<ZeronEvent> Handler
+            public Action<ZeronEventType> Handler
             {
                 get;
             }

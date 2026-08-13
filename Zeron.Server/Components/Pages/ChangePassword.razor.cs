@@ -2,8 +2,6 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.Components;
-using Zeron.Server.ZServers;
-using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
 {
@@ -42,6 +40,5 @@ namespace Zeron.Server.Components.Pages
                 _ => null
             };
         }
-
     }
 }

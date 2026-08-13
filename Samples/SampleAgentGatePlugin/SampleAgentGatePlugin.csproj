@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SampleAgentGatePlugin</AssemblyName>
+    <RootNamespace>SampleAgentGatePlugin</RootNamespace>
+    <Description>Sample IZeronAgentPlugin: observe install.* and Pause/Resume/Cancel gate.install.</Description>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Zeron\Zeron.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="SampleAgentGatePlugin.mode.sample">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="README.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

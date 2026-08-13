@@ -361,6 +361,32 @@ namespace Zeron.ZServers
                 return false;
             }
 
+            string correlationId = !string.IsNullOrWhiteSpace(queuesType.AssignmentId)
+                ? queuesType.AssignmentId!
+                : Guid.NewGuid().ToString("N");
+                
+            string gatePayload = JsonSerializer.Serialize(new
+            {
+                package = queuesType.PackageName,
+                operation,
+                assignmentId = queuesType.AssignmentId
+            });
+
+            GateDecisionType gateDecision = ZeronGateServer.Evaluate(
+                ZeronEventTopics.GateInstall,
+                gatePayload,
+                correlationId);
+
+            if (gateDecision == GateDecisionType.Cancel)
+            {
+                ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
+                    "InstallServer {0} {1} cancelled by .NET gate.", operation, queuesType.PackageName));
+                PublishInstallEvent("install.failed", queuesType, operation, success: false, exitCode: -1);
+                NotifyAssignmentCompleted(queuesType, operation, success: false, exitCode: -1);
+
+                return false;
+            }
+
             BeginInstall(operation, queuesType);
 
             if (!RunBeforeScript(queuesType))

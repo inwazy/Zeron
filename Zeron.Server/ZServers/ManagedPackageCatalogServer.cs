@@ -341,6 +341,79 @@ namespace Zeron.Server.ZServers
         }
 
         /// <summary>
+        /// ComparePackageVersionsAsync - field-level diff between two snapshots.
+        /// Null version number means the live (current) package definition.
+        /// </summary>
+        /// <param name="packageId"></param>
+        /// <param name="leftVersionNumber"></param>
+        /// <param name="rightVersionNumber"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns diff or error.</returns>
+        public async Task<(ManagedPackageVersionDiffType? Diff, string? Error)> ComparePackageVersionsAsync(
+            Guid packageId,
+            int? leftVersionNumber,
+            int? rightVersionNumber,
+            CancellationToken cancellationToken = default)
+        {
+            ManagedPackageEntity? package = await m_DbContext.ManagedPackages
+                .AsNoTracking()
+                .FirstOrDefaultAsync(item => item.Id == packageId, cancellationToken);
+
+            if (package == null)
+            {
+                return (null, "Package not found.");
+            }
+
+            if (leftVersionNumber == null && rightVersionNumber == null)
+            {
+                return (null, "Select at least one historical version to compare.");
+            }
+
+            if (leftVersionNumber.HasValue
+                && rightVersionNumber.HasValue
+                && leftVersionNumber.Value == rightVersionNumber.Value)
+            {
+                return (null, "Left and right versions must differ.");
+            }
+
+            (ManagedPackageVersionInfoType? left, string? leftError) = await ResolveCompareSideAsync(
+                package,
+                leftVersionNumber,
+                cancellationToken);
+
+            if (leftError != null)
+            {
+                return (null, leftError);
+            }
+
+            (ManagedPackageVersionInfoType? right, string? rightError) = await ResolveCompareSideAsync(
+                package,
+                rightVersionNumber,
+                cancellationToken);
+
+            if (rightError != null)
+            {
+                return (null, rightError);
+            }
+
+            List<ManagedPackageVersionDiffFieldType> fields = BuildFieldDiff(left!, right!);
+
+            return (new ManagedPackageVersionDiffType
+            {
+                PackageId = package.Id.ToString(),
+                PackageName = package.Name,
+                LeftLabel = FormatCompareLabel(leftVersionNumber),
+                RightLabel = FormatCompareLabel(rightVersionNumber),
+                LeftVersionNumber = leftVersionNumber,
+                RightVersionNumber = rightVersionNumber,
+                LeftIsCurrent = leftVersionNumber == null,
+                RightIsCurrent = rightVersionNumber == null,
+                ChangedCount = fields.Count(item => item.Changed),
+                Fields = fields
+            }, null);
+        }
+
+        /// <summary>
         /// RollbackPackageAsync - restore a historical snapshot and push catalog sync.
         /// </summary>
         /// <param name="packageId"></param>
@@ -893,6 +966,151 @@ namespace Zeron.Server.ZServers
                 Sha256x64 = version.Sha256x64,
                 IsEnabled = version.IsEnabled
             };
+        }
+
+        /// <summary>
+        /// ResolveCompareSideAsync
+        /// </summary>
+        /// <param name="livePackage"></param>
+        /// <param name="versionNumber"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns tuple of ManagedPackageVersionInfoType? and string?.</returns>
+        private async Task<(ManagedPackageVersionInfoType? Snapshot, string? Error)> ResolveCompareSideAsync(
+            ManagedPackageEntity livePackage,
+            int? versionNumber,
+            CancellationToken cancellationToken)
+        {
+            if (versionNumber == null)
+            {
+                return (LiveToVersionSnapshot(livePackage), null);
+            }
+
+            if (versionNumber.Value < 1)
+            {
+                return (null, "Version not found.");
+            }
+
+            ManagedPackageVersionInfoType? version = await GetPackageVersionAsync(
+                livePackage.Id,
+                versionNumber.Value,
+                cancellationToken);
+
+            return version == null
+                ? (null, "Version not found.")
+                : (version, null);
+        }
+
+        /// <summary>
+        /// LiveToVersionSnapshot - shape live package like a version row for diffing.
+        /// </summary>
+        /// <param name="package"></param>
+        /// <returns>Returns ManagedPackageVersionInfoType.</returns>
+        private static ManagedPackageVersionInfoType LiveToVersionSnapshot(
+            ManagedPackageEntity package)
+        {
+            return new ManagedPackageVersionInfoType
+            {
+                PackageId = package.Id.ToString(),
+                VersionNumber = 0,
+                Name = package.Name,
+                Urlx86 = package.Urlx86,
+                Urlx64 = package.Urlx64,
+                CmdInstallx86 = package.CmdInstallx86,
+                CmdInstallx64 = package.CmdInstallx64,
+                CmdUnInstallx86 = package.CmdUnInstallx86,
+                CmdUnInstallx64 = package.CmdUnInstallx64,
+                ScriptInstallBefore = package.ScriptInstallBefore,
+                ScriptInstallAfter = package.ScriptInstallAfter,
+                ScriptUnInstallBefore = package.ScriptUnInstallBefore,
+                ScriptUnInstallAfter = package.ScriptUnInstallAfter,
+                ScriptEngine = NormalizeScriptEngine(package.ScriptEngine),
+                Sha256x86 = package.Sha256x86,
+                Sha256x64 = package.Sha256x64,
+                IsEnabled = package.IsEnabled
+            };
+        }
+
+        /// <summary>
+        /// FormatCompareLabel
+        /// </summary>
+        /// <param name="versionNumber"></param>
+        /// <returns>Returns string.</returns>
+        private static string FormatCompareLabel(
+            int? versionNumber)
+        {
+            return versionNumber == null
+                ? "current"
+                : string.Format(CultureInfo.InvariantCulture, "v{0}", versionNumber.Value);
+        }
+
+        /// <summary>
+        /// BuildFieldDiff
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns>Returns list of ManagedPackageVersionDiffFieldType.</returns>
+        private static List<ManagedPackageVersionDiffFieldType> BuildFieldDiff(
+            ManagedPackageVersionInfoType left,
+            ManagedPackageVersionInfoType right)
+        {
+            List<(string Field, string? Left, string? Right)> pairs =
+            [
+                ("Name", left.Name, right.Name),
+                ("IsEnabled", FormatBool(left.IsEnabled), FormatBool(right.IsEnabled)),
+                ("ScriptEngine", NormalizeScriptEngine(left.ScriptEngine), NormalizeScriptEngine(right.ScriptEngine)),
+                ("Urlx86", left.Urlx86, right.Urlx86),
+                ("Urlx64", left.Urlx64, right.Urlx64),
+                ("CmdInstallx86", left.CmdInstallx86, right.CmdInstallx86),
+                ("CmdInstallx64", left.CmdInstallx64, right.CmdInstallx64),
+                ("CmdUnInstallx86", left.CmdUnInstallx86, right.CmdUnInstallx86),
+                ("CmdUnInstallx64", left.CmdUnInstallx64, right.CmdUnInstallx64),
+                ("Sha256x86", left.Sha256x86, right.Sha256x86),
+                ("Sha256x64", left.Sha256x64, right.Sha256x64),
+                ("ScriptInstallBefore", left.ScriptInstallBefore, right.ScriptInstallBefore),
+                ("ScriptInstallAfter", left.ScriptInstallAfter, right.ScriptInstallAfter),
+                ("ScriptUnInstallBefore", left.ScriptUnInstallBefore, right.ScriptUnInstallBefore),
+                ("ScriptUnInstallAfter", left.ScriptUnInstallAfter, right.ScriptUnInstallAfter)
+            ];
+
+            List<ManagedPackageVersionDiffFieldType> fields = [];
+
+            foreach ((string field, string? leftValue, string? rightValue) in pairs)
+            {
+                string leftDisplay = NormalizeDiffValue(leftValue);
+                string rightDisplay = NormalizeDiffValue(rightValue);
+
+                fields.Add(new ManagedPackageVersionDiffFieldType
+                {
+                    Field = field,
+                    Left = leftDisplay,
+                    Right = rightDisplay,
+                    Changed = !string.Equals(leftDisplay, rightDisplay, StringComparison.Ordinal)
+                });
+            }
+
+            return fields;
+        }
+
+        /// <summary>
+        /// NormalizeDiffValue
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns>Returns normalized diff value.</returns>
+        private static string NormalizeDiffValue(
+            string? value)
+        {
+            return value?.Trim() ?? "";
+        }
+
+        /// <summary>
+        /// FormatBool
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns>Returns formatted bool value.</returns>
+        private static string FormatBool(
+            bool value)
+        {
+            return value ? "true" : "false";
         }
     }
 }

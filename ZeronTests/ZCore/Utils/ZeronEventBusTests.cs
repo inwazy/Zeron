@@ -49,7 +49,7 @@ namespace Zeron.ZCore.Utils.Tests
         [TestMethod()]
         public void InstallEventPublisherDualWritesToBusTest()
         {
-            ZeronEvent? captured = null;
+            ZeronEventType? captured = null;
 
             using IDisposable sub = ZeronEventBus.Current.Subscribe(
                 ZeronEventTopics.PackageCatalogSync,

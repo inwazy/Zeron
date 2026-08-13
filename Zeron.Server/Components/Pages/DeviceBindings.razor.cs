@@ -3,6 +3,7 @@
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Zeron.Server.Data.Entities;
+using Zeron.Server.ZCore.Type;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -23,7 +24,7 @@ namespace Zeron.Server.Components.Pages
         private List<AgentEntity> m_Agents = [];
 
         // Form.
-        private readonly BindFormModel m_Form = new();
+        private readonly BindFormModelType m_Form = new();
 
         // Message.
         private string? m_Message;
@@ -131,15 +132,6 @@ namespace Zeron.Server.Components.Pages
             {
                 m_IsBusy = false;
             }
-        }
-
-        /// <summary>
-        /// BindFormModel
-        /// </summary>
-        private sealed class BindFormModel
-        {
-            public string UserId { get; set; } = "";
-            public string AgentKey { get; set; } = "";
         }
     }
 }

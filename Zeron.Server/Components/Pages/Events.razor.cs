@@ -4,9 +4,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Zeron.Server.Data.Entities;
-using Zeron.Server.ZCore;
 using Zeron.Server.ZServers;
-using Zeron.ZCore.Type;
 
 namespace Zeron.Server.Components.Pages
 {
@@ -102,6 +100,5 @@ namespace Zeron.Server.Components.Pages
                 await m_HubConnection.DisposeAsync();
             }
         }
-
     }
 }

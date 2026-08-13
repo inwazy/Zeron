@@ -1,8 +1,8 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Zeron.Server.ZCore.Type;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -14,7 +14,7 @@ namespace Zeron.Server.Components.Pages
     public partial class PackageDeploy
     {
         // Model.
-        private readonly DeployFormModel m_Model = new();
+        private readonly DeployFormModelType m_Model = new();
 
         // Catalog packages.
         private List<ManagedPackageInfoType> m_Packages = [];
@@ -71,6 +71,7 @@ namespace Zeron.Server.Components.Pages
                 if (!response.Success || response.TaskId == null)
                 {
                     m_Error = response.Message ?? "Deploy failed.";
+
                     return;
                 }
 
@@ -84,34 +85,6 @@ namespace Zeron.Server.Components.Pages
             {
                 m_IsSubmitting = false;
             }
-        }
-
-        /// <summary>
-        /// DeployFormModel
-        /// </summary>
-        /// <returns>Returns void.</returns>
-        private sealed class DeployFormModel
-        {
-            // Operation.
-            public string Operation { get; set; } = "install";
-
-            // Package name.
-            public string PackageName { get; set; } = "";
-
-            // Extra args.
-            public string? ExtraArgs { get; set; }
-
-            // Name.
-            public string? Name { get; set; }
-
-            // Target type.
-            public string TargetType { get; set; } = "all";
-
-            // Agent ID.
-            public string? AgentId { get; set; }
-
-            // Hostname pattern.
-            public string? HostnamePattern { get; set; }
         }
     }
 }

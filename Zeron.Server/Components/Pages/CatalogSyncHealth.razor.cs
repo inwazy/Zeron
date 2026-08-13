@@ -95,6 +95,7 @@ namespace Zeron.Server.Components.Pages
 
                 m_Succeeded = response.Success;
                 m_Message = response.Message;
+
                 await ReloadAsync();
             }
             finally
@@ -127,6 +128,7 @@ namespace Zeron.Server.Components.Pages
 
                 m_Succeeded = response.Success;
                 m_Message = response.Message;
+
                 await ReloadAsync();
             }
             finally
@@ -134,6 +136,5 @@ namespace Zeron.Server.Components.Pages
                 m_IsBusy = false;
             }
         }
-
     }
 }

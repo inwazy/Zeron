@@ -1,0 +1,4 @@
+# Copy to SampleAgentGatePlugin.mode next to the DLL (optional).
+# Env ZERON_SAMPLE_GATE_MODE overrides this file.
+# proceed | pause-resume | cancel
+proceed

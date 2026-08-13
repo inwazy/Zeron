@@ -66,8 +66,42 @@ Optional long-running process receives NDJSON events on stdin:
 | `resume_self` | Flush queued events |
 | `cancel` / `pause_gate` / `pause_sync` / … | Rejected with `{"type":"error","code":"not_allowed"}` |
 
-Scripts **cannot** block Install, RemoteCommand, or Catalog Sync. .NET gate intercept is Phase 3.
+Scripts **cannot** block Install, RemoteCommand, or Catalog Sync.
+
+## .NET Gate (intercept)
+
+Only in-process .NET handlers (`IGateHandler` / `IGateController`) can Pause / Resume / Cancel. Scripts sending `cancel` / `pause_gate` are rejected.
+
+| Topic | Where |
+|-------|--------|
+| `gate.command` | Agent: RemoteCommand before invoke |
+| `gate.install` | Agent: Install before execute |
+| `gate.dispatch` | Server: task dispatch before PUB |
+| `gate.cancelled` | Emitted when work is cancelled (including pause timeout) |
+
+```csharp
+ZeronGateServer.Current.Register(new MyHandler()); // Handle() may set Decision = Pause|Cancel
+ZeronGateServer.Current.Resume(correlationId);
+ZeronGateServer.Current.Cancel(correlationId, "reason");
+```
+
+- `Pause` waits until Resume, Cancel, or `gate_pause_timeout_ms` (Agent default 300000; Server `GatePauseTimeoutMs` default 2000). Timeout → Cancel.
+- Demand loads `IZeronAgentPlugin` DLLs from `script_plugins_dir` (default `plugins/`). **Skipped names:** `Zeron.*`, `System.*`, `Microsoft.*`, `netstandard*`.
+- Server plugins: register in-process via `IGateController` (DI: `IGateController` → `ZeronGateServer.Current`). `agent.connected` remains post-hook only (no gate).
+- Treat `plugins/` as trusted code (same process as the agent).
 
 ## Sample listener
 
 See [`Zeron.Demand/Resource/script-event-listener.sample.ps1`](../Zeron.Demand/Resource/script-event-listener.sample.ps1).
+
+## Sample .NET Gate plugin
+
+[`Samples/SampleAgentGatePlugin`](../Samples/SampleAgentGatePlugin/README.md) — observe `install.*`, intercept `gate.install`.
+
+```powershell
+dotnet build Samples/SampleAgentGatePlugin/SampleAgentGatePlugin.csproj -c Release
+# copy SampleAgentGatePlugin.dll → Zeron.Demand plugins/
+$env:ZERON_SAMPLE_GATE_MODE = "pause-resume"   # proceed | pause-resume | cancel
+```
+
+Default mode is `proceed` (log only). `pause-resume` Pause then auto-Resume after `ZERON_SAMPLE_GATE_DELAY_MS` (2000). `cancel` aborts install.
