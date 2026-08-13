@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Zeron\Zeron.csproj" />
     <ProjectReference Include="..\Zeron.Server\Zeron.Server.csproj" />
+    <ProjectReference Include="..\Samples\SampleAgentGatePlugin\SampleAgentGatePlugin.csproj" />
   </ItemGroup>
 
 </Project>

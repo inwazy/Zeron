@@ -27,6 +27,7 @@ Driven by NetMQ (ZeroMQ), Zeron empowers SMB IT teams and developers to control 
 | `Zeron.Client` | Interactive test console |
 | `Zeron.Server` | Central management server |
 | `ZeronTests` | Unit and integration tests |
+| `Samples/SampleAgentGatePlugin` | Sample Demand `.NET` gate plugin (`plugins/`) |
 
 ## Features
 

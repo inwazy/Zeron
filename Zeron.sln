@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zeron.Client", "Zeron.Clien
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeron.Server", "Zeron.Server\Zeron.Server.csproj", "{C77EA777-9CF2-4D6C-9E69-FECA4BABF442}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{5D20AA90-6969-D8BD-9DCD-8634F4692FDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleAgentGatePlugin", "Samples\SampleAgentGatePlugin\SampleAgentGatePlugin.csproj", "{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,9 +87,24 @@ Global
 		{C77EA777-9CF2-4D6C-9E69-FECA4BABF442}.Release|x64.Build.0 = Release|Any CPU
 		{C77EA777-9CF2-4D6C-9E69-FECA4BABF442}.Release|x86.ActiveCfg = Release|Any CPU
 		{C77EA777-9CF2-4D6C-9E69-FECA4BABF442}.Release|x86.Build.0 = Release|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Debug|x64.Build.0 = Debug|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Debug|x86.Build.0 = Debug|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Release|x64.ActiveCfg = Release|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Release|x64.Build.0 = Release|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Release|x86.ActiveCfg = Release|Any CPU
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5ECDE046-273F-4B11-9CA6-B5DB56CABCE0} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7C07D593-D326-49DB-ABEC-21DE796B7456}

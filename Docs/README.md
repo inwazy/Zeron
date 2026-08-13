@@ -9,7 +9,7 @@ Central documentation for building, deploying, configuring, and operating Zeron.
 | [Agent Connection Guide](./agent-connection.md) | Heartbeat flow, diagnostics, and troubleshooting |
 | [Testing Guide](./testing.md) | Unit tests, E2E integration tests, and EF migrations |
 | [Script Host](./script-host.md) | Pluggable script engines (PowerShell + external process) |
-| [Event Bus](./event-bus.md) | In-process events, script observe bridge, .NET Gate |
+| [Event Bus](./event-bus.md) | In-process events, script observe bridge, .NET Gate ([sample plugin](../Samples/SampleAgentGatePlugin/README.md)) |
 
 ## Quick Links
 
