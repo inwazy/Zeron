@@ -2,7 +2,6 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.IdentityModel.Tokens;
@@ -65,6 +64,7 @@ namespace Zeron.Server
 
             EncryptionProvider.Configure(serverSettings.EncryptionSaltKey, serverSettings.EncryptionIvKey);
             EncryptionProvider.ConfigureFromEnvironment();
+            ZeronGateServer.ConfigureDefaultTimeoutMs(serverSettings.GatePauseTimeoutMs);
 
             string dbPath = ResolveDatabasePath(serverSettings.DatabasePath);
 
@@ -96,6 +96,7 @@ namespace Zeron.Server
             builder.Services.AddSingleton<CommandPublisherServer>();
             builder.Services.AddSingleton<IDashboardNotifier, DashboardNotifierServer>();
             builder.Services.AddSingleton<Zeron.ZInterfaces.IZeronEventBus>(_ => Zeron.ZCore.Utils.ZeronEventBus.Current);
+            builder.Services.AddSingleton<Zeron.ZInterfaces.IGateController>(_ => Zeron.ZCore.Utils.ZeronGateServer.Current);
             builder.Services.AddHttpContextAccessor();
 
             if (!builder.Environment.IsEnvironment("Testing"))
@@ -148,7 +149,7 @@ namespace Zeron.Server
             });
 
             builder.Services.AddCascadingAuthenticationState();
-            var razorComponents = builder.Services.AddRazorComponents()
+            IServerSideBlazorBuilder razorComponents = builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
             if (builder.Environment.IsDevelopment())

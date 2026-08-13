@@ -17,7 +17,7 @@ namespace Zeron.ZCore.Utils
     public sealed class ScriptEventBridge : IDisposable
     {
         // Pending events while pause_self is active.
-        private readonly ConcurrentQueue<ZeronEvent> m_Queue = new();
+        private readonly ConcurrentQueue<ZeronEventType> m_Queue = new();
 
         // Sync for process IO.
         private readonly object m_IoLock = new();
@@ -250,7 +250,7 @@ namespace Zeron.ZCore.Utils
         /// <param name="zeronEvent"></param>
         /// <returns>Returns void.</returns>
         private void OnBusEvent(
-            ZeronEvent zeronEvent)
+            ZeronEventType zeronEvent)
         {
             if (!Enabled || string.IsNullOrWhiteSpace(ExecutablePath))
             {
@@ -286,7 +286,7 @@ namespace Zeron.ZCore.Utils
                 }
             }
 
-            while (!m_Paused && m_Queue.TryDequeue(out ZeronEvent? queued))
+            while (!m_Paused && m_Queue.TryDequeue(out ZeronEventType? queued))
             {
                 if (queued == null)
                 {
@@ -307,7 +307,7 @@ namespace Zeron.ZCore.Utils
         /// <param name="zeronEvent"></param>
         /// <returns>Returns void.</returns>
         private void WriteEvent(
-            ZeronEvent zeronEvent)
+            ZeronEventType zeronEvent)
         {
             if (!TryWriteEvent(zeronEvent))
             {
@@ -321,7 +321,7 @@ namespace Zeron.ZCore.Utils
         /// <param name="zeronEvent"></param>
         /// <returns>Returns true when delivered to listener stdin.</returns>
         private bool TryWriteEvent(
-            ZeronEvent zeronEvent)
+            ZeronEventType zeronEvent)
         {
             string line = JsonSerializer.Serialize(new
             {

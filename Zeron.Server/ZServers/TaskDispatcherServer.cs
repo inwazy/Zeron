@@ -8,6 +8,7 @@ using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
+using Zeron.ZCore.Utils;
 
 namespace Zeron.Server.ZServers
 {
@@ -100,11 +101,33 @@ namespace Zeron.Server.ZServers
                 .ToListAsync(cancellationToken);
 
             int dispatched = 0;
+            bool changed = false;
 
             foreach (TaskAssignmentEntity assignment in pendingAssignments)
             {
                 if (assignment.Task == null || assignment.Agent == null)
                 {
+                    continue;
+                }
+
+                string gatePayload = JsonSerializer.Serialize(new
+                {
+                    assignmentId = assignment.Id,
+                    agentKey = assignment.Agent.AgentKey,
+                    targetApi = assignment.Task.TargetApi,
+                    command = assignment.Task.Command
+                });
+
+                GateDecisionType gateDecision = ZeronGateServer.Evaluate(
+                    ZeronEventTopics.GateDispatch,
+                    gatePayload,
+                    assignment.Id.ToString(),
+                    ZeronGateServer.GetDefaultTimeoutMs());
+
+                if (gateDecision == GateDecisionType.Cancel)
+                {
+                    FailAssignment(assignment, "Dispatch cancelled by .NET gate.");
+                    changed = true;
                     continue;
                 }
 
@@ -122,14 +145,49 @@ namespace Zeron.Server.ZServers
                 assignment.Status = "dispatched";
                 assignment.StartedAt = DateTime.UtcNow;
                 dispatched++;
+                changed = true;
             }
 
-            if (dispatched > 0)
+            if (changed)
             {
                 await m_DbContext.SaveChangesAsync(cancellationToken);
             }
 
             return dispatched;
+        }
+
+        /// <summary>
+        /// FailAssignment - mark pending assignment failed without dispatch.
+        /// </summary>
+        /// <param name="assignment"></param>
+        /// <param name="errorMessage"></param>
+        /// <returns>Returns void.</returns>
+        private void FailAssignment(
+            TaskAssignmentEntity assignment,
+            string errorMessage)
+        {
+            assignment.Status = "failed";
+            assignment.CompletedAt = DateTime.UtcNow;
+
+            if (assignment.Result == null)
+            {
+                m_DbContext.TaskResults.Add(new TaskResultEntity
+                {
+                    Id = Guid.NewGuid(),
+                    AssignmentId = assignment.Id,
+                    Success = false,
+                    ErrorMessage = errorMessage,
+                    CompletedAt = DateTime.UtcNow
+                });
+            }
+
+            if (assignment.Task != null && assignment.Task.Status != "cancelled")
+            {
+                assignment.Task.Status = "failed";
+            }
+
+            ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
+                "TaskDispatcherServer failed assignment {0}: {1}", assignment.Id, errorMessage));
         }
 
         /// <summary>

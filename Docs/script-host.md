@@ -33,6 +33,8 @@ Catalog packages carry a `ScriptEngine` field (default `powershell`). Demand run
 
 Package Deploy to specific `AgentIds` rejects targets that do not report the engine as available in heartbeat `supportedEngines` (empty capability JSON still allows `powershell` for older agents). Sync Health remains about catalog freshness, not engine availability.
 
+Install (and RemoteCommand / Server dispatch) can be **Pause / Cancel** by in-process .NET plugins only — scripts cannot intercept. See [Event Bus](./event-bus.md).
+
 ## External process engines
 
 Register user tools without compiling against Zeron:

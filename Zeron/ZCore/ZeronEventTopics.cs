@@ -72,5 +72,25 @@ namespace Zeron.ZCore
         /// ScriptFailed
         /// </summary>
         public const string ScriptFailed = "script.failed";
+
+        /// <summary>
+        /// GateCommand - RemoteCommand before invoke.
+        /// </summary>
+        public const string GateCommand = "gate.command";
+
+        /// <summary>
+        /// GateInstall - Install before execute.
+        /// </summary>
+        public const string GateInstall = "gate.install";
+
+        /// <summary>
+        /// GateDispatch - Server task dispatch before PUB.
+        /// </summary>
+        public const string GateDispatch = "gate.dispatch";
+
+        /// <summary>
+        /// GateCancelled
+        /// </summary>
+        public const string GateCancelled = "gate.cancelled";
     }
 }

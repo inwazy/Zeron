@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using System.Collections.Specialized;
+using Zeron.ZCore;
 using Zeron.ZCore.Type;
 using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
@@ -24,6 +25,7 @@ namespace Zeron.ZServers.Tests
 
             m_Install = null;
             ScriptHostServer.Clear();
+            ZeronGateServer.Current.Clear();
         }
 
         /// <summary>
@@ -61,6 +63,57 @@ namespace Zeron.ZServers.Tests
             Assert.IsFalse(ok);
             Assert.AreEqual(1, RecordingEngine.Scripts.Count);
             Assert.AreEqual("before", RecordingEngine.Scripts[0]);
+        }
+
+        /// <summary>
+        /// Install gate Cancel skips script execution.
+        /// </summary>
+        [TestMethod()]
+        public void ExecuteInstallQueuesGateCancelSkipsScriptTest()
+        {
+            if (InstallServer.Current != null)
+            {
+                Assert.Inconclusive("InstallServer.Current already set by another test.");
+            }
+
+            ScriptHostServer.Clear();
+            ScriptHostServer.Register(new RecordingEngine("mytool"));
+            ZeronGateServer.Current.Clear();
+            ZeronGateServer.Current.Register(new CancelInstallGate());
+
+            m_Install = new InstallServer();
+            m_Install.LoadConfig(new NameValueCollection
+            {
+                ["install_timer_queue_trigger_interval"] = "50000"
+            });
+            m_Install.Initialize();
+
+            bool ok = InstallServer.ExecuteInstallQueues(new InstallQueuesType
+            {
+                PackageName = "pkg",
+                Operation = "install",
+                ScriptBefore = "before",
+                ScriptEngine = "mytool",
+                AssignmentId = "assign-gate-1",
+                FilePath = Path.Combine(Path.GetTempPath(), "zeron-missing-installer.exe"),
+                RepoUrl = ""
+            });
+
+            Assert.IsFalse(ok);
+            Assert.AreEqual(0, RecordingEngine.Scripts.Count);
+        }
+
+        private sealed class CancelInstallGate : IGateHandler
+        {
+            public void Handle(
+                GateContextType context)
+            {
+                if (context.Topic == ZeronEventTopics.GateInstall)
+                {
+                    context.Decision = GateDecisionType.Cancel;
+                    context.Reason = "test";
+                }
+            }
         }
 
         private sealed class RecordingEngine : IScriptEngine

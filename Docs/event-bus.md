@@ -66,7 +66,28 @@ Optional long-running process receives NDJSON events on stdin:
 | `resume_self` | Flush queued events |
 | `cancel` / `pause_gate` / `pause_sync` / … | Rejected with `{"type":"error","code":"not_allowed"}` |
 
-Scripts **cannot** block Install, RemoteCommand, or Catalog Sync. .NET gate intercept is Phase 3.
+Scripts **cannot** block Install, RemoteCommand, or Catalog Sync.
+
+## .NET Gate (intercept)
+
+Only in-process .NET handlers (`IGateHandler` / `IGateController`) can Pause / Resume / Cancel. Scripts sending `cancel` / `pause_gate` are rejected.
+
+| Topic | Where |
+|-------|--------|
+| `gate.command` | Agent: RemoteCommand before invoke |
+| `gate.install` | Agent: Install before execute |
+| `gate.dispatch` | Server: task dispatch before PUB |
+| `gate.cancelled` | Emitted when work is cancelled (including pause timeout) |
+
+```csharp
+ZeronGateServer.Current.Register(new MyHandler()); // Handle() may set Decision = Pause|Cancel
+ZeronGateServer.Current.Resume(correlationId);
+ZeronGateServer.Current.Cancel(correlationId, "reason");
+```
+
+- `Pause` waits until Resume, Cancel, or `gate_pause_timeout_ms` (Agent default 300000; Server `GatePauseTimeoutMs` default 2000). Timeout → Cancel.
+- Demand loads `IZeronAgentPlugin` DLLs from `script_plugins_dir` (default `plugins/`).
+- Server plugins: register in-process via `IGateController` (DI: `IGateController` → `ZeronGateServer.Current`). `agent.connected` remains post-hook only (no gate).
 
 ## Sample listener
 

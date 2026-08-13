@@ -6,6 +6,7 @@ using Zeron.Demand.ZCore;
 using Zeron.Demand.ZServers;
 using Zeron.ZAttribute;
 using Zeron.ZCore;
+using Zeron.ZCore.Type;
 using Zeron.ZCore.Utils;
 using Zeron.ZInterfaces;
 using Zeron.ZServers;
@@ -79,6 +80,44 @@ namespace Zeron.Demand.ZServices
                     },
                     source: "agent",
                     correlationId: correlationId);
+
+                string gatePayload = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    targetApi,
+                    command,
+                    assignmentId = trackAssignment ? assignmentId : null
+                });
+                
+                GateDecisionType gateDecision = ZeronGateServer.Evaluate(
+                    ZeronEventTopics.GateCommand,
+                    gatePayload,
+                    correlationId);
+
+                if (gateDecision == GateDecisionType.Cancel)
+                {
+                    string cancelled = "RemoteCommand cancelled by .NET gate.";
+                    AuditServer.Log(targetApi, command, false, cancelled, "sub");
+
+                    if (trackAssignment)
+                    {
+                        ReporterServer.ReportTaskResult(assignmentId, false, null, cancelled);
+                    }
+
+                    var cancelledPayload = new
+                    {
+                        targetApi,
+                        command,
+                        success = false,
+                        assignmentId = trackAssignment ? assignmentId : null,
+                        cancelled = true
+                    };
+
+                    InstallEventPublisher.PublishObject("remotecommand.executed", cancelledPayload);
+                    InstallEventPublisher.PublishObject(ZeronEventTopics.CommandCompleted, cancelledPayload);
+                    RemoteCommandContext.AssignmentId = null;
+
+                    return ServiceResponse.SerializeFailure(cancelled);
+                }
 
                 try
                 {

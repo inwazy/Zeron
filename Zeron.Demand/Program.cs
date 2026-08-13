@@ -85,6 +85,7 @@ namespace Zeron.Demand
                 ServerIntegrate.Fork<ApplicationServer>();
                 ServerIntegrate.Fork<DeployServer>();
                 ServerIntegrate.Fork<ScriptHostBootstrapServer>();
+                ServerIntegrate.Fork<ZeronGateBootstrapServer>();
                 ServerIntegrate.Fork<ScriptEventBridgeServer>();
                 ServerIntegrate.Fork<InstallServer>();
                 ServerIntegrate.Fork<MailerServer>();
