@@ -19,6 +19,11 @@
 | `GatePauseTimeoutMs` | `2000` | Server dispatch gate pause timeout (Cancel on expiry) |
 | `DispatchIntervalMs` | `5000` | Background task dispatch interval |
 | `ScheduleIntervalMs` | `15000` | Central cron schedule poll interval |
+| `RetentionEnabled` | `true` | Prune old audit logs, install-result tips, and catalog versions |
+| `RetentionIntervalMinutes` | `60` | How often the retention worker runs |
+| `AuditLogRetentionDays` | `90` | Delete audit rows older than this (`0` disables) |
+| `UserNotificationRetentionDays` | `30` | Delete DeviceOwner install tips older than this (`0` disables) |
+| `CatalogVersionKeepCount` | `20` | Keep the newest N catalog snapshots per package (`0` disables) |
 | `JwtSecret` | (dev secret) | JWT signing key (min 32 chars) |
 | `JwtIssuer` | `Zeron.Server` | JWT issuer and audience |
 | `JwtExpireMinutes` | `480` | JWT token lifetime |
@@ -289,3 +294,15 @@ Server stores attributed operations in `AuditLogs` (Dashboard **Audit** `/audit`
 | `catalog.sync.push` | server | Operator push sync from Sync Health |
 
 Query filters: `action`, `actor`, `target`, `source`, `limit`.
+
+## Data Retention
+
+A background worker (`DataRetentionWorker`) prunes growing tables. Set a days/count value to `0` to skip that store.
+
+| Store | Rule |
+|-------|------|
+| `AuditLogs` | Rows with `OccurredAt` older than `AuditLogRetentionDays` |
+| `UserNotifications` | Tips with `CreatedAt` older than `UserNotificationRetentionDays` (including unread) |
+| `ManagedPackageVersions` | Keep the newest `CatalogVersionKeepCount` snapshots **per package**; live catalog row is unchanged |
+
+The worker is not started in the `Testing` environment.

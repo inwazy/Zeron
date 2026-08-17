@@ -93,6 +93,7 @@ namespace Zeron.Server
             builder.Services.AddScoped<AlertNotifierServer>();
             builder.Services.AddScoped<AlertRuleServer>();
             builder.Services.AddScoped<DashboardSummaryServer>();
+            builder.Services.AddScoped<DataRetentionServer>();
             builder.Services.AddSingleton<CommandPublisherServer>();
             builder.Services.AddSingleton<IDashboardNotifier, DashboardNotifierServer>();
             builder.Services.AddSingleton<Zeron.ZInterfaces.IZeronEventBus>(_ => Zeron.ZCore.Utils.ZeronEventBus.Current);
@@ -104,6 +105,7 @@ namespace Zeron.Server
                 builder.Services.AddHostedService<HeartbeatMonitorWorker>();
                 builder.Services.AddHostedService<TaskDispatchWorker>();
                 builder.Services.AddHostedService<TaskScheduleWorker>();
+                builder.Services.AddHostedService<DataRetentionWorker>();
             }
 
             builder.Services.AddAuthentication(options =>
