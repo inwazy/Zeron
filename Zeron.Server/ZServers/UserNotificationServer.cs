@@ -166,6 +166,24 @@ namespace Zeron.Server.ZServers
         }
 
         /// <summary>
+        /// GetUnreadInstallResultCountsAsync - global unread install-result tips (ops dashboard).
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns total unread and failed unread counts.</returns>
+        public async Task<(int Total, int Failed)> GetUnreadInstallResultCountsAsync(
+            CancellationToken cancellationToken = default)
+        {
+            IQueryable<UserNotificationEntity> unread = m_DbContext.UserNotifications
+                .AsNoTracking()
+                .Where(item => item.Kind == KindInstallResult && item.ReadAt == null);
+
+            int total = await unread.CountAsync(cancellationToken);
+            int failed = await unread.CountAsync(item => item.Success == false, cancellationToken);
+
+            return (total, failed);
+        }
+
+        /// <summary>
         /// ToInfo
         /// </summary>
         private static UserNotificationInfoType ToInfo(

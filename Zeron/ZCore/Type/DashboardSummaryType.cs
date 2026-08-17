@@ -72,6 +72,51 @@ namespace Zeron.ZCore.Type
         }
 
         /// <summary>
+        /// CatalogSyncHealthy - online agents with a recent successful catalog sync.
+        /// </summary>
+        public int CatalogSyncHealthy
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// CatalogSyncUnhealthy - stale, never-synced, or recently failed (excludes offline).
+        /// </summary>
+        public int CatalogSyncUnhealthy
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// CatalogSyncOffline
+        /// </summary>
+        public int CatalogSyncOffline
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// UnreadInstallNotifications - unread DeviceOwner install-result tips.
+        /// </summary>
+        public int UnreadInstallNotifications
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// UnreadInstallFailures - unread install-result tips that failed.
+        /// </summary>
+        public int UnreadInstallFailures
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// RecentAgents
         /// </summary>
         public List<DashboardAgentItemType> RecentAgents

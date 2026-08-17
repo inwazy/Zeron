@@ -152,9 +152,9 @@ Use `/ready` for load balancer / process manager health checks.
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| `GET /api/dashboard/summary` | Viewer+ | Aggregated online/offline agents, stale connections, active tasks, open alerts, recent lists, transport security |
+| `GET /api/dashboard/summary` | Viewer+ | Aggregated online/offline agents, stale connections, catalog sync health, unread install tips, active tasks, open alerts, recent lists, transport security |
 
-The Dashboard home page (`/`) uses this summary and refreshes every 15 seconds (plus SignalR updates).
+The Dashboard home page (`/`) uses this summary and refreshes every 15 seconds (plus SignalR updates). Cards include **Catalog Sync Unhealthy** (`/packages/sync-health`) and **Unread Install Tips** (`/events?topic=install.`).
 
 ### Transport security panel
 

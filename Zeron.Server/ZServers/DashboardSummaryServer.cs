@@ -31,6 +31,12 @@ namespace Zeron.Server.ZServers
         // Settings
         private readonly ServerSettings m_Settings;
 
+        // Catalog sync health.
+        private readonly CatalogSyncHealthServer m_CatalogSyncHealth;
+
+        // User notifications (install-result tips).
+        private readonly UserNotificationServer m_UserNotifications;
+
         /// <summary>
         /// DashboardSummaryServer
         /// </summary>
@@ -40,6 +46,8 @@ namespace Zeron.Server.ZServers
         /// <param name="eventIngestor"></param>
         /// <param name="alertRuleServer"></param>
         /// <param name="settings"></param>
+        /// <param name="catalogSyncHealth"></param>
+        /// <param name="userNotifications"></param>
         /// <returns>Returns void.</returns>
         public DashboardSummaryServer(
             AgentManagerServer agentManager,
@@ -47,7 +55,9 @@ namespace Zeron.Server.ZServers
             TaskDispatcherServer taskDispatcher,
             EventIngestorServer eventIngestor,
             AlertRuleServer alertRuleServer,
-            ServerSettings settings)
+            ServerSettings settings,
+            CatalogSyncHealthServer catalogSyncHealth,
+            UserNotificationServer userNotifications)
         {
             m_AgentManager = agentManager;
             m_AgentDiagnosticServer = agentDiagnosticServer;
@@ -55,6 +65,8 @@ namespace Zeron.Server.ZServers
             m_EventIngestor = eventIngestor;
             m_AlertRuleServer = alertRuleServer;
             m_Settings = settings;
+            m_CatalogSyncHealth = catalogSyncHealth;
+            m_UserNotifications = userNotifications;
         }
 
         /// <summary>
@@ -78,6 +90,9 @@ namespace Zeron.Server.ZServers
                 cancellationToken);
             List<EventEntity> events = await m_EventIngestor.GetEventsAsync(null, null, 8, cancellationToken);
             int openAlertCount = await m_AlertRuleServer.GetOpenAlertCountAsync(cancellationToken);
+            CatalogSyncHealthSummaryType catalogHealth = await m_CatalogSyncHealth.GetHealthAsync(cancellationToken);
+            (int unreadInstall, int unreadInstallFailed) = await m_UserNotifications
+                .GetUnreadInstallResultCountsAsync(cancellationToken);
 
             return new DashboardSummaryType
             {
@@ -88,6 +103,11 @@ namespace Zeron.Server.ZServers
                 AgentsStale = diagnostics.Count(item => item.ConnectionState == "stale"),
                 ActiveTasks = tasks.Count(task => task.Status is "pending" or "running" or "dispatched"),
                 OpenAlerts = openAlertCount,
+                CatalogSyncHealthy = catalogHealth.Healthy,
+                CatalogSyncUnhealthy = catalogHealth.Stale + catalogHealth.NeverSynced + catalogHealth.RecentlyFailed,
+                CatalogSyncOffline = catalogHealth.Offline,
+                UnreadInstallNotifications = unreadInstall,
+                UnreadInstallFailures = unreadInstallFailed,
                 RecentAgents = agents
                     .Take(8)
                     .Select(agent =>
