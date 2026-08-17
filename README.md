@@ -9,7 +9,7 @@ Driven by NetMQ (ZeroMQ), Zeron empowers SMB IT teams and developers to control 
 ![Travis (.com)](https://img.shields.io/travis/com/jiowcl/Zeron)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/6bf8bdd0b9634cf3b8c50079e6bbbbfd)](https://app.codacy.com/gh/jiowcl/Zeron/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-![Screenshot](./Zeron.Server/Screenshot/Dashboard.png?raw=true)
+![Screenshot](./Zeron.Server/Screenshot/Dashboard.png)
 
 ## Why Zeron?  
 
@@ -46,6 +46,7 @@ Driven by NetMQ (ZeroMQ), Zeron empowers SMB IT teams and developers to control 
 - **User Management** — Admin CRUD for Admin / Operator / Viewer accounts
 - **Password Policy** — Forced change on first login + self-service change password
 - **Dashboard Summary** — Home overview of agents, tasks, alerts, and events with live refresh
+- **My Devices** — DeviceOwner self-service install with live result tips over SignalR
 - **Task Schedules** — Central cron schedules that dispatch remote APIs to agents
 - **Package Deploy** — Central ManagedPackage install/uninstall to selected agents
 - **Health Probes** — `/health` and `/ready` for deployment monitoring

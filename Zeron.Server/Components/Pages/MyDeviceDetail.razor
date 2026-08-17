@@ -6,7 +6,11 @@
 @attribute [Authorize(Policy = ServerPolicies.DeviceOwnerOrStaff)]
 @inject DevicePortalServer PortalServer
 @inject ManagedPackageCatalogServer CatalogServer
+@inject UserNotificationServer NotificationServer
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@implements IAsyncDisposable
 
 <div class="page-header">
     <div>
@@ -18,6 +22,24 @@
         <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
     </div>
 </div>
+
+@if (m_Notifications.Count > 0)
+{
+    <div class="panel">
+        <h2>Install Results</h2>
+        @foreach (UserNotificationInfoType note in m_Notifications)
+        {
+            <div class="notify-banner @(note.Success == false ? "notify-fail" : "notify-ok")">
+                <div>
+                    <strong>@note.Title</strong>
+                    <p>@note.Message</p>
+                    <small class="muted">@note.CreatedAt.ToLocalTime().ToString("g")</small>
+                </div>
+                <button class="btn btn-secondary" @onclick="() => DismissAsync(note)" disabled="@m_IsBusy">Dismiss</button>
+            </div>
+        }
+    </div>
+}
 
 @if (!string.IsNullOrWhiteSpace(m_Error))
 {

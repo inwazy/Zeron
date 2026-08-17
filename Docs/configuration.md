@@ -276,7 +276,7 @@ Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies
 
 **ScriptEngine:** catalog field (default `powershell`) selects the Script Host engine for install/uninstall hooks on Demand. Deploy to explicit `AgentIds` fails if the agent does not report that engine as available. Catalog Create/Edit exposes before/after script bodies (`ScriptInstallBefore` / `After`, `ScriptUnInstallBefore` / `After`) plus engine id; History shows which hooks are set (`ib`/`ia`/`ub`/`ua`). See [Script Host](./script-host.md).
 
-**Install result notifications:** when a self-service deploy (`Task.Name` starts with `self-`) finishes with `install.completed` / `install.failed`, Server notifies every active user bound to that agent. Dashboard tips appear on `/my-devices` (`InstallResultNotifyEnabled`). Optional per-user email uses `Users.Email` + SMTP (`InstallResultEmailEnabled`). Staff package deploys are not notified this way.
+**Install result notifications:** when a self-service deploy (`Task.Name` starts with `self-`) finishes with `install.completed` / `install.failed`, Server notifies every active user bound to that agent. Dashboard tips appear on `/my-devices` and `/my-devices/{agentKey}` (`InstallResultNotifyEnabled`). While those pages are open, unread tips are also pushed over SignalR (`InstallResultReceived` on `/hubs/dashboard`) so DeviceOwners do not need to refresh. Fleet `EventReceived` / `AlertReceived` / `AgentStatusChanged` stay on the staff hub group. Optional per-user email uses `Users.Email` + SMTP (`InstallResultEmailEnabled`). Staff package deploys are not notified this way.
 
 Dashboard pages: `/my-devices`, `/device-bindings` (Admin).
 

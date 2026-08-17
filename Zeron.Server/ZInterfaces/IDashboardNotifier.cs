@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Zeron.Server.Data.Entities;
+using Zeron.ZCore.Type;
 
 namespace Zeron.Server.ZInterfaces
 {
@@ -33,5 +34,15 @@ namespace Zeron.Server.ZInterfaces
         /// <returns>Returns void.</returns>
         Task NotifyAlertAsync(
             AlertEntity alert);
+
+        /// <summary>
+        /// NotifyInstallResultAsync - push a DeviceOwner install-result tip to that user.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="notification"></param>
+        /// <returns>Returns void.</returns>
+        Task NotifyInstallResultAsync(
+            Guid userId,
+            UserNotificationInfoType notification);
     }
 }

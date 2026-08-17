@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Zeron.Server.Data.Entities;
 using Zeron.Server.Hubs;
 using Zeron.Server.ZInterfaces;
+using Zeron.ZCore.Type;
 
 namespace Zeron.Server.ZServers
 {
@@ -35,7 +36,7 @@ namespace Zeron.Server.ZServers
         public async Task NotifyEventAsync(
             EventEntity eventEntity)
         {
-            await m_HubContext.Clients.All.SendAsync("EventReceived", new
+            await m_HubContext.Clients.Group(DashboardHub.StaffGroup).SendAsync("EventReceived", new
             {
                 eventEntity.Id,
                 AgentKey = eventEntity.Agent?.AgentKey,
@@ -53,7 +54,7 @@ namespace Zeron.Server.ZServers
         public async Task NotifyAgentStatusAsync(
             AgentEntity agent)
         {
-            await m_HubContext.Clients.All.SendAsync("AgentStatusChanged", new
+            await m_HubContext.Clients.Group(DashboardHub.StaffGroup).SendAsync("AgentStatusChanged", new
             {
                 agent.AgentKey,
                 agent.MachineName,
@@ -70,7 +71,7 @@ namespace Zeron.Server.ZServers
         public async Task NotifyAlertAsync(
             AlertEntity alert)
         {
-            await m_HubContext.Clients.All.SendAsync("AlertReceived", new
+            await m_HubContext.Clients.Group(DashboardHub.StaffGroup).SendAsync("AlertReceived", new
             {
                 alert.Id,
                 alert.RuleType,
@@ -81,6 +82,21 @@ namespace Zeron.Server.ZServers
                 alert.Status,
                 alert.CreatedAt
             });
+        }
+
+        /// <summary>
+        /// NotifyInstallResultAsync
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="notification"></param>
+        /// <returns>Returns void.</returns>
+        public async Task NotifyInstallResultAsync(
+            Guid userId,
+            UserNotificationInfoType notification)
+        {
+            await m_HubContext.Clients.User(userId.ToString()).SendAsync(
+                DashboardHub.InstallResultReceived,
+                notification);
         }
     }
 }

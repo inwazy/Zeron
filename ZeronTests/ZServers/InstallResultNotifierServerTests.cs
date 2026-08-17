@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore;
+using Zeron.Server.ZInterfaces;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -42,6 +43,34 @@ namespace Zeron.Server.ZServers.Tests
             Assert.AreEqual(UserNotificationServer.KindInstallResult, notes[0].Kind);
             Assert.IsTrue(notes[0].Success);
             Assert.AreEqual("ccleaner", notes[0].PackageName);
+        }
+
+        /// <summary>
+        /// Self-service install.completed also pushes a live dashboard tip to the DeviceOwner.
+        /// </summary>
+        [TestMethod()]
+        public async Task NotifyFromSelfInstallCompletedPushesDashboardTest()
+        {
+            await using ZeronServerDbContext dbContext = CreateContext();
+            (Guid userId, Guid assignmentId) = await SeedSelfInstallAsync(dbContext, "owner-live", "live-agent");
+            RecordingDashboardNotifier dashboard = new();
+
+            InstallResultNotifierServer notifier = CreateNotifier(dbContext, notify: true, email: false, dashboard);
+            int count = await notifier.NotifyFromInstallEventAsync(new AgentEventReportType
+            {
+                AgentId = "live-agent",
+                Topic = "install.completed",
+                Payload = "{\"package\":\"ccleaner\",\"success\":true,\"exitCode\":0,\"assignmentId\":\""
+                    + assignmentId
+                    + "\"}"
+            });
+
+            Assert.AreEqual(1, count);
+            Assert.AreEqual(1, dashboard.InstallResults.Count);
+            Assert.AreEqual(userId, dashboard.InstallResults[0].UserId);
+            Assert.AreEqual("ccleaner", dashboard.InstallResults[0].Notification.PackageName);
+            Assert.IsTrue(dashboard.InstallResults[0].Notification.Success);
+            Assert.AreEqual("live-agent", dashboard.InstallResults[0].Notification.AgentKey);
         }
 
         /// <summary>
@@ -177,7 +206,8 @@ namespace Zeron.Server.ZServers.Tests
         private static InstallResultNotifierServer CreateNotifier(
             ZeronServerDbContext dbContext,
             bool notify,
-            bool email)
+            bool email,
+            IDashboardNotifier? dashboardNotifier = null)
         {
             return new InstallResultNotifierServer(
                 dbContext,
@@ -186,7 +216,50 @@ namespace Zeron.Server.ZServers.Tests
                 {
                     InstallResultNotifyEnabled = notify,
                     InstallResultEmailEnabled = email
-                });
+                },
+                dashboardNotifier);
+        }
+
+        /// <summary>
+        /// RecordingDashboardNotifier
+        /// </summary>
+        private sealed class RecordingDashboardNotifier : IDashboardNotifier
+        {
+            /// <summary>
+            /// InstallResults
+            /// </summary>
+            public List<(Guid UserId, UserNotificationInfoType Notification)> InstallResults { get; } = [];
+
+            /// <inheritdoc />
+            public Task NotifyEventAsync(
+                EventEntity eventEntity)
+            {
+                return Task.CompletedTask;
+            }
+
+            /// <inheritdoc />
+            public Task NotifyAgentStatusAsync(
+                AgentEntity agent)
+            {
+                return Task.CompletedTask;
+            }
+
+            /// <inheritdoc />
+            public Task NotifyAlertAsync(
+                AlertEntity alert)
+            {
+                return Task.CompletedTask;
+            }
+
+            /// <inheritdoc />
+            public Task NotifyInstallResultAsync(
+                Guid userId,
+                UserNotificationInfoType notification)
+            {
+                InstallResults.Add((userId, notification));
+
+                return Task.CompletedTask;
+            }
         }
 
         /// <summary>

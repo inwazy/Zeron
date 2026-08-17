@@ -6,6 +6,9 @@
 @inject DevicePortalServer PortalServer
 @inject UserNotificationServer NotificationServer
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@implements IAsyncDisposable
 
 <div class="page-header">
     <div>
