@@ -31,18 +31,28 @@ namespace Zeron.Server.Endpoints
                 [FromForm] string password,
                 AuthServer authServer) =>
             {
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    return Results.Redirect("/login?failed=username");
+                }
+
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    return Results.Redirect("/login?failed=password");
+                }
+
                 LoginResponseType response = await authServer.LoginAsync(username, password);
 
                 if (!response.Success || response.User == null || !Guid.TryParse(response.User.Id, out Guid userId))
                 {
-                    return Results.Redirect("/login?failed=1");
+                    return Results.Redirect("/login?failed=credentials");
                 }
 
                 UserEntity? userEntity = await authServer.GetUserEntityAsync(userId);
 
                 if (userEntity == null)
                 {
-                    return Results.Redirect("/login?failed=1");
+                    return Results.Redirect("/login?failed=credentials");
                 }
 
                 await SignInUserAsync(context, userEntity);
