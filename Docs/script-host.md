@@ -80,6 +80,8 @@ Register user tools without compiling against Zeron:
 | `script_default_timeout_ms` | `300000` | Default timeout for script runs |
 | `script_engine_{id}_*` | — | External process engines (see above) |
 
+Note: `.NET Gate` plugins are loaded from `script_plugins_dir` (see [Event Bus](./event-bus.md)). The loader intentionally skips DLL filenames starting with `Zeron.`, `System.`, `Microsoft.`, or `netstandard` to avoid loading framework/host assemblies.
+
 ## Adding an engine
 
 **Preferred:** App.config `script_engine_*` keys (no code change).

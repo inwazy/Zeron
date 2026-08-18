@@ -69,6 +69,50 @@ namespace Zeron.Server.ZServers.Tests
 
             await dbContext.SaveChangesAsync();
 
+            Guid ownerId = Guid.NewGuid();
+            dbContext.Users.Add(new UserEntity
+            {
+                Id = ownerId,
+                Username = "owner-dash",
+                PasswordHash = "x",
+                Role = ServerRoles.DeviceOwner,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+            dbContext.UserNotifications.AddRange(
+                new UserNotificationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = ownerId,
+                    Kind = UserNotificationServer.KindInstallResult,
+                    Title = "install failed",
+                    Message = "failed",
+                    Success = false,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new UserNotificationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = ownerId,
+                    Kind = UserNotificationServer.KindInstallResult,
+                    Title = "install ok",
+                    Message = "ok",
+                    Success = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new UserNotificationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = ownerId,
+                    Kind = UserNotificationServer.KindInstallResult,
+                    Title = "already read",
+                    Message = "read",
+                    Success = false,
+                    CreatedAt = DateTime.UtcNow,
+                    ReadAt = DateTime.UtcNow
+                });
+            await dbContext.SaveChangesAsync();
+
             DashboardSummaryServer summaryServer = CreateSummaryServer(dbContext);
             DashboardSummaryType summary = await summaryServer.GetSummaryAsync();
 
@@ -80,6 +124,11 @@ namespace Zeron.Server.ZServers.Tests
             Assert.AreEqual(1, summary.RecentAlerts.Count);
             Assert.AreEqual(1, summary.RecentTasks.Count);
             Assert.AreEqual(2, summary.RecentAgents.Count);
+            Assert.AreEqual(0, summary.CatalogSyncHealthy);
+            Assert.AreEqual(1, summary.CatalogSyncUnhealthy);
+            Assert.AreEqual(1, summary.CatalogSyncOffline);
+            Assert.AreEqual(2, summary.UnreadInstallNotifications);
+            Assert.AreEqual(1, summary.UnreadInstallFailures);
             Assert.IsNotNull(summary.Security);
             Assert.AreEqual("insecure", summary.Security.OverallStatus);
             Assert.IsFalse(summary.Security.CurveEnabled);
@@ -148,6 +197,9 @@ namespace Zeron.Server.ZServers.Tests
             EventIngestorServer eventIngestor = new(dbContext, taskDispatcher);
             AlertNotifierServer alertNotifier = new(settings);
             AlertRuleServer alertRuleServer = new(dbContext, alertNotifier);
+            ManagedPackageCatalogServer catalog = new(dbContext);
+            CatalogSyncHealthServer catalogSyncHealth = new(dbContext, catalog, settings);
+            UserNotificationServer userNotifications = new(dbContext);
 
             return new DashboardSummaryServer(
                 agentManager,
@@ -155,7 +207,9 @@ namespace Zeron.Server.ZServers.Tests
                 taskDispatcher,
                 eventIngestor,
                 alertRuleServer,
-                settings);
+                settings,
+                catalogSyncHealth,
+                userNotifications);
         }
 
         private static ZeronServerDbContext CreateContext(string dbName)

@@ -6,7 +6,11 @@
 @attribute [Authorize(Policy = ServerPolicies.DeviceOwnerOrStaff)]
 @inject DevicePortalServer PortalServer
 @inject ManagedPackageCatalogServer CatalogServer
+@inject UserNotificationServer NotificationServer
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@implements IAsyncDisposable
 
 <div class="page-header">
     <div>
@@ -15,17 +19,38 @@
     </div>
     <div class="actions">
         <a class="btn btn-secondary" href="/my-devices">Back</a>
-        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+        <LoadingButton CssClass="btn btn-secondary"
+                        Text="Refresh"
+                        IsLoading="@m_IsBusy"
+                        OnClick="ReloadAsync" />
     </div>
 </div>
 
+@if (m_Notifications.Count > 0)
+{
+    <div class="panel">
+        <h2>Install Results</h2>
+        @foreach (UserNotificationInfoType note in m_Notifications)
+        {
+            <NotificationBanner Success="@(note.Success != false)"
+                                 ShowDismiss="true"
+                                 DisableDismiss="@m_IsBusy"
+                                 OnDismiss="() => DismissAsync(note)">
+                <strong>@note.Title</strong>
+                <p>@note.Message</p>
+                <small class="muted">@note.CreatedAt.ToLocalTime().ToString("g")</small>
+            </NotificationBanner>
+        }
+    </div>
+}
+
 @if (!string.IsNullOrWhiteSpace(m_Error))
 {
-    <p class="error">@m_Error</p>
+    <NotificationBanner Success="false" Message="m_Error" />
 }
 else if (m_Device == null)
 {
-    <p class="error">Device not found or not bound to your account.</p>
+    <NotificationBanner Success="false" Message="Device not found or not bound to your account." />
 }
 else
 {
@@ -66,12 +91,16 @@ else
                 <InputText @bind-Value="m_Deploy.ExtraArgs" />
             </label>
             <div class="actions">
-                <button class="btn" @onclick="DeployAsync" disabled="@m_IsBusy">Submit</button>
+                <LoadingButton CssClass="btn"
+                                Text="Submit"
+                                IsLoading="@m_IsBusy"
+                                OnClick="DeployAsync" />
             </div>
         </div>
         @if (!string.IsNullOrWhiteSpace(m_DeployMessage))
         {
-            <p class="@(m_DeploySucceeded ? "success-text" : "error")">@m_DeployMessage</p>
+            <NotificationBanner Success="m_DeploySucceeded"
+                                 Message="m_DeployMessage" />
         }
     </div>
 

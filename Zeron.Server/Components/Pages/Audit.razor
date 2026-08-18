@@ -11,7 +11,10 @@
         <p>Attributed operation history for catalog, deploy, bindings, and agent package overrides.</p>
     </div>
     <div class="actions">
-        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+        <LoadingButton CssClass="btn btn-secondary"
+                        Text="Refresh"
+                        IsLoading="@m_IsBusy"
+                        OnClick="ReloadAsync" />
     </div>
 </div>
 
@@ -38,13 +41,24 @@
             </InputSelect>
         </label>
         <div class="actions">
-            <button class="btn" @onclick="ReloadAsync" disabled="@m_IsBusy">Apply Filters</button>
+            <LoadingButton CssClass="btn"
+                            Text="Apply Filters"
+                            IsLoading="@m_IsBusy"
+                            OnClick="ApplyFiltersAsync" />
         </div>
     </div>
 </div>
 
 <div class="panel">
-    @if (m_Rows.Count == 0)
+    <PagerBar Title="Results"
+              Summary="@PageSummary"
+              IsLoading="@m_IsBusy"
+              HasPrevious="@(m_PageIndex > 0)"
+              HasNext="@m_HasNextPage"
+              OnPrevious="GoPrevPageAsync"
+              OnNext="GoNextPageAsync" />
+
+    @if (m_PageRows.Count == 0)
     {
         <p class="muted">No audit records found.</p>
     }
@@ -63,7 +77,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (AuditLogInfoType row in m_Rows)
+                @foreach (AuditLogInfoType row in m_PageRows)
                 {
                     <tr>
                         <td>@row.OccurredAt.ToLocalTime().ToString("g")</td>

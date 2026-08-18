@@ -33,7 +33,7 @@
 
 @if (m_Agent == null)
 {
-    <p class="error">Agent not found.</p>
+    <NotificationBanner Success="false" Message="Agent not found." />
 }
 else
 {
@@ -53,7 +53,7 @@ else
             <p><em>@m_Diagnostic.RecommendedAction</em></p>
             @if (m_Diagnostic.HasOpenOfflineAlert)
             {
-                <p class="error">An open offline alert exists for this agent.</p>
+                <NotificationBanner Success="false" Message="An open offline alert exists for this agent." />
             }
         </div>
     }

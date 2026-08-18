@@ -134,7 +134,31 @@ namespace Zeron.Server.ZServers
             int limit = 100,
             CancellationToken cancellationToken = default)
         {
+            return await QueryAsync(action, actorUsername, targetKey, source, limit, 0, cancellationToken);
+        }
+
+        /// <summary>
+        /// QueryAsync
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="actorUsername"></param>
+        /// <param name="targetKey"></param>
+        /// <param name="source"></param>
+        /// <param name="limit"></param>
+        /// <param name="offset"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns audit rows.</returns>
+        public async Task<List<AuditLogInfoType>> QueryAsync(
+            string? action,
+            string? actorUsername,
+            string? targetKey,
+            string? source,
+            int limit,
+            int offset,
+            CancellationToken cancellationToken = default)
+        {
             int take = Math.Clamp(limit, 1, 500);
+            int skip = Math.Max(0, offset);
             IQueryable<AuditLogEntity> query = m_DbContext.AuditLogs.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(action))
@@ -166,6 +190,7 @@ namespace Zeron.Server.ZServers
 
             List<AuditLogEntity> rows = await query
                 .OrderByDescending(item => item.OccurredAt)
+                .Skip(skip)
                 .Take(take)
                 .ToListAsync(cancellationToken);
 

@@ -24,6 +24,11 @@ namespace Zeron.Server.Components.Pages
         // Error.
         private string? m_Error;
 
+        // Field-level errors.
+        private string? m_CurrentPasswordError;
+        private string? m_NewPasswordError;
+        private string? m_ConfirmPasswordError;
+
         /// <summary>
         /// OnInitialized
         /// </summary>
@@ -39,6 +44,32 @@ namespace Zeron.Server.Components.Pages
                 "invalid" => "Unable to update password. Use at least 6 characters.",
                 _ => null
             };
+
+            // Map error code to field-level hints.
+            // Note: HTML inputs are not bound (plain form post), so we only display errors from query code.
+            m_CurrentPasswordError = null;
+            m_NewPasswordError = null;
+            m_ConfirmPasswordError = null;
+
+            switch (ErrorCode)
+            {
+                case "current":
+                    m_CurrentPasswordError = m_Error;
+                    break;
+
+                case "same":
+                case "invalid":
+                    m_NewPasswordError = m_Error;
+                    break;
+
+                case "mismatch":
+                    m_NewPasswordError = m_Error;
+                    m_ConfirmPasswordError = m_Error;
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 }

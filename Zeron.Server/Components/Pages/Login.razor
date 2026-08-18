@@ -18,18 +18,26 @@
                 <label>
                     Username
                     <input name="username" required autocomplete="username" />
+                    @if (!string.IsNullOrWhiteSpace(m_UsernameError))
+                    {
+                        <p class="field-error">@m_UsernameError</p>
+                    }
                 </label>
                 <label>
                     Password
                     <input name="password" type="password" required autocomplete="current-password" />
+                    @if (!string.IsNullOrWhiteSpace(m_PasswordError))
+                    {
+                        <p class="field-error">@m_PasswordError</p>
+                    }
                 </label>
                 <button class="btn" type="submit">Sign In</button>
             </div>
         </form>
 
-        @if (m_ShowError)
+        @if (!string.IsNullOrWhiteSpace(m_Error))
         {
-            <p class="error">Invalid username or password.</p>
+            <NotificationBanner Success="false" Message="m_Error" />
         }
     </div>
 </div>

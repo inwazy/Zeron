@@ -63,14 +63,17 @@
             <span>Enabled</span>
         </label>
         <div class="actions">
-            <button class="btn" @onclick="HandleCreateAsync" disabled="@m_IsSubmitting">Create Schedule</button>
+            <LoadingButton CssClass="btn"
+                            Text="Create Schedule"
+                            IsLoading="@m_IsSubmitting"
+                            OnClick="HandleCreateAsync" />
             <a class="btn btn-secondary" href="/schedules">Cancel</a>
         </div>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(m_Error))
     {
-        <p class="error">@m_Error</p>
+        <NotificationBanner Success="false" Message="m_Error" />
     }
 
     <div class="cron-examples">

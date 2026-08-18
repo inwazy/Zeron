@@ -149,6 +149,51 @@ namespace Zeron.Server.ZCore
         } = 15000;
 
         /// <summary>
+        /// RetentionEnabled - prune old audit logs, notifications, and catalog versions.
+        /// </summary>
+        public bool RetentionEnabled
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
+        /// RetentionIntervalMinutes - how often the retention worker runs.
+        /// </summary>
+        public int RetentionIntervalMinutes
+        {
+            get;
+            set;
+        } = 60;
+
+        /// <summary>
+        /// AuditLogRetentionDays - delete audit rows older than this (0 disables).
+        /// </summary>
+        public int AuditLogRetentionDays
+        {
+            get;
+            set;
+        } = 90;
+
+        /// <summary>
+        /// UserNotificationRetentionDays - delete install-result tips older than this (0 disables).
+        /// </summary>
+        public int UserNotificationRetentionDays
+        {
+            get;
+            set;
+        } = 30;
+
+        /// <summary>
+        /// CatalogVersionKeepCount - keep the newest N versions per package (0 disables).
+        /// </summary>
+        public int CatalogVersionKeepCount
+        {
+            get;
+            set;
+        } = 20;
+
+        /// <summary>
         /// JwtSecret
         /// </summary>
         public string JwtSecret

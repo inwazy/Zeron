@@ -1,0 +1,16 @@
+@namespace Zeron.Server.Components.Shared
+
+<div class="filter-chips-bar actions" role="group" aria-label="@AriaLabel">
+    @foreach (FilterChipOption option in Options)
+    {
+        bool isActive = string.Equals(option.Value, SelectedValue, StringComparison.OrdinalIgnoreCase);
+        IReadOnlyDictionary<string, object> ariaAttributes = GetAriaAttributes(isActive, option.Label);
+        <LoadingButton CssClass="@(isActive ? "btn" : "btn btn-secondary")"
+                        Text="@option.Label"
+                        IsLoading="@IsLoading"
+                        Disabled="@IsLoading"
+                        AdditionalAttributes="ariaAttributes"
+                        OnClick="() => OnSelect.InvokeAsync(option.Value)" />
+    }
+</div>
+

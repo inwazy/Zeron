@@ -16,8 +16,12 @@ namespace Zeron.Server.Components.Pages
         [SupplyParameterFromQuery(Name = "failed")]
         public string? Failed { get; set; }
 
-        // Show error.
-        private bool m_ShowError;
+        // Error message.
+        private string? m_Error;
+
+        // Field-level errors.
+        private string? m_UsernameError;
+        private string? m_PasswordError;
 
         /// <summary>
         /// OnInitialized
@@ -25,7 +29,31 @@ namespace Zeron.Server.Components.Pages
         /// <returns>Returns void.</returns>
         protected override void OnInitialized()
         {
-            m_ShowError = Failed == "1";
+            m_Error = Failed switch
+            {
+                "username" => "Username is required.",
+                "password" => "Password is required.",
+                "credentials" or "1" => "Invalid username or password.",
+                _ => null
+            };
+
+            m_UsernameError = null;
+            m_PasswordError = null;
+
+            switch (Failed)
+            {
+                case "username":
+                    m_UsernameError = m_Error;
+                    break;
+                case "password":
+                    m_PasswordError = m_Error;
+                    break;
+                case "credentials":
+                case "1":
+                    m_UsernameError = m_Error;
+                    m_PasswordError = m_Error;
+                    break;
+            }
         }
     }
 }

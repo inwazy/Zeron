@@ -11,10 +11,13 @@
 <div class="page-header">
     <div>
         <h1>Dashboard</h1>
-        <p>Operational summary of agents, tasks, alerts, and events.</p>
+        <p>Operational summary of agents, catalog sync, tasks, alerts, and events.</p>
     </div>
     <div class="actions">
-        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsLoading">Refresh</button>
+        <LoadingButton CssClass="btn btn-secondary"
+                        Text="Refresh"
+                        IsLoading="@m_IsLoading"
+                        OnClick="ReloadAsync" />
         <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
             <Authorized>
                 <a class="btn" href="/tasks/create">Create Task</a>
@@ -25,7 +28,7 @@
 
 @if (m_PasswordChanged)
 {
-    <p class="success-text">Password updated successfully.</p>
+    <NotificationBanner Success="true" Message="Password updated successfully." />
 }
 
 @if (m_Summary == null)
@@ -107,6 +110,16 @@ else
             <span>Connection Stale</span>
             <strong class="@(m_Summary.AgentsStale > 0 ? "text-warning" : "")">@m_Summary.AgentsStale</strong>
             <small>heartbeat aging</small>
+        </a>
+        <a class="card card-link" href="/packages/sync-health">
+            <span>Catalog Sync Unhealthy</span>
+            <strong class="@(m_Summary.CatalogSyncUnhealthy > 0 ? "text-warning" : "")">@m_Summary.CatalogSyncUnhealthy</strong>
+            <small>@m_Summary.CatalogSyncHealthy healthy · @m_Summary.CatalogSyncOffline offline</small>
+        </a>
+        <a class="card card-link" href="/events?topic=install.">
+            <span>Unread Install Tips</span>
+            <strong class="@(m_Summary.UnreadInstallFailures > 0 ? "text-danger" : m_Summary.UnreadInstallNotifications > 0 ? "text-warning" : "")">@m_Summary.UnreadInstallNotifications</strong>
+            <small>@m_Summary.UnreadInstallFailures failed · DeviceOwner inbox</small>
         </a>
         <a class="card card-link" href="/tasks">
             <span>Active Tasks</span>

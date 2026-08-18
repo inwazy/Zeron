@@ -7,6 +7,7 @@ using System.Text.Json;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore;
+using Zeron.Server.ZInterfaces;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
 using Zeron.ZCore.Utils;
@@ -27,21 +28,27 @@ namespace Zeron.Server.ZServers
         // Settings.
         private readonly ServerSettings m_Settings;
 
+        // Optional live dashboard push.
+        private readonly IDashboardNotifier? m_DashboardNotifier;
+
         /// <summary>
         /// InstallResultNotifierServer
         /// </summary>
         /// <param name="dbContext"></param>
         /// <param name="notificationServer"></param>
         /// <param name="settings"></param>
+        /// <param name="dashboardNotifier"></param>
         /// <returns>Returns void.</returns>
         public InstallResultNotifierServer(
             ZeronServerDbContext dbContext,
             UserNotificationServer notificationServer,
-            ServerSettings settings)
+            ServerSettings settings,
+            IDashboardNotifier? dashboardNotifier = null)
         {
             m_DbContext = dbContext;
             m_NotificationServer = notificationServer;
             m_Settings = settings;
+            m_DashboardNotifier = dashboardNotifier;
         }
 
         /// <summary>
@@ -131,7 +138,7 @@ namespace Zeron.Server.ZServers
             {
                 if (m_Settings.InstallResultNotifyEnabled)
                 {
-                    await m_NotificationServer.CreateAsync(
+                    UserNotificationInfoType created = await m_NotificationServer.CreateAsync(
                         user.Id,
                         UserNotificationServer.KindInstallResult,
                         title,
@@ -140,6 +147,21 @@ namespace Zeron.Server.ZServers
                         packageName,
                         finalSuccess,
                         cancellationToken);
+
+                    if (m_DashboardNotifier != null)
+                    {
+                        try
+                        {
+                            await m_DashboardNotifier.NotifyInstallResultAsync(user.Id, created);
+                        }
+                        catch (Exception exception)
+                        {
+                            ZNLogger.Common.Error(string.Format(CultureInfo.InvariantCulture,
+                                "InstallResultNotifierServer SignalR Error:{0}\n{1}",
+                                exception.Message,
+                                exception.StackTrace));
+                        }
+                    }
                 }
 
                 if (m_Settings.InstallResultEmailEnabled
@@ -166,6 +188,10 @@ namespace Zeron.Server.ZServers
         /// <summary>
         /// TrySendEmailAsync
         /// </summary>
+        /// <param name="toAddress"></param>
+        /// <param name="title"></param>
+        /// <param name="message"></param>
+        /// <returns>Returns void.</returns>
         private async Task TrySendEmailAsync(
             string toAddress,
             string title,
@@ -213,6 +239,12 @@ namespace Zeron.Server.ZServers
         /// <summary>
         /// TryReadPayload
         /// </summary>
+        /// <param name="payload"></param>
+        /// <param name="assignmentId"></param>
+        /// <param name="success"></param>
+        /// <param name="exitCode"></param>
+        /// <param name="package"></param>
+        /// <returns>Returns bool.</returns>
         private static bool TryReadPayload(
             string? payload,
             out string? assignmentId,

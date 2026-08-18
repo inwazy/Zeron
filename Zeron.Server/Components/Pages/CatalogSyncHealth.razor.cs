@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.Components.Authorization;
+using Zeron.Server.Components.Shared;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
 
@@ -26,6 +27,17 @@ namespace Zeron.Server.Components.Pages
 
         // Busy.
         private bool m_IsBusy;
+
+        // Sync filter options.
+        private static readonly IReadOnlyList<FilterChipsBar.FilterChipOption> c_SyncFilterOptions =
+        [
+            new() { Label = "All", Value = null },
+            new() { Label = "Healthy", Value = "healthy" },
+            new() { Label = "Stale", Value = "stale" },
+            new() { Label = "Never", Value = "never" },
+            new() { Label = "Failed", Value = "failed" },
+            new() { Label = "Offline", Value = "offline" }
+        ];
 
         /// <summary>
         /// FilteredAgents
@@ -55,6 +67,18 @@ namespace Zeron.Server.Components.Pages
             string? filter)
         {
             m_Filter = filter;
+        }
+
+        /// <summary>
+        /// SelectFilterAsync
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns>Returns Task.</returns>
+        private Task SelectFilterAsync(
+            string? filter)
+        {
+            SetFilter(filter);
+            return Task.CompletedTask;
         }
 
         /// <summary>

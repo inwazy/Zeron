@@ -26,16 +26,34 @@
             <InputText @bind-Value="m_Topic" />
         </label>
         <div class="actions" style="align-items: end;">
-            <button class="btn btn-secondary" @onclick="ReloadAsync">Filter</button>
+            <LoadingButton CssClass="btn btn-secondary"
+                            Text="Filter"
+                            IsLoading="@m_IsBusy"
+                            OnClick="ApplyFiltersAsync" />
         </div>
     </div>
 
-    @foreach (EventEntity evt in m_Events)
+    <PagerBar Title="Results"
+              Summary="@PageSummary"
+              IsLoading="@m_IsBusy"
+              HasPrevious="@(m_PageIndex > 0)"
+              HasNext="@m_HasNextPage"
+              OnPrevious="GoPrevPageAsync"
+              OnNext="GoNextPageAsync" />
+
+    @if (m_PageRows.Count == 0)
     {
-        <div class="timeline-item">
-            <strong>@evt.Topic</strong>
-            <small>@evt.Agent?.AgentKey · @evt.ReceivedAt.ToLocalTime()</small>
-            <div>@evt.Payload</div>
-        </div>
+        <p class="muted">No events found.</p>
+    }
+    else
+    {
+        @foreach (EventEntity evt in m_PageRows)
+        {
+            <div class="timeline-item">
+                <strong>@evt.Topic</strong>
+                <small>@evt.Agent?.AgentKey · @evt.ReceivedAt.ToLocalTime()</small>
+                <div>@evt.Payload</div>
+            </div>
+        }
     }
 </div>

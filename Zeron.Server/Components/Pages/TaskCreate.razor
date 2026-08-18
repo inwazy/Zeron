@@ -54,13 +54,16 @@
             </label>
         }
         <div class="actions">
-            <button class="btn" @onclick="HandleCreateAsync" disabled="@m_IsSubmitting">Create Task</button>
+            <LoadingButton CssClass="btn"
+                            Text="Create Task"
+                            IsLoading="@m_IsSubmitting"
+                            OnClick="HandleCreateAsync" />
             <a class="btn btn-secondary" href="/tasks">Cancel</a>
         </div>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(m_Error))
     {
-        <p class="error">@m_Error</p>
+        <NotificationBanner Success="false" Message="m_Error" />
     }
 </div>

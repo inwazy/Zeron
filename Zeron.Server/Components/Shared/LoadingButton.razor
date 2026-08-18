@@ -1,0 +1,29 @@
+@namespace Zeron.Server.Components.Shared
+@using Microsoft.AspNetCore.Components
+
+@* Reusable loading button for Blazor Server pages. *@
+<button class="@CssClass"
+        type="@ButtonType"
+        disabled="@((Disabled || IsLoading))"
+        @attributes="AdditionalAttributes"
+        @onclick="OnClick">
+    @if (IsLoading)
+    {
+        <span class="loading-inline">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <span>@LoadingText</span>
+        </span>
+    }
+    else
+    {
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            <span>@Text</span>
+        }
+    }
+</button>
+

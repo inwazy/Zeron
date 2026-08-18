@@ -1,0 +1,39 @@
+@namespace Zeron.Server.Components.Shared
+@using Microsoft.AspNetCore.Components
+
+@* 
+  Shared banner for success/failure/system notifications.
+  Keeps UI consistent across pages (instead of mixing inline <p class="error"> and custom markup).
+*@
+
+@if (!string.IsNullOrWhiteSpace(Message) || (ChildContent != null))
+{
+    <div class="notify-banner @(Success ? "notify-ok" : "notify-fail")">
+        <div>
+            @if (ChildContent != null)
+            {
+                @ChildContent
+            }
+            else
+            {
+                @if (!string.IsNullOrWhiteSpace(Title))
+                {
+                    <strong>@Title</strong>
+                }
+                @if (!string.IsNullOrWhiteSpace(Message))
+                {
+                    <p>@Message</p>
+                }
+            }
+        </div>
+
+        @if (ShowDismiss && OnDismiss.HasDelegate)
+        {
+            <button class="btn btn-secondary"
+                    type="button"
+                    disabled="@DisableDismiss"
+                    @onclick="OnDismiss">Dismiss</button>
+        }
+    </div>
+}
+

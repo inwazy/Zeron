@@ -13,11 +13,20 @@
     </div>
     <div class="actions">
         <a class="btn btn-secondary" href="/packages/catalog">Catalog</a>
-        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+        <LoadingButton CssClass="btn btn-secondary"
+                        Text="Refresh"
+                        IsLoading="@m_IsBusy"
+                        OnClick="ReloadAsync" />
         <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
             <Authorized>
-                <button class="btn" @onclick="() => PushAsync(onlyUnhealthy: true)" disabled="@m_IsBusy">Push Unhealthy</button>
-                <button class="btn btn-secondary" @onclick="() => PushAsync(onlyUnhealthy: false)" disabled="@m_IsBusy">Push All Online</button>
+                <LoadingButton CssClass="btn"
+                                Text="Push Unhealthy"
+                                IsLoading="@m_IsBusy"
+                                OnClick="() => PushAsync(onlyUnhealthy: true)" />
+                <LoadingButton CssClass="btn btn-secondary"
+                                Text="Push All Online"
+                                IsLoading="@m_IsBusy"
+                                OnClick="() => PushAsync(onlyUnhealthy: false)" />
             </Authorized>
         </AuthorizeView>
     </div>
@@ -25,7 +34,7 @@
 
 @if (!string.IsNullOrWhiteSpace(m_Message))
 {
-    <p class="@(m_Succeeded ? "success-text" : "error")">@m_Message</p>
+    <NotificationBanner Success="m_Succeeded" Message="m_Message" />
 }
 
 @if (m_Summary != null)
@@ -42,14 +51,11 @@
 <div class="panel">
     <div class="panel-header">
         <h2>Agents</h2>
-        <div class="actions">
-            <button class="btn btn-secondary" @onclick="() => SetFilter(null)">All</button>
-            <button class="btn btn-secondary" @onclick='() => SetFilter("healthy")'>Healthy</button>
-            <button class="btn btn-secondary" @onclick='() => SetFilter("stale")'>Stale</button>
-            <button class="btn btn-secondary" @onclick='() => SetFilter("never")'>Never</button>
-            <button class="btn btn-secondary" @onclick='() => SetFilter("failed")'>Failed</button>
-            <button class="btn btn-secondary" @onclick='() => SetFilter("offline")'>Offline</button>
-        </div>
+        <FilterChipsBar Options="c_SyncFilterOptions"
+                        SelectedValue="@m_Filter"
+                        AriaLabel="Catalog sync state filter"
+                        IsLoading="@m_IsBusy"
+                        OnSelect="SelectFilterAsync" />
     </div>
 
     @if (FilteredAgents.Count == 0)
@@ -89,11 +95,10 @@
                                 <Authorized>
                                     @if (item.Status == "online")
                                     {
-                                        <button class="btn btn-secondary"
-                                                @onclick="() => PushOneAsync(item.AgentKey!)"
-                                                disabled="@m_IsBusy">
-                                            Push Sync
-                                        </button>
+                                        <LoadingButton CssClass="btn btn-secondary"
+                                                        Text="Push Sync"
+                                                        IsLoading="@m_IsBusy"
+                                                        OnClick="() => PushOneAsync(item.AgentKey!)" />
                                     }
                                 </Authorized>
                             </AuthorizeView>

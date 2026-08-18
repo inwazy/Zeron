@@ -19,6 +19,11 @@
 | `GatePauseTimeoutMs` | `2000` | Server dispatch gate pause timeout (Cancel on expiry) |
 | `DispatchIntervalMs` | `5000` | Background task dispatch interval |
 | `ScheduleIntervalMs` | `15000` | Central cron schedule poll interval |
+| `RetentionEnabled` | `true` | Prune old audit logs, install-result tips, and catalog versions |
+| `RetentionIntervalMinutes` | `60` | How often the retention worker runs |
+| `AuditLogRetentionDays` | `90` | Delete audit rows older than this (`0` disables) |
+| `UserNotificationRetentionDays` | `30` | Delete DeviceOwner install tips older than this (`0` disables) |
+| `CatalogVersionKeepCount` | `20` | Keep the newest N catalog snapshots per package (`0` disables) |
 | `JwtSecret` | (dev secret) | JWT signing key (min 32 chars) |
 | `JwtIssuer` | `Zeron.Server` | JWT issuer and audience |
 | `JwtExpireMinutes` | `480` | JWT token lifetime |
@@ -152,9 +157,9 @@ Use `/ready` for load balancer / process manager health checks.
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| `GET /api/dashboard/summary` | Viewer+ | Aggregated online/offline agents, stale connections, active tasks, open alerts, recent lists, transport security |
+| `GET /api/dashboard/summary` | Viewer+ | Aggregated online/offline agents, stale connections, catalog sync health, unread install tips, active tasks, open alerts, recent lists, transport security |
 
-The Dashboard home page (`/`) uses this summary and refreshes every 15 seconds (plus SignalR updates).
+The Dashboard home page (`/`) uses this summary and refreshes every 15 seconds (plus SignalR updates). Cards include **Catalog Sync Unhealthy** (`/packages/sync-health`) and **Unread Install Tips** (`/events?topic=install.`).
 
 ### Transport security panel
 
@@ -271,7 +276,7 @@ Catalog packages may include optional `Sha256x86` / `Sha256x64`; Demand verifies
 
 **ScriptEngine:** catalog field (default `powershell`) selects the Script Host engine for install/uninstall hooks on Demand. Deploy to explicit `AgentIds` fails if the agent does not report that engine as available. Catalog Create/Edit exposes before/after script bodies (`ScriptInstallBefore` / `After`, `ScriptUnInstallBefore` / `After`) plus engine id; History shows which hooks are set (`ib`/`ia`/`ub`/`ua`). See [Script Host](./script-host.md).
 
-**Install result notifications:** when a self-service deploy (`Task.Name` starts with `self-`) finishes with `install.completed` / `install.failed`, Server notifies every active user bound to that agent. Dashboard tips appear on `/my-devices` (`InstallResultNotifyEnabled`). Optional per-user email uses `Users.Email` + SMTP (`InstallResultEmailEnabled`). Staff package deploys are not notified this way.
+**Install result notifications:** when a self-service deploy (`Task.Name` starts with `self-`) finishes with `install.completed` / `install.failed`, Server notifies every active user bound to that agent. Dashboard tips appear on `/my-devices` and `/my-devices/{agentKey}` (`InstallResultNotifyEnabled`). While those pages are open, unread tips are also pushed over SignalR (`InstallResultReceived` on `/hubs/dashboard`) so DeviceOwners do not need to refresh. Fleet `EventReceived` / `AlertReceived` / `AgentStatusChanged` stay on the staff hub group. Optional per-user email uses `Users.Email` + SMTP (`InstallResultEmailEnabled`). Staff package deploys are not notified this way.
 
 Dashboard pages: `/my-devices`, `/device-bindings` (Admin).
 
@@ -289,3 +294,15 @@ Server stores attributed operations in `AuditLogs` (Dashboard **Audit** `/audit`
 | `catalog.sync.push` | server | Operator push sync from Sync Health |
 
 Query filters: `action`, `actor`, `target`, `source`, `limit`.
+
+## Data Retention
+
+A background worker (`DataRetentionWorker`) prunes growing tables. Set a days/count value to `0` to skip that store.
+
+| Store | Rule |
+|-------|------|
+| `AuditLogs` | Rows with `OccurredAt` older than `AuditLogRetentionDays` |
+| `UserNotifications` | Tips with `CreatedAt` older than `UserNotificationRetentionDays` (including unread) |
+| `ManagedPackageVersions` | Keep the newest `CatalogVersionKeepCount` snapshots **per package**; live catalog row is unchanged |
+
+The worker is not started in the `Testing` environment.

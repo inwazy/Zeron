@@ -1,0 +1,19 @@
+@namespace Zeron.Server.Components.Shared
+
+<div class="panel-header">
+    <h2>@Title</h2>
+    <div class="actions">
+        <small class="muted">@Summary</small>
+        <LoadingButton CssClass="btn btn-secondary"
+                        Text="Previous"
+                        IsLoading="@IsLoading"
+                        Disabled="@(!HasPrevious)"
+                        OnClick="OnPrevious" />
+        <LoadingButton CssClass="btn btn-secondary"
+                        Text="Next"
+                        IsLoading="@IsLoading"
+                        Disabled="@(!HasNext)"
+                        OnClick="OnNext" />
+    </div>
+</div>
+

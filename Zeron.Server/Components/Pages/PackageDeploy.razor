@@ -68,7 +68,10 @@
             </label>
         }
         <div class="actions">
-            <button class="btn" @onclick="HandleDeployAsync" disabled="@m_IsSubmitting">Deploy</button>
+            <LoadingButton CssClass="btn"
+                            Text="Deploy"
+                            IsLoading="@m_IsSubmitting"
+                            OnClick="HandleDeployAsync" />
             <a class="btn btn-secondary" href="/packages">Cancel</a>
             <a class="btn btn-secondary" href="/packages/catalog">Catalog</a>
         </div>
@@ -83,12 +86,14 @@
 
     @if (!string.IsNullOrWhiteSpace(m_Error))
     {
-        <p class="error">@m_Error</p>
+        <NotificationBanner Success="false" Message="m_Error" />
     }
 
     @if (m_Packages.Count == 0)
     {
-        <p class="error" style="margin-top: 1rem;">No enabled packages in the catalog. Add one under Package Catalog first.</p>
+        <NotificationBanner Success="false"
+                             Message="No enabled packages in the catalog. Add one under Package Catalog first."
+                             />
     }
 </div>
 

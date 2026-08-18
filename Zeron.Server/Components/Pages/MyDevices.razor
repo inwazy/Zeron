@@ -6,6 +6,9 @@
 @inject DevicePortalServer PortalServer
 @inject UserNotificationServer NotificationServer
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@implements IAsyncDisposable
 
 <div class="page-header">
     <div>
@@ -13,10 +16,16 @@
         <p>Status of Zeron.Demand agents bound to your account.</p>
     </div>
     <div class="actions">
-        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+        <LoadingButton CssClass="btn btn-secondary"
+                        Text="Refresh"
+                        IsLoading="@m_IsBusy"
+                        OnClick="ReloadAsync" />
         @if (m_Notifications.Count > 0)
         {
-            <button class="btn btn-secondary" @onclick="DismissAllAsync" disabled="@m_IsBusy">Dismiss All</button>
+            <LoadingButton CssClass="btn btn-secondary"
+                            Text="Dismiss All"
+                            IsLoading="@m_IsBusy"
+                            OnClick="DismissAllAsync" />
         }
     </div>
 </div>
@@ -27,25 +36,25 @@
         <h2>Install Results</h2>
         @foreach (UserNotificationInfoType note in m_Notifications)
         {
-            <div class="notify-banner @(note.Success == false ? "notify-fail" : "notify-ok")">
-                <div>
-                    <strong>@note.Title</strong>
-                    <p>@note.Message</p>
-                    <small class="muted">@note.CreatedAt.ToLocalTime().ToString("g")</small>
-                    @if (!string.IsNullOrWhiteSpace(note.AgentKey))
-                    {
-                        <small class="muted"> · <a href="@($"/my-devices/{note.AgentKey}")">Open device</a></small>
-                    }
-                </div>
-                <button class="btn btn-secondary" @onclick="() => DismissAsync(note)" disabled="@m_IsBusy">Dismiss</button>
-            </div>
+            <NotificationBanner Success="@(note.Success != false)"
+                                 ShowDismiss="true"
+                                 DisableDismiss="@m_IsBusy"
+                                 OnDismiss="() => DismissAsync(note)">
+                <strong>@note.Title</strong>
+                <p>@note.Message</p>
+                <small class="muted">@note.CreatedAt.ToLocalTime().ToString("g")</small>
+                @if (!string.IsNullOrWhiteSpace(note.AgentKey))
+                {
+                    <small class="muted"> · <a href="@($"/my-devices/{note.AgentKey}")">Open device</a></small>
+                }
+            </NotificationBanner>
         }
     </div>
 }
 
 @if (!string.IsNullOrWhiteSpace(m_Error))
 {
-    <p class="error">@m_Error</p>
+    <NotificationBanner Success="false" Message="m_Error" />
 }
 else if (m_Devices.Count == 0)
 {

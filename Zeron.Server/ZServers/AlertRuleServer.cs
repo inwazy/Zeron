@@ -146,6 +146,25 @@ namespace Zeron.Server.ZServers
             int limit,
             CancellationToken cancellationToken = default)
         {
+            return await GetAlertsAsync(status, limit, 0, cancellationToken);
+        }
+
+        /// <summary>
+        /// GetAlertsAsync
+        /// </summary>
+        /// <param name="status"></param>
+        /// <param name="limit"></param>
+        /// <param name="offset"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns alerts.</returns>
+        public async Task<List<AlertEntity>> GetAlertsAsync(
+            string? status,
+            int limit,
+            int offset,
+            CancellationToken cancellationToken = default)
+        {
+            int take = Math.Clamp(limit, 1, 500);
+            int skip = Math.Max(0, offset);
             IQueryable<AlertEntity> query = m_DbContext.Alerts.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(status))
@@ -155,7 +174,8 @@ namespace Zeron.Server.ZServers
 
             return await query
                 .OrderByDescending(alert => alert.CreatedAt)
-                .Take(limit)
+                .Skip(skip)
+                .Take(take)
                 .ToListAsync(cancellationToken);
         }
 
