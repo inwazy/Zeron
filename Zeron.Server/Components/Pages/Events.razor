@@ -33,22 +33,13 @@
         </div>
     </div>
 
-    <div class="panel-header">
-        <h2>Results</h2>
-        <div class="actions">
-            <small class="muted">@PageSummary</small>
-            <LoadingButton CssClass="btn btn-secondary"
-                            Text="Previous"
-                            IsLoading="@m_IsBusy"
-                            Disabled="@(m_PageIndex == 0)"
-                            OnClick="GoPrevPageAsync" />
-            <LoadingButton CssClass="btn btn-secondary"
-                            Text="Next"
-                            IsLoading="@m_IsBusy"
-                            Disabled="@(!m_HasNextPage)"
-                            OnClick="GoNextPageAsync" />
-        </div>
-    </div>
+    <PagerBar Title="Results"
+              Summary="@PageSummary"
+              IsLoading="@m_IsBusy"
+              HasPrevious="@(m_PageIndex > 0)"
+              HasNext="@m_HasNextPage"
+              OnPrevious="GoPrevPageAsync"
+              OnNext="GoNextPageAsync" />
 
     @if (m_PageRows.Count == 0)
     {
