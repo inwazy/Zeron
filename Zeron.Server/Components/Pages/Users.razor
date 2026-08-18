@@ -39,12 +39,15 @@
             <InputText @bind-Value="m_CreateModel.Email" />
         </label>
         <div class="actions">
-            <button class="btn" @onclick="CreateUserAsync" disabled="@m_IsBusy">Create User</button>
+            <LoadingButton CssClass="btn"
+                            Text="Create User"
+                            IsLoading="@m_IsBusy"
+                            OnClick="CreateUserAsync" />
         </div>
     </div>
     @if (!string.IsNullOrWhiteSpace(m_CreateMessage))
     {
-        <p class="@(m_CreateSucceeded ? "success-text" : "error")">@m_CreateMessage</p>
+        <NotificationBanner Success="m_CreateSucceeded" Message="m_CreateMessage" />
     }
 </div>
 
@@ -111,22 +114,25 @@
                         </td>
                         <td>
                             <div class="actions">
-                                <button class="btn btn-secondary" @onclick="() => SaveUserAsync(row)" disabled="@m_IsBusy">Save</button>
+                                <LoadingButton CssClass="btn btn-secondary"
+                                                Text="Save"
+                                                IsLoading="@m_IsBusy"
+                                                OnClick="() => SaveUserAsync(row)" />
                                 @if (row.IsActive)
                                 {
-                                    <button class="btn btn-danger"
-                                            @onclick="() => SetActiveAsync(row, false)"
-                                            disabled="@(m_IsBusy || row.Id == m_CurrentUserId)">
-                                        Deactivate
-                                    </button>
+                                    <LoadingButton CssClass="btn btn-danger"
+                                                    Text="Deactivate"
+                                                    IsLoading="@m_IsBusy"
+                                                    Disabled="@(m_IsBusy || row.Id == m_CurrentUserId)"
+                                                    OnClick="() => SetActiveAsync(row, false)" />
                                 }
                                 else
                                 {
-                                    <button class="btn btn-secondary"
-                                            @onclick="() => SetActiveAsync(row, true)"
-                                            disabled="@m_IsBusy">
-                                        Activate
-                                    </button>
+                                    <LoadingButton CssClass="btn btn-secondary"
+                                                    Text="Activate"
+                                                    IsLoading="@m_IsBusy"
+                                                    Disabled="@m_IsBusy"
+                                                    OnClick="() => SetActiveAsync(row, true)" />
                                 }
                             </div>
                         </td>
@@ -138,6 +144,6 @@
 
     @if (!string.IsNullOrWhiteSpace(m_UpdateMessage))
     {
-        <p class="@(m_UpdateSucceeded ? "success-text" : "error")">@m_UpdateMessage</p>
+        <NotificationBanner Success="m_UpdateSucceeded" Message="m_UpdateMessage" />
     }
 </div>

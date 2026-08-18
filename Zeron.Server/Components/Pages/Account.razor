@@ -37,12 +37,15 @@ else
                 <small class="muted">Leave blank to clear.</small>
             </label>
             <div class="actions">
-                <button class="btn" @onclick="SaveEmailAsync" disabled="@m_IsBusy">Save Email</button>
+                <LoadingButton CssClass="btn"
+                                Text="Save Email"
+                                IsLoading="@m_IsBusy"
+                                OnClick="SaveEmailAsync" />
             </div>
         </div>
         @if (!string.IsNullOrWhiteSpace(m_EmailMessage))
         {
-            <p class="@(m_EmailSucceeded ? "success-text" : "error")">@m_EmailMessage</p>
+            <NotificationBanner Success="m_EmailSucceeded" Message="m_EmailMessage" />
         }
     </div>
 
@@ -63,12 +66,15 @@ else
                 <InputText type="password" @bind-Value="m_ConfirmPassword" autocomplete="new-password" />
             </label>
             <div class="actions">
-                <button class="btn" @onclick="SavePasswordAsync" disabled="@m_IsBusy">Update Password</button>
+                <LoadingButton CssClass="btn"
+                                Text="Update Password"
+                                IsLoading="@m_IsBusy"
+                                OnClick="SavePasswordAsync" />
             </div>
         </div>
         @if (!string.IsNullOrWhiteSpace(m_PasswordMessage))
         {
-            <p class="@(m_PasswordSucceeded ? "success-text" : "error")">@m_PasswordMessage</p>
+            <NotificationBanner Success="m_PasswordSucceeded" Message="m_PasswordMessage" />
         }
     </div>
 }

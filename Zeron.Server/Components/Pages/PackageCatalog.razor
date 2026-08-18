@@ -91,16 +91,23 @@
                     <InputTextArea @bind-Value="m_Form.ScriptUnInstallAfter" rows="5" />
                 </label>
                 <div class="actions form-span">
-                    <button class="btn" @onclick="SaveAsync" disabled="@m_IsBusy">@(m_EditId == null ? "Create" : "Save")</button>
+                    <LoadingButton CssClass="btn"
+                                    IsLoading="@m_IsBusy"
+                                    OnClick="SaveAsync">
+                        @(m_EditId == null ? "Create" : "Save")
+                    </LoadingButton>
                     @if (m_EditId != null)
                     {
-                        <button class="btn btn-secondary" @onclick="CancelEdit" disabled="@m_IsBusy">Cancel</button>
+                        <LoadingButton CssClass="btn btn-secondary"
+                                        Text="Cancel"
+                                        IsLoading="@m_IsBusy"
+                                        OnClick="CancelEdit" />
                     }
                 </div>
             </div>
             @if (!string.IsNullOrWhiteSpace(m_Message))
             {
-                <p class="@(m_Succeeded ? "success-text" : "error")">@m_Message</p>
+                <NotificationBanner Success="m_Succeeded" Message="m_Message" />
             }
         </div>
     </Authorized>
@@ -109,7 +116,10 @@
 <div class="panel">
     <div class="panel-header">
         <h2>Catalog</h2>
-        <button class="btn btn-secondary" @onclick="ReloadAsync">Refresh</button>
+            <LoadingButton CssClass="btn btn-secondary"
+                            Text="Refresh"
+                            IsLoading="@m_IsBusy"
+                            OnClick="ReloadAsync" />
     </div>
 
     @if (m_Packages.Count == 0)
@@ -146,11 +156,20 @@
                         <td>@(package.UpdatedAt?.ToLocalTime().ToString("g") ?? "-")</td>
                         <td>
                             <div class="actions">
-                                <button class="btn btn-secondary" @onclick="() => ShowHistoryAsync(package)" disabled="@m_IsBusy">History</button>
+                                <LoadingButton CssClass="btn btn-secondary"
+                                                Text="History"
+                                                IsLoading="@m_IsBusy"
+                                                OnClick="() => ShowHistoryAsync(package)" />
                                 <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
                                     <Authorized>
-                                        <button class="btn btn-secondary" @onclick="() => BeginEdit(package)" disabled="@m_IsBusy">Edit</button>
-                                        <button class="btn btn-danger" @onclick="() => DeleteAsync(package)" disabled="@m_IsBusy">Delete</button>
+                                        <LoadingButton CssClass="btn btn-secondary"
+                                                        Text="Edit"
+                                                        IsLoading="@m_IsBusy"
+                                                        OnClick="() => BeginEdit(package)" />
+                                        <LoadingButton CssClass="btn btn-danger"
+                                                        Text="Delete"
+                                                        IsLoading="@m_IsBusy"
+                                                        OnClick="() => DeleteAsync(package)" />
                                     </Authorized>
                                 </AuthorizeView>
                             </div>
@@ -167,12 +186,15 @@
     <div class="panel">
         <div class="panel-header">
             <h2>History: <code>@m_HistoryPackage.Name</code></h2>
-            <button class="btn btn-secondary" @onclick="CloseHistory" disabled="@m_IsBusy">Close</button>
+            <LoadingButton CssClass="btn btn-secondary"
+                            Text="Close"
+                            IsLoading="@m_IsBusy"
+                            OnClick="CloseHistory" />
         </div>
 
         @if (!string.IsNullOrWhiteSpace(m_HistoryMessage))
         {
-            <p class="@(m_HistorySucceeded ? "success-text" : "error")">@m_HistoryMessage</p>
+            <NotificationBanner Success="m_HistorySucceeded" Message="m_HistoryMessage" />
         }
 
         @if (m_Versions.Count == 0)
@@ -207,10 +229,16 @@
                     Show changed fields only
                 </label>
                 <div class="actions">
-                    <button class="btn" @onclick="CompareAsync" disabled="@m_IsBusy">Compare</button>
+                    <LoadingButton CssClass="btn"
+                                    Text="Compare"
+                                    IsLoading="@m_IsBusy"
+                                    OnClick="CompareAsync" />
                     @if (m_Diff != null)
                     {
-                        <button class="btn btn-secondary" @onclick="ClearDiff" disabled="@m_IsBusy">Clear Diff</button>
+                        <LoadingButton CssClass="btn btn-secondary"
+                                        Text="Clear Diff"
+                                        IsLoading="@m_IsBusy"
+                                        OnClick="ClearDiff" />
                     }
                 </div>
             </div>
@@ -288,18 +316,16 @@
                             <td class="muted">@(string.IsNullOrWhiteSpace(version.Urlx64) ? "-" : version.Urlx64)</td>
                             <td>
                                 <div class="actions">
-                                    <button class="btn btn-secondary"
-                                            @onclick="() => CompareToCurrentAsync(version.VersionNumber)"
-                                            disabled="@m_IsBusy">
-                                        Diff
-                                    </button>
+                                    <LoadingButton CssClass="btn btn-secondary"
+                                                    Text="Diff"
+                                                    IsLoading="@m_IsBusy"
+                                                    OnClick="() => CompareToCurrentAsync(version.VersionNumber)" />
                                     <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
                                         <Authorized>
-                                            <button class="btn btn-secondary"
-                                                    @onclick="() => RollbackAsync(version.VersionNumber)"
-                                                    disabled="@m_IsBusy">
-                                                Restore
-                                            </button>
+                                            <LoadingButton CssClass="btn btn-secondary"
+                                                            Text="Restore"
+                                                            IsLoading="@m_IsBusy"
+                                                            OnClick="() => RollbackAsync(version.VersionNumber)" />
                                         </Authorized>
                                     </AuthorizeView>
                                 </div>

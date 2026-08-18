@@ -39,12 +39,15 @@
             </InputSelect>
         </label>
         <div class="actions">
-            <button class="btn" @onclick="BindAsync" disabled="@m_IsBusy">Bind</button>
+            <LoadingButton CssClass="btn"
+                            Text="Bind"
+                            IsLoading="@m_IsBusy"
+                            OnClick="BindAsync" />
         </div>
     </div>
     @if (!string.IsNullOrWhiteSpace(m_Message))
     {
-        <p class="@(m_Succeeded ? "success-text" : "error")">@m_Message</p>
+        <NotificationBanner Success="m_Succeeded" Message="m_Message" />
     }
 </div>
 
@@ -79,7 +82,10 @@
                         <td>@(binding.MachineName ?? "-")</td>
                         <td>@(binding.BoundAt?.ToLocalTime().ToString("g") ?? "-")</td>
                         <td>
-                            <button class="btn btn-danger" @onclick="() => UnbindAsync(binding)" disabled="@m_IsBusy">Unbind</button>
+                            <LoadingButton CssClass="btn btn-danger"
+                                            Text="Unbind"
+                                            IsLoading="@m_IsBusy"
+                                            OnClick="() => UnbindAsync(binding)" />
                         </td>
                     </tr>
                 }

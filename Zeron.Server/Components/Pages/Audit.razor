@@ -11,7 +11,10 @@
         <p>Attributed operation history for catalog, deploy, bindings, and agent package overrides.</p>
     </div>
     <div class="actions">
-        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsBusy">Refresh</button>
+        <LoadingButton CssClass="btn btn-secondary"
+                        Text="Refresh"
+                        IsLoading="@m_IsBusy"
+                        OnClick="ReloadAsync" />
     </div>
 </div>
 
@@ -38,7 +41,10 @@
             </InputSelect>
         </label>
         <div class="actions">
-            <button class="btn" @onclick="ReloadAsync" disabled="@m_IsBusy">Apply Filters</button>
+            <LoadingButton CssClass="btn"
+                            Text="Apply Filters"
+                            IsLoading="@m_IsBusy"
+                            OnClick="ReloadAsync" />
         </div>
     </div>
 </div>

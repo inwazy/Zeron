@@ -16,21 +16,33 @@
             <Authorized>
                 @if (m_Schedule != null)
                 {
-                    <button class="btn" @onclick="RunNowAsync" disabled="@m_IsBusy">Run Now</button>
+                    <LoadingButton CssClass="btn"
+                                    Text="Run Now"
+                                    IsLoading="@m_IsBusy"
+                                    OnClick="RunNowAsync" />
                     @if (m_Schedule.Enabled)
                     {
-                        <button class="btn btn-secondary" @onclick="() => SetEnabledAsync(false)" disabled="@m_IsBusy">Disable</button>
+                        <LoadingButton CssClass="btn btn-secondary"
+                                        Text="Disable"
+                                        IsLoading="@m_IsBusy"
+                                        OnClick="() => SetEnabledAsync(false)" />
                     }
                     else
                     {
-                        <button class="btn btn-secondary" @onclick="() => SetEnabledAsync(true)" disabled="@m_IsBusy">Enable</button>
+                        <LoadingButton CssClass="btn btn-secondary"
+                                        Text="Enable"
+                                        IsLoading="@m_IsBusy"
+                                        OnClick="() => SetEnabledAsync(true)" />
                     }
                 }
             </Authorized>
         </AuthorizeView>
         <AuthorizeView Roles="@ServerRoles.Admin">
             <Authorized>
-                <button class="btn btn-danger" @onclick="DeleteAsync" disabled="@m_IsBusy">Delete</button>
+                <LoadingButton CssClass="btn btn-danger"
+                                Text="Delete"
+                                IsLoading="@m_IsBusy"
+                                OnClick="DeleteAsync" />
             </Authorized>
         </AuthorizeView>
     </div>
@@ -38,7 +50,7 @@
 
 @if (m_Schedule == null)
 {
-    <p class="error">Schedule not found.</p>
+    <NotificationBanner Success="false" Message="Schedule not found." />
 }
 else
 {
@@ -145,7 +157,10 @@ else
                         </label>
                     }
                     <div class="actions">
-                        <button class="btn" @onclick="SaveAsync" disabled="@m_IsBusy">Save Changes</button>
+                        <LoadingButton CssClass="btn"
+                                        Text="Save Changes"
+                                        IsLoading="@m_IsBusy"
+                                        OnClick="SaveAsync" />
                     </div>
                 </div>
             </div>
@@ -154,6 +169,6 @@ else
 
     @if (!string.IsNullOrWhiteSpace(m_Message))
     {
-        <p class="@(m_Succeeded ? "success-text" : "error")">@m_Message</p>
+        <NotificationBanner Success="m_Succeeded" Message="m_Message" />
     }
 }

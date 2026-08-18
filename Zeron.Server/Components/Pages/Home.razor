@@ -14,7 +14,10 @@
         <p>Operational summary of agents, catalog sync, tasks, alerts, and events.</p>
     </div>
     <div class="actions">
-        <button class="btn btn-secondary" @onclick="ReloadAsync" disabled="@m_IsLoading">Refresh</button>
+        <LoadingButton CssClass="btn btn-secondary"
+                        Text="Refresh"
+                        IsLoading="@m_IsLoading"
+                        OnClick="ReloadAsync" />
         <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">
             <Authorized>
                 <a class="btn" href="/tasks/create">Create Task</a>
@@ -25,7 +28,7 @@
 
 @if (m_PasswordChanged)
 {
-    <p class="success-text">Password updated successfully.</p>
+    <NotificationBanner Success="true" Message="Password updated successfully." />
 }
 
 @if (m_Summary == null)
