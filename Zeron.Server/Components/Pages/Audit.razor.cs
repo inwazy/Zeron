@@ -28,6 +28,14 @@ namespace Zeron.Server.Components.Pages
         // Busy.
         private bool m_IsBusy;
 
+        // Pagination.
+        private const int c_PageSize = 50;
+        private int m_PageIndex;
+        private bool m_HasNextPage;
+
+        // Current page rows.
+        private List<AuditLogInfoType> m_PageRows = [];
+
         /// <summary>
         /// OnInitializedAsync
         /// </summary>
@@ -47,16 +55,70 @@ namespace Zeron.Server.Components.Pages
 
             try
             {
+                int offset = m_PageIndex * c_PageSize;
                 m_Rows = await AuditLogServer.QueryAsync(
                     string.IsNullOrWhiteSpace(m_ActionFilter) ? null : m_ActionFilter,
                     string.IsNullOrWhiteSpace(m_ActorFilter) ? null : m_ActorFilter,
                     string.IsNullOrWhiteSpace(m_TargetFilter) ? null : m_TargetFilter,
-                    string.IsNullOrWhiteSpace(m_SourceFilter) ? null : m_SourceFilter);
+                    string.IsNullOrWhiteSpace(m_SourceFilter) ? null : m_SourceFilter,
+                    limit: c_PageSize + 1,
+                    offset: offset);
+
+                m_HasNextPage = m_Rows.Count > c_PageSize;
+                m_PageRows = m_Rows.Take(c_PageSize).ToList();
             }
             finally
             {
                 m_IsBusy = false;
             }
         }
+
+        /// <summary>
+        /// ApplyFiltersAsync
+        /// </summary>
+        /// <returns>Returns Task.</returns>
+        private async Task ApplyFiltersAsync()
+        {
+            m_PageIndex = 0;
+            await ReloadAsync();
+        }
+
+        /// <summary>
+        /// GoPrevPageAsync
+        /// </summary>
+        /// <returns>Returns Task.</returns>
+        private async Task GoPrevPageAsync()
+        {
+            if (m_PageIndex <= 0)
+            {
+                return;
+            }
+
+            m_PageIndex--;
+            await ReloadAsync();
+        }
+
+        /// <summary>
+        /// GoNextPageAsync
+        /// </summary>
+        /// <returns>Returns Task.</returns>
+        private async Task GoNextPageAsync()
+        {
+            if (!m_HasNextPage)
+            {
+                return;
+            }
+
+            m_PageIndex++;
+            await ReloadAsync();
+        }
+
+        /// <summary>
+        /// PageSummary
+        /// </summary>
+        private string PageSummary =>
+            m_PageRows.Count == 0
+                ? "No records"
+                : $"Page {m_PageIndex + 1} · showing {m_PageRows.Count} record(s)";
     }
 }

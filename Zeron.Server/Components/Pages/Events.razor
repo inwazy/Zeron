@@ -26,16 +26,43 @@
             <InputText @bind-Value="m_Topic" />
         </label>
         <div class="actions" style="align-items: end;">
-            <button class="btn btn-secondary" @onclick="ReloadAsync">Filter</button>
+            <LoadingButton CssClass="btn btn-secondary"
+                            Text="Filter"
+                            IsLoading="@m_IsBusy"
+                            OnClick="ApplyFiltersAsync" />
         </div>
     </div>
 
-    @foreach (EventEntity evt in m_Events)
-    {
-        <div class="timeline-item">
-            <strong>@evt.Topic</strong>
-            <small>@evt.Agent?.AgentKey · @evt.ReceivedAt.ToLocalTime()</small>
-            <div>@evt.Payload</div>
+    <div class="panel-header">
+        <h2>Results</h2>
+        <div class="actions">
+            <small class="muted">@PageSummary</small>
+            <LoadingButton CssClass="btn btn-secondary"
+                            Text="Previous"
+                            IsLoading="@m_IsBusy"
+                            Disabled="@(m_PageIndex == 0)"
+                            OnClick="GoPrevPageAsync" />
+            <LoadingButton CssClass="btn btn-secondary"
+                            Text="Next"
+                            IsLoading="@m_IsBusy"
+                            Disabled="@(!m_HasNextPage)"
+                            OnClick="GoNextPageAsync" />
         </div>
+    </div>
+
+    @if (m_PageRows.Count == 0)
+    {
+        <p class="muted">No events found.</p>
+    }
+    else
+    {
+        @foreach (EventEntity evt in m_PageRows)
+        {
+            <div class="timeline-item">
+                <strong>@evt.Topic</strong>
+                <small>@evt.Agent?.AgentKey · @evt.ReceivedAt.ToLocalTime()</small>
+                <div>@evt.Payload</div>
+            </div>
+        }
     }
 </div>

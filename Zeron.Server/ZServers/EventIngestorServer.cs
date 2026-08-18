@@ -363,6 +363,27 @@ namespace Zeron.Server.ZServers
             int limit,
             CancellationToken cancellationToken = default)
         {
+            return await GetEventsAsync(agentKey, topic, limit, 0, cancellationToken);
+        }
+
+        /// <summary>
+        /// GetEventsAsync
+        /// </summary>
+        /// <param name="agentKey"></param>
+        /// <param name="topic"></param>
+        /// <param name="limit"></param>
+        /// <param name="offset"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns events.</returns>
+        public async Task<List<EventEntity>> GetEventsAsync(
+            string? agentKey,
+            string? topic,
+            int limit,
+            int offset,
+            CancellationToken cancellationToken = default)
+        {
+            int take = Math.Clamp(limit, 1, 500);
+            int skip = Math.Max(0, offset);
             IQueryable<EventEntity> query = m_DbContext.Events
                 .Include(evt => evt.Agent)
                 .AsQueryable();
@@ -379,7 +400,8 @@ namespace Zeron.Server.ZServers
 
             return await query
                 .OrderByDescending(evt => evt.ReceivedAt)
-                .Take(limit)
+                .Skip(skip)
+                .Take(take)
                 .ToListAsync(cancellationToken);
         }
     }

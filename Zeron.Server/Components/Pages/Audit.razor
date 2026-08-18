@@ -44,13 +44,30 @@
             <LoadingButton CssClass="btn"
                             Text="Apply Filters"
                             IsLoading="@m_IsBusy"
-                            OnClick="ReloadAsync" />
+                            OnClick="ApplyFiltersAsync" />
         </div>
     </div>
 </div>
 
 <div class="panel">
-    @if (m_Rows.Count == 0)
+    <div class="panel-header">
+        <h2>Results</h2>
+        <div class="actions">
+            <small class="muted">@PageSummary</small>
+            <LoadingButton CssClass="btn btn-secondary"
+                            Text="Previous"
+                            IsLoading="@m_IsBusy"
+                            Disabled="@(m_PageIndex == 0)"
+                            OnClick="GoPrevPageAsync" />
+            <LoadingButton CssClass="btn btn-secondary"
+                            Text="Next"
+                            IsLoading="@m_IsBusy"
+                            Disabled="@(!m_HasNextPage)"
+                            OnClick="GoNextPageAsync" />
+        </div>
+    </div>
+
+    @if (m_PageRows.Count == 0)
     {
         <p class="muted">No audit records found.</p>
     }
@@ -69,7 +86,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (AuditLogInfoType row in m_Rows)
+                @foreach (AuditLogInfoType row in m_PageRows)
                 {
                     <tr>
                         <td>@row.OccurredAt.ToLocalTime().ToString("g")</td>
