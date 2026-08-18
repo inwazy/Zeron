@@ -486,6 +486,12 @@ td code,
     margin: 0 0 1rem;
 }
 
+.field-error {
+    color: var(--danger);
+    margin: 0.35rem 0 0;
+    font-size: 0.85rem;
+}
+
 .nav-user a.btn-link {
     text-decoration: none;
 }
