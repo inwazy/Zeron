@@ -94,7 +94,10 @@ namespace Zeron.Server.ZServers
             Guid userId,
             UserNotificationInfoType notification)
         {
-            await m_HubContext.Clients.User(userId.ToString()).SendAsync(
+            // Use explicit per-user group to avoid any SignalR user-id mapping ambiguity.
+            string group = DashboardHub.UserGroupPrefix + userId.ToString();
+
+            await m_HubContext.Clients.Group(group).SendAsync(
                 DashboardHub.InstallResultReceived,
                 notification);
         }

@@ -4,6 +4,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
+using System;
 using Zeron.Server.ZCore;
 
 namespace Zeron.Server.Hubs
@@ -20,6 +21,11 @@ namespace Zeron.Server.Hubs
         public const string StaffGroup = "staff";
 
         /// <summary>
+        /// UserGroupPrefix - per-user DeviceOwner group name prefix.
+        /// </summary>
+        public const string UserGroupPrefix = "user:";
+
+        /// <summary>
         /// InstallResultReceived
         /// </summary>
         public const string InstallResultReceived = "InstallResultReceived";
@@ -30,7 +36,14 @@ namespace Zeron.Server.Hubs
         /// <returns>Returns Task.</returns>
         public override async Task OnConnectedAsync()
         {
-            if (!IsDeviceOwnerOnly())
+            string? role = Context.User?.FindFirstValue(ClaimTypes.Role);
+
+            if (string.Equals(role, ServerRoles.DeviceOwner, StringComparison.OrdinalIgnoreCase)
+                && TryResolveUserId(out Guid userId))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, GetUserGroup(userId));
+            }
+            else
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, StaffGroup);
             }
@@ -39,14 +52,30 @@ namespace Zeron.Server.Hubs
         }
 
         /// <summary>
-        /// IsDeviceOwnerOnly
+        /// TryResolveUserId
         /// </summary>
+        /// <param name="userId"></param>
         /// <returns>Returns bool.</returns>
-        private bool IsDeviceOwnerOnly()
+        private bool TryResolveUserId(
+            out Guid userId)
         {
-            string? role = Context.User?.FindFirstValue(ClaimTypes.Role);
+            userId = default;
 
-            return string.Equals(role, ServerRoles.DeviceOwner, StringComparison.OrdinalIgnoreCase);
+            string? idValue = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            return !string.IsNullOrWhiteSpace(idValue)
+                && Guid.TryParse(idValue, out userId);
+        }
+
+        /// <summary>
+        /// GetUserGroup
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns>Returns group name.</returns>
+        private static string GetUserGroup(
+            Guid userId)
+        {
+            return UserGroupPrefix + userId.ToString();
         }
     }
 }
