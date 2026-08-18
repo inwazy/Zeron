@@ -331,6 +331,13 @@ th {
     gap: 0.5rem;
 }
 
+.filter-chips-bar .btn:focus-visible,
+.filter-chips-bar .btn-secondary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
 .loading-inline {
     display: inline-flex;
     align-items: center;

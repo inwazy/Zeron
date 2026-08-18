@@ -8,6 +8,7 @@
         <LoadingButton CssClass="@(isActive ? "btn" : "btn btn-secondary")"
                         Text="@option.Label"
                         IsLoading="@IsLoading"
+                        Disabled="@IsLoading"
                         AdditionalAttributes="ariaAttributes"
                         OnClick="() => OnSelect.InvokeAsync(option.Value)" />
     }
