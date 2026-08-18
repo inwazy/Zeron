@@ -5,6 +5,7 @@
 <button class="@CssClass"
         type="@ButtonType"
         disabled="@((Disabled || IsLoading))"
+        @attributes="AdditionalAttributes"
         @onclick="OnClick">
     @if (IsLoading)
     {

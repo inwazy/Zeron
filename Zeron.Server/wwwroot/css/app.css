@@ -320,6 +320,17 @@ th {
     cursor: not-allowed;
 }
 
+.btn:focus-visible,
+.btn-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.filter-chips-bar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
 .loading-inline {
     display: inline-flex;
     align-items: center;

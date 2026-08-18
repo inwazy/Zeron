@@ -39,6 +39,30 @@ namespace Zeron.Server.Components.Shared
         public EventCallback<string?> OnSelect { get; set; }
 
         /// <summary>
+        /// AriaLabel
+        /// </summary>
+        /// <value>The aria label for filter group.</value>
+        [Parameter]
+        public string AriaLabel { get; set; } = "Filter options";
+
+        /// <summary>
+        /// GetAriaAttributes
+        /// </summary>
+        /// <param name="isActive"></param>
+        /// <param name="label"></param>
+        /// <returns>Returns aria attributes for chip button.</returns>
+        private static IReadOnlyDictionary<string, object> GetAriaAttributes(
+            bool isActive,
+            string label)
+        {
+            return new Dictionary<string, object>
+            {
+                ["aria-pressed"] = isActive ? "true" : "false",
+                ["aria-label"] = label
+            };
+        }
+
+        /// <summary>
         /// FilterChipOption
         /// </summary>  
         public sealed class FilterChipOption

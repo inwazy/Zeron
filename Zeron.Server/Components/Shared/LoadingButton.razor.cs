@@ -57,6 +57,9 @@ namespace Zeron.Server.Components.Shared
         /// </summary>
         [Parameter]
         public EventCallback OnClick { get; set; }
+
+        [Parameter(CaptureUnmatchedValues = true)]
+        public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
     }
 }
 
