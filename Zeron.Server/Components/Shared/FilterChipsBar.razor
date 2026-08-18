@@ -1,0 +1,13 @@
+@namespace Zeron.Server.Components.Shared
+
+<div class="actions">
+    @foreach (FilterChipOption option in Options)
+    {
+        bool isActive = string.Equals(option.Value, SelectedValue, StringComparison.OrdinalIgnoreCase);
+        <LoadingButton CssClass="@(isActive ? "btn" : "btn btn-secondary")"
+                        Text="@option.Label"
+                        IsLoading="@IsLoading"
+                        OnClick="() => OnSelect.InvokeAsync(option.Value)" />
+    }
+</div>
+

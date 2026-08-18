@@ -15,20 +15,10 @@
         <h1>Alerts</h1>
         <p>Agent offline and other operational alerts.</p>
     </div>
-    <div class="actions">
-        <LoadingButton CssClass="btn btn-secondary"
-                        Text="All"
-                        IsLoading="@m_IsBusy"
-                        OnClick="() => LoadAlertsAsync(null)" />
-        <LoadingButton CssClass="btn btn-secondary"
-                        Text="Open"
-                        IsLoading="@m_IsBusy"
-                        OnClick="() => LoadAlertsAsync(AlertStatusesType.Open)" />
-        <LoadingButton CssClass="btn btn-secondary"
-                        Text="Resolved"
-                        IsLoading="@m_IsBusy"
-                        OnClick="() => LoadAlertsAsync(AlertStatusesType.Resolved)" />
-    </div>
+    <FilterChipsBar Options="c_StatusOptions"
+                    SelectedValue="@m_StatusFilter"
+                    IsLoading="@m_IsBusy"
+                    OnSelect="SelectStatusFilterAsync" />
 </div>
 
 <div class="panel">

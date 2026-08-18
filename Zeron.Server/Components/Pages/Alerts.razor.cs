@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
 using Microsoft.AspNetCore.SignalR.Client;
+using Zeron.Server.Components.Shared;
 using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore.Type;
 using Zeron.Server.ZServers;
@@ -33,6 +34,14 @@ namespace Zeron.Server.Components.Pages
         private int m_PageIndex;
         private bool m_HasNextPage;
 
+        // Status filter options.
+        private static readonly IReadOnlyList<FilterChipsBar.FilterChipOption> c_StatusOptions =
+        [
+            new() { Label = "All", Value = null },
+            new() { Label = "Open", Value = AlertStatusesType.Open },
+            new() { Label = "Resolved", Value = AlertStatusesType.Resolved }
+        ];
+
         /// <summary>
         /// OnInitializedAsync
         /// </summary>
@@ -54,6 +63,17 @@ namespace Zeron.Server.Components.Pages
             m_StatusFilter = status;
             m_PageIndex = 0;
             await ReloadPageAsync();
+        }
+
+        /// <summary>
+        /// SelectStatusFilterAsync
+        /// </summary>
+        /// <param name="status"></param>
+        /// <returns>Returns Task.</returns>
+        private async Task SelectStatusFilterAsync(
+            string? status)
+        {
+            await LoadAlertsAsync(status);
         }
 
         /// <summary>
