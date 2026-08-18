@@ -4,8 +4,14 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
+using System.IO;
+using System.Collections.Specialized;
+using Zeron.ZCore.Utils;
+using Zeron.ZCore;
 using Zeron.Server.Data.Entities;
 using Zeron.ZCore.Type;
+using Zeron.ZServers;
+using Zeron.ZInterfaces;
 
 namespace Zeron.Server.Tests
 {
@@ -180,6 +186,202 @@ namespace Zeron.Server.Tests
             Assert.IsTrue(deploy!.Success);
             Assert.AreEqual("install " + packageName + " /S", deploy.Command);
             Assert.IsNotNull(deploy.TaskId);
+        }
+
+        /// <summary>
+        /// End-to-end: ManagedPackage deploy creates assignment, then .NET gate cancels install.
+        /// No real installer binary is executed (gate cancels before scripts/binary).
+        /// </summary>
+        [TestMethod()]
+        public async Task DotNetGateCancelInstallFailsAssignmentE2ETest()
+        {
+            // Arrange: agent + auth clients
+            using HttpClient agentClient = s_Factory!.CreateClient();
+            using HttpClient dashboardClient = s_Factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                HandleCookies = true
+            });
+
+            agentClient.DefaultRequestHeaders.Add("X-Zeron-Agent-Key", AgentApiKey);
+            await PostHeartbeatAsync(agentClient);
+            await LoginAsync(dashboardClient);
+
+            // Enable a managed package for deploy.
+            string packageName = "ccleaner-" + Guid.NewGuid().ToString("N")[..8];
+            HttpResponseMessage catalogResponse = await dashboardClient.PostAsJsonAsync(
+                "/api/packages/catalog",
+                new ManagedPackageUpsertRequestType
+                {
+                    Name = packageName,
+                    Urlx64 = "https://example.com/ccleaner.exe",
+                    CmdInstallx64 = "/S",
+                    IsEnabled = true
+                });
+
+            Assert.AreEqual(HttpStatusCode.Created, catalogResponse.StatusCode, await catalogResponse.Content.ReadAsStringAsync());
+
+            // In real agent flows the agent pulls catalog; here gate-cancel occurs before EnsureBinary.
+            HttpResponseMessage deployResponse;
+            string deployTaskId;
+
+            try
+            {
+                HttpResponseMessage syncResponse = await agentClient.GetAsync("/api/packages/catalog/sync");
+                Assert.AreEqual(HttpStatusCode.OK, syncResponse.StatusCode);
+
+                deployResponse = await dashboardClient.PostAsJsonAsync(
+                    "/api/packages/deploy",
+                    new PackageDeployRequestType
+                    {
+                        Operation = "install",
+                        PackageName = packageName,
+                        ExtraArgs = "/S",
+                        TargetType = "agent",
+                        AgentIds = [TestAgentId]
+                    });
+
+                Assert.AreEqual(HttpStatusCode.Created, deployResponse.StatusCode, await deployResponse.Content.ReadAsStringAsync());
+
+                PackageDeployResponseType? deploy = await deployResponse.Content.ReadFromJsonAsync<PackageDeployResponseType>();
+                Assert.IsNotNull(deploy);
+                Assert.IsTrue(deploy!.Success);
+
+                deployTaskId = deploy.TaskId.ToString();
+            }
+            catch
+            {
+                throw;
+            }
+
+            // Register .NET gate: cancel install immediately on agent side.
+            ZeronGateServer.Current.Clear();
+            ZeronGateServer.Current.Register(new CancelGateInstallHandler());
+
+            // Find the pending assignment created by the deploy task.
+            AgentHeartbeatResponseType heartbeat = await PostHeartbeatAsync(agentClient);
+            Assert.IsNotNull(heartbeat.PendingTasks);
+            Assert.IsTrue(heartbeat.PendingTasks!.Any(t =>
+                string.Equals(t.TargetApi, "ManagedPackage", StringComparison.OrdinalIgnoreCase)));
+
+            PendingTaskType pendingTask = heartbeat.PendingTasks!
+                .First(item => string.Equals(item.TargetApi, "ManagedPackage", StringComparison.OrdinalIgnoreCase));
+
+            Assert.IsFalse(string.IsNullOrWhiteSpace(pendingTask.AssignmentId));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(pendingTask.Command));
+
+            // Parse "install <packageName> <extraArgs>"
+            // (Deploy command format is controlled by server; we only need operation+package for gate payload.)
+            string[] parts = pendingTask.Command!.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            Assert.IsTrue(parts.Length >= 2);
+
+            string op = parts[0].Equals("uninstall", StringComparison.OrdinalIgnoreCase)
+                ? "uninstall"
+                : "install";
+            string opPackageName = parts[1];
+
+            string assignmentId = pendingTask.AssignmentId!;
+
+            // Wire InstallServer assignment completion -> server /api/tasks/results.
+            int? callbackStatus = null;
+            string? callbackError = null;
+            InstallServer.AssignmentCompletedHandler = (string aAssignmentId, bool success, string? responseJson, string? errorMessage) =>
+            {
+                TaskResultReportType report = new()
+                {
+                    AssignmentId = aAssignmentId,
+                    AgentId = TestAgentId,
+                    Success = success,
+                    ResponseJson = responseJson,
+                    ErrorMessage = errorMessage
+                };
+
+                try
+                {
+                    using HttpResponseMessage save = agentClient
+                        .PostAsJsonAsync("/api/tasks/results", report)
+                        .GetAwaiter().GetResult();
+
+                    callbackStatus = (int)save.StatusCode;
+
+                    if (save.StatusCode != HttpStatusCode.OK)
+                    {
+                        callbackError = save.Content.ReadAsStringAsync()
+                            .GetAwaiter().GetResult();
+                    }
+                }
+                catch (Exception e)
+                {
+                    callbackError = e.Message;
+                }
+            };
+
+            InstallServer? installServer = null;
+
+            try
+            {
+                // Initialize instance so ExecuteQueuesCore can call back into AssignmentCompletedHandler.
+                installServer = new InstallServer();
+                installServer.LoadConfig(new NameValueCollection
+                {
+                    ["install_timer_queue_trigger_interval"] = "50000"
+                });
+                installServer.Initialize();
+
+                // Cancel gate happens before scripts/binary execution.
+                bool ok = InstallServer.ExecuteQueues(
+                    op,
+                    new InstallQueuesType
+                    {
+                        PackageName = opPackageName,
+                        Operation = op,
+                        ScriptEngine = "powershell",
+                        ScriptBefore = "",
+                        ScriptAfter = "",
+                        Arguments = "",
+                        FilePath = Path.Combine(Path.GetTempPath(), "zeron-e2e-no-such-installer.exe"),
+                        AssignmentId = assignmentId
+                    });
+
+                Assert.IsFalse(ok);
+
+                if (callbackError != null)
+                {
+                    throw new AssertFailedException(
+                        $"Assignment completion callback failed. httpStatus={callbackStatus}, error={callbackError}");
+                }
+
+                // Verify server state: assignment should no longer be pending.
+                AgentHeartbeatResponseType postGateHeartbeat = await PostHeartbeatAsync(agentClient);
+                Assert.IsNotNull(postGateHeartbeat.PendingTasks);
+                Assert.IsFalse(postGateHeartbeat.PendingTasks!
+                    .Any(t => string.Equals(t.AssignmentId, assignmentId, StringComparison.OrdinalIgnoreCase)));
+            }
+            finally
+            {
+                try
+                {
+                    installServer?.Stop();
+                }
+                catch
+                {
+                }
+
+                InstallServer.AssignmentCompletedHandler = null;
+                ZeronGateServer.Current.Clear();
+            }
+        }
+
+        private sealed class CancelGateInstallHandler : IGateHandler
+        {
+            public void Handle(
+                GateContextType context)
+            {
+                if (context.Topic == ZeronEventTopics.GateInstall)
+                {
+                    context.Decision = GateDecisionType.Cancel;
+                    context.Reason = "e2e cancel install";
+                }
+            }
         }
 
         /// <summary>
