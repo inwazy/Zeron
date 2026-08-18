@@ -4,6 +4,8 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Security.Claims;
+using System;
+using System.Collections.Generic;
 using Zeron.Server.Hubs;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
@@ -29,6 +31,23 @@ namespace Zeron.Server.Components.Pages
 
         // Hub connection.
         private HubConnection? m_HubConnection;
+
+        /// <summary>
+        /// FilterNotificationsForCurrentDevices
+        /// </summary>
+        /// <param name="notes"></param>
+        /// <returns>Returns filtered list.</returns>
+        private List<UserNotificationInfoType> FilterNotificationsForCurrentDevices(
+            List<UserNotificationInfoType> notes)
+        {
+            return notes
+                .Where(note =>
+                    string.Equals(note.Kind, UserNotificationServer.KindInstallResult, StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrWhiteSpace(note.AgentKey)
+                    && m_Devices.Any(device =>
+                        string.Equals(device.AgentKey, note.AgentKey, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+        }
 
         /// <summary>
         /// OnInitializedAsync
@@ -75,7 +94,8 @@ namespace Zeron.Server.Components.Pages
             }
 
             m_Devices = await PortalServer.GetMyDevicesAsync(userId);
-            m_Notifications = await NotificationServer.GetNotificationsAsync(userId, unreadOnly: true, limit: 10);
+            List<UserNotificationInfoType> unread = await NotificationServer.GetNotificationsAsync(userId, unreadOnly: true, limit: 10);
+            m_Notifications = FilterNotificationsForCurrentDevices(unread);
         }
 
         /// <summary>
@@ -102,12 +122,23 @@ namespace Zeron.Server.Components.Pages
         {
             await InvokeAsync(async () =>
             {
+                if (!string.Equals(note.Kind, UserNotificationServer.KindInstallResult, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(note.AgentKey))
+                {
+                    return;
+                }
+
                 if (!string.IsNullOrWhiteSpace(note.Id)
                     && m_Notifications.Any(item => item.Id == note.Id))
                 {
                     return;
                 }
 
+                // Refresh the bound agent list once so we don't accidentally show notifications for stale bindings.
                 m_Notifications.Insert(0, note);
 
                 if (m_Notifications.Count > 10)
@@ -121,6 +152,15 @@ namespace Zeron.Server.Components.Pages
                 if (Guid.TryParse(userIdValue, out Guid userId))
                 {
                     m_Devices = await PortalServer.GetMyDevicesAsync(userId);
+                }
+
+                // Apply the strict filter after device list refresh.
+                m_Notifications = FilterNotificationsForCurrentDevices(m_Notifications);
+
+                // If this notification doesn't match the current bindings, do not show it.
+                if (!m_Notifications.Any(item => item.Id == note.Id))
+                {
+                    return;
                 }
 
                 StateHasChanged();
@@ -154,7 +194,8 @@ namespace Zeron.Server.Components.Pages
             {
                 await NotificationServer.MarkReadAsync(userId, notificationId);
 
-                m_Notifications = await NotificationServer.GetNotificationsAsync(userId, unreadOnly: true, limit: 10);
+                List<UserNotificationInfoType> unread = await NotificationServer.GetNotificationsAsync(userId, unreadOnly: true, limit: 10);
+                m_Notifications = FilterNotificationsForCurrentDevices(unread);
             }
             finally
             {

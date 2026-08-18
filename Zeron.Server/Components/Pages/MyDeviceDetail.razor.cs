@@ -139,7 +139,10 @@ namespace Zeron.Server.Components.Pages
                 limit: 20);
 
             return unread
-                .Where(item => string.Equals(item.AgentKey, AgentKey, StringComparison.OrdinalIgnoreCase))
+                .Where(item =>
+                    string.Equals(item.Kind, UserNotificationServer.KindInstallResult, StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrWhiteSpace(item.AgentKey)
+                    && string.Equals(item.AgentKey, AgentKey, StringComparison.OrdinalIgnoreCase))
                 .Take(10)
                 .ToList();
         }
@@ -171,7 +174,13 @@ namespace Zeron.Server.Components.Pages
         private async Task OnInstallResultReceivedAsync(
             UserNotificationInfoType note)
         {
-            if (!string.Equals(note.AgentKey, AgentKey, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(note.Kind, UserNotificationServer.KindInstallResult, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(note.AgentKey)
+                || !string.Equals(note.AgentKey, AgentKey, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
