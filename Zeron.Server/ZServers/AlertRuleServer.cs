@@ -192,6 +192,21 @@ namespace Zeron.Server.ZServers
         }
 
         /// <summary>
+        /// GetAlertAsync
+        /// </summary>
+        /// <param name="alertId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns alert or null.</returns>
+        public async Task<AlertEntity?> GetAlertAsync(
+            Guid alertId,
+            CancellationToken cancellationToken = default)
+        {
+            return await m_DbContext.Alerts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(item => item.Id == alertId, cancellationToken);
+        }
+
+        /// <summary>
         /// AcknowledgeAlertAsync
         /// </summary>
         /// <param name="alertId"></param>

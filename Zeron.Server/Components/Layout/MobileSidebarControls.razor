@@ -1,0 +1,19 @@
+@rendermode InteractiveServer
+@inject IJSRuntime Js
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<div class="mobile-topbar">
+    <button class="sidebar-toggle btn btn-secondary"
+            type="button"
+            aria-label="Toggle navigation menu"
+            @onclick="ToggleSidebar">
+        Menu
+    </button>
+    <div class="mobile-brand">
+        <span class="brand-mark">Z</span>
+        <strong>Zeron</strong>
+    </div>
+</div>
+
+<div class="sidebar-backdrop" @onclick="CloseSidebar"></div>

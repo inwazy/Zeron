@@ -29,6 +29,16 @@ namespace Zeron.ZCore
         public const string TaskDispatched = "task.dispatched";
 
         /// <summary>
+        /// TaskCompleted - central task reached completed or failed (all assignments terminal).
+        /// </summary>
+        public const string TaskCompleted = "task.completed";
+
+        /// <summary>
+        /// AssignmentCompleted - a single task assignment reached completed or failed.
+        /// </summary>
+        public const string AssignmentCompleted = "assignment.completed";
+
+        /// <summary>
         /// EventIngested
         /// </summary>
         public const string EventIngested = "event.ingested";
@@ -92,5 +102,10 @@ namespace Zeron.ZCore
         /// GateCancelled
         /// </summary>
         public const string GateCancelled = "gate.cancelled";
+
+        /// <summary>
+        /// AuditWritten - after a central audit row is persisted (editions / SIEM).
+        /// </summary>
+        public const string AuditWritten = "audit.written";
     }
 }

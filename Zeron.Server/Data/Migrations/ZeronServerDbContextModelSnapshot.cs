@@ -592,7 +592,13 @@ namespace Zeron.Server.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AuthProvider")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExternalSubject")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
@@ -614,6 +620,8 @@ namespace Zeron.Server.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExternalSubject");
 
                     b.HasIndex("Username")
                         .IsUnique();

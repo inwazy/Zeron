@@ -275,6 +275,8 @@ namespace Zeron.Demand.ZServers
 
             if (response == null)
             {
+                PublishHeartbeatEvent("transport_failed", pendingTasks: 0);
+
                 ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
                     "ReporterServer heartbeat failed for AgentId={0}", AgentServer.AgentId));
 
@@ -283,16 +285,21 @@ namespace Zeron.Demand.ZServers
 
             if (!response.Success)
             {
+                PublishHeartbeatEvent("rejected", pendingTasks: 0);
+
                 ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
                     "ReporterServer heartbeat rejected for AgentId={0}", AgentServer.AgentId));
 
                 return;
             }
 
+            int pendingCount = response.PendingTasks?.Count ?? 0;
+            PublishHeartbeatEvent("ok", pendingCount);
+
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "ReporterServer heartbeat ok. AgentId={0}, PendingTasks={1}",
                 AgentServer.AgentId,
-                response.PendingTasks?.Count ?? 0));
+                pendingCount));
 
             if (response.PendingTasks == null)
             {
@@ -307,6 +314,22 @@ namespace Zeron.Demand.ZServers
 
                 ReportTaskResultCore(pendingTask.AssignmentId, success, resultJson, success ? null : resultJson);
             }
+        }
+
+        /// <summary>
+        /// Publishes agent heartbeat outcome for in-process observers (e.g. OTel).
+        /// </summary>
+        /// <param name="outcome">Outcome token (ok, rejected, transport_failed).</param>
+        /// <param name="pendingTasks">Pending task count from the server response.</param>
+        private static void PublishHeartbeatEvent(
+            string outcome,
+            int pendingTasks)
+        {
+            InstallEventPublisher.PublishObject(ZeronEventTopics.AgentHeartbeat, new
+            {
+                outcome,
+                pendingTasks
+            });
         }
     }
 }

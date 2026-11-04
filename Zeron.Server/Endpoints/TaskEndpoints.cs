@@ -1,6 +1,7 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
+using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore;
 using Zeron.Server.ZServers;
 using Zeron.ZCore.Type;
@@ -22,9 +23,16 @@ namespace Zeron.Server.Endpoints
         {
             app.MapPost("/api/tasks", async (TaskCreateRequestType request, TaskDispatcherServer taskDispatcher) =>
             {
-                var task = await taskDispatcher.CreateTaskAsync(request);
+                try
+                {
+                    TaskEntity task = await taskDispatcher.CreateTaskAsync(request);
 
-                return Results.Created($"/api/tasks/{task.Id}", task);
+                    return Results.Created($"/api/tasks/{task.Id}", task);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    return Results.Json(new { success = false, message = ex.Message }, statusCode: StatusCodes.Status403Forbidden);
+                }
             }).RequireAuthorization(ServerPolicies.OperatorOrAbove);
 
             app.MapGet("/api/tasks", async (TaskDispatcherServer taskDispatcher) =>
@@ -34,7 +42,7 @@ namespace Zeron.Server.Endpoints
 
             app.MapGet("/api/tasks/{taskId:guid}", async (Guid taskId, TaskDispatcherServer taskDispatcher) =>
             {
-                var task = await taskDispatcher.GetTaskAsync(taskId);
+                TaskEntity? task = await taskDispatcher.GetTaskAsync(taskId);
 
                 return task == null ? Results.NotFound() : Results.Ok(task);
             }).RequireAuthorization(ServerPolicies.ViewerOrAbove);

@@ -1,13 +1,16 @@
 @page "/alerts"
 @rendermode InteractiveServer
+@using Zeron.Server.Components.Shared
 @using Zeron.Server.Data.Entities
 @using Zeron.Server.ZCore
 @using Zeron.Server.ZCore.Type
+@using Zeron.Server.ZInterfaces
 @using Zeron.Server.ZServers
 @attribute [Authorize(Policy = ServerPolicies.ViewerOrAbove)]
 @inject AlertRuleServer AlertRuleServer
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IEnumerable<IAlertRowActionContribution> AlertRowActions
 @implements IAsyncDisposable
 
 <PageHeader Title="Alerts" Subtitle="Agent offline and other operational alerts.">
@@ -63,6 +66,10 @@
                         <td><span class="status @alert.Status">@alert.Status</span></td>
                         <td>@alert.CreatedAt.ToLocalTime()</td>
                         <td>
+                            @foreach (AlertRowAction action in AlertRowActions.SelectMany(contribution => contribution.GetActions(alert)))
+                            {
+                                <a class="btn-link" href="@action.Href">@action.Text</a>
+                            }
                             @if (alert.Status == AlertStatusesType.Open)
                             {
                                 <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator}")">

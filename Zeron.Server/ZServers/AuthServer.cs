@@ -129,7 +129,25 @@ namespace Zeron.Server.ZServers
             UserEntity? user = await m_DbContext.Users
                 .FirstOrDefaultAsync(item => item.Username == username, cancellationToken);
 
-            if (user == null || !user.IsActive || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+            if (user == null || !user.IsActive)
+            {
+                return new LoginResponseType
+                {
+                    Success = false,
+                    Message = "Invalid username or password."
+                };
+            }
+
+            if (IsOidcProvisionedUser(user))
+            {
+                return new LoginResponseType
+                {
+                    Success = false,
+                    Message = "This account uses SSO. Sign in with your identity provider."
+                };
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
                 return new LoginResponseType
                 {
@@ -183,6 +201,11 @@ namespace Zeron.Server.ZServers
             if (user == null)
             {
                 return (null, "User not found.");
+            }
+
+            if (IsOidcProvisionedUser(user))
+            {
+                return (null, "SSO accounts cannot change a local password.");
             }
 
             if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
@@ -294,6 +317,18 @@ namespace Zeron.Server.ZServers
             string? apiKey)
         {
             return AgentApiKeyServer.Matches(m_Settings.AgentApiKey, apiKey);
+        }
+
+        /// <summary>
+        /// Returns whether the user was provisioned via enterprise OIDC SSO.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns>True for oidc-provisioned accounts.</returns>
+        private static bool IsOidcProvisionedUser(
+            UserEntity user)
+        {
+            return string.Equals(user.AuthProvider, ServerAuthProviders.Oidc, StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrWhiteSpace(user.ExternalSubject);
         }
 
         /// <summary>

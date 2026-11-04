@@ -1,12 +1,15 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Security.Claims;
 using System.Text.Json;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
 using Zeron.Server.ZCore;
+using Zeron.Server.ZInterfaces;
 using Zeron.ZCore;
 using Zeron.ZCore.Type;
 
@@ -29,6 +32,12 @@ namespace Zeron.Server.ZServers
         // Optional audit log.
         private readonly AuditLogServer? m_AuditLogServer;
 
+        // Optional enterprise agent scope filter
+        private readonly IAgentAccessScopeFilter? m_ScopeFilter;
+
+        // HTTP context accessor for caller principal
+        private readonly IHttpContextAccessor? m_HttpContextAccessor;
+
         /// <summary>
         /// PackageDeployServer
         /// </summary>
@@ -36,17 +45,23 @@ namespace Zeron.Server.ZServers
         /// <param name="dbContext"></param>
         /// <param name="catalogServer"></param>
         /// <param name="auditLogServer"></param>
+        /// <param name="scopeFilter"></param>
+        /// <param name="httpContextAccessor"></param>
         /// <returns>Returns void.</returns>
         public PackageDeployServer(
             TaskDispatcherServer taskDispatcher,
             ZeronServerDbContext dbContext,
             ManagedPackageCatalogServer? catalogServer = null,
-            AuditLogServer? auditLogServer = null)
+            AuditLogServer? auditLogServer = null,
+            IAgentAccessScopeFilter? scopeFilter = null,
+            IHttpContextAccessor? httpContextAccessor = null)
         {
             m_TaskDispatcher = taskDispatcher;
             m_DbContext = dbContext;
             m_CatalogServer = catalogServer;
             m_AuditLogServer = auditLogServer;
+            m_ScopeFilter = scopeFilter;
+            m_HttpContextAccessor = httpContextAccessor;
         }
 
         /// <summary>
@@ -85,6 +100,33 @@ namespace Zeron.Server.ZServers
                     Message = error
                 };
             }
+
+            (PackageDeployRequestType scopedRequest, string? scopeError) = await ApplyAgentScopeToDeployRequestAsync(
+                request,
+                cancellationToken);
+
+            if (scopeError != null)
+            {
+                await WriteDeployAuditAsync(
+                    actor,
+                    auditAction,
+                    false,
+                    scopeError,
+                    packageName,
+                    operation,
+                    command,
+                    null,
+                    request,
+                    cancellationToken);
+
+                return new PackageDeployResponseType
+                {
+                    Success = false,
+                    Message = scopeError
+                };
+            }
+
+            request = scopedRequest;
 
             if (m_CatalogServer != null)
             {
@@ -167,17 +209,42 @@ namespace Zeron.Server.ZServers
                 ? $"deploy-{operation}-{packageName}-{DateTime.UtcNow:yyyyMMddHHmmss}"
                 : request.Name.Trim();
 
-            TaskEntity task = await m_TaskDispatcher.CreateTaskAsync(new TaskCreateRequestType
+            TaskEntity task;
+
+            try
             {
-                Name = taskName,
-                Description = request.Description
-                    ?? $"ManagedPackage {operation} '{packageName}'",
-                TargetApi = "ManagedPackage",
-                Command = command,
-                TargetType = request.TargetType ?? "all",
-                AgentIds = request.AgentIds,
-                HostnamePattern = request.HostnamePattern
-            }, cancellationToken);
+                task = await m_TaskDispatcher.CreateTaskAsync(new TaskCreateRequestType
+                {
+                    Name = taskName,
+                    Description = request.Description
+                        ?? $"ManagedPackage {operation} '{packageName}'",
+                    TargetApi = "ManagedPackage",
+                    Command = command,
+                    TargetType = request.TargetType ?? "all",
+                    AgentIds = request.AgentIds,
+                    HostnamePattern = request.HostnamePattern
+                }, cancellationToken);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await WriteDeployAuditAsync(
+                    actor,
+                    auditAction,
+                    false,
+                    ex.Message,
+                    packageName,
+                    operation,
+                    command,
+                    null,
+                    request,
+                    cancellationToken);
+
+                return new PackageDeployResponseType
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
 
             ZNLogger.Common.Info(string.Format(CultureInfo.InvariantCulture,
                 "PackageDeployServer created task '{0}' for {1} {2}.", task.Name, operation, packageName));
@@ -345,12 +412,29 @@ namespace Zeron.Server.ZServers
         {
             int take = Math.Clamp(limit, 1, 100);
 
-            return await m_DbContext.Tasks
+            List<TaskEntity> tasks = await m_DbContext.Tasks
                 .Include(task => task.Assignments)
+                .ThenInclude(assignment => assignment.Agent)
                 .Where(task => task.TargetApi == "ManagedPackage")
                 .OrderByDescending(task => task.CreatedAt)
-                .Take(take)
+                .Take(take * 3)
                 .ToListAsync(cancellationToken);
+
+            IReadOnlySet<string>? allowed = await ResolveAllowedAgentKeysAsync(cancellationToken);
+
+            if (allowed != null)
+            {
+                tasks = tasks
+                    .Where(task => TaskTouchesAllowedAgents(task, allowed))
+                    .Take(take)
+                    .ToList();
+            }
+            else if (tasks.Count > take)
+            {
+                tasks = tasks.Take(take).ToList();
+            }
+
+            return tasks;
         }
 
         /// <summary>
@@ -368,6 +452,14 @@ namespace Zeron.Server.ZServers
             CancellationToken cancellationToken = default)
         {
             int take = Math.Clamp(limit, 1, 200);
+            IReadOnlySet<string>? allowed = await ResolveAllowedAgentKeysAsync(cancellationToken);
+
+            if (!string.IsNullOrWhiteSpace(agentKey)
+                && allowed != null
+                && !allowed.Contains(agentKey))
+            {
+                return [];
+            }
 
             IQueryable<EventEntity> query = m_DbContext.Events
                 .Include(evt => evt.Agent)
@@ -382,6 +474,13 @@ namespace Zeron.Server.ZServers
                 .OrderByDescending(evt => evt.ReceivedAt)
                 .Take(take * 3)
                 .ToListAsync(cancellationToken);
+
+            if (allowed != null)
+            {
+                events = events
+                    .Where(evt => evt.Agent != null && allowed.Contains(evt.Agent.AgentKey))
+                    .ToList();
+            }
 
             if (!string.IsNullOrWhiteSpace(packageName))
             {
@@ -499,6 +598,111 @@ namespace Zeron.Server.ZServers
             }
 
             return payload.Contains(packageName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Narrows deploy targets to the caller's allowed agent keys.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Scoped request or error.</returns>
+        private async Task<(PackageDeployRequestType Request, string? Error)> ApplyAgentScopeToDeployRequestAsync(
+            PackageDeployRequestType request,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlySet<string>? allowed = await ResolveAllowedAgentKeysAsync(cancellationToken);
+
+            if (allowed == null)
+            {
+                return (request, null);
+            }
+
+            if (allowed.Count == 0)
+            {
+                return (request, "No target agents are allowed for the current user scope.");
+            }
+
+            List<string> requested = (request.AgentIds ?? [])
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => id.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            List<string> scopedIds;
+
+            if (requested.Count > 0)
+            {
+                scopedIds = requested.Where(allowed.Contains).ToList();
+
+                if (scopedIds.Count == 0)
+                {
+                    return (request, "None of the requested agents are allowed for the current user scope.");
+                }
+            }
+            else
+            {
+                scopedIds = allowed.ToList();
+            }
+
+            PackageDeployRequestType scoped = new()
+            {
+                Name = request.Name,
+                Description = request.Description,
+                Operation = request.Operation,
+                PackageName = request.PackageName,
+                ExtraArgs = request.ExtraArgs,
+                TargetType = "agent",
+                AgentIds = scopedIds,
+                HostnamePattern = null
+            };
+
+            return (scoped, null);
+        }
+
+        /// <summary>
+        /// Resolves the caller's agent allow-list when a scope filter is registered.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Allow-list or null when unrestricted.</returns>
+        private async Task<IReadOnlySet<string>?> ResolveAllowedAgentKeysAsync(
+            CancellationToken cancellationToken)
+        {
+            if (m_ScopeFilter == null)
+            {
+                return null;
+            }
+
+            ClaimsPrincipal? user = m_HttpContextAccessor?.HttpContext?.User;
+
+            return await m_ScopeFilter.GetAllowedAgentKeysAsync(user, cancellationToken);
+        }
+
+        /// <summary>
+        /// Returns whether the task has at least one assignment on an allowed agent.
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="allowed"></param>
+        /// <returns>True when visible.</returns>
+        private static bool TaskTouchesAllowedAgents(
+            TaskEntity task,
+            IReadOnlySet<string> allowed)
+        {
+            if (task.Assignments == null || task.Assignments.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (TaskAssignmentEntity assignment in task.Assignments)
+            {
+                string? key = assignment.Agent?.AgentKey;
+
+                if (!string.IsNullOrWhiteSpace(key) && allowed.Contains(key))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

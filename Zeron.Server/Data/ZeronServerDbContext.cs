@@ -122,6 +122,7 @@ namespace Zeron.Server.Data
             modelBuilder.Entity<UserEntity>(entity =>
             {
                 entity.HasIndex(user => user.Username).IsUnique();
+                entity.HasIndex(user => user.ExternalSubject);
             });
 
             modelBuilder.Entity<AlertEntity>(entity =>

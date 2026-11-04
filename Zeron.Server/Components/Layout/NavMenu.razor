@@ -1,6 +1,9 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Reflection
+@using Zeron.Server.Components.Shared
+@using Zeron.Server.ZInterfaces
+@inject IEnumerable<INavMenuContribution> NavContributions
 
 <nav class="nav-menu" aria-label="Main navigation">
     <AuthorizeView Roles="@($"{ServerRoles.Admin},{ServerRoles.Operator},{ServerRoles.Viewer}")">
@@ -18,6 +21,10 @@
             <NavLink href="/events">Events</NavLink>
             <NavLink href="/audit">Audit</NavLink>
             <NavLink href="/alerts">Alerts</NavLink>
+            @foreach (NavMenuItem item in NavContributions.SelectMany(contribution => contribution.GetItems()))
+            {
+                <NavLink href="@item.Href">@item.Text</NavLink>
+            }
         </Authorized>
     </AuthorizeView>
     <AuthorizeView Roles="@ServerRoles.DeviceOwner">

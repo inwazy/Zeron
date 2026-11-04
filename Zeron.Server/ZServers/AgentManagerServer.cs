@@ -1,8 +1,10 @@
 // Zeron - Scheduled Task Application for Windows OS
 // Copyright (c) 2019 Jiowcl. All rights reserved.
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Security.Claims;
 using System.Text.Json;
 using Zeron.Server.Data;
 using Zeron.Server.Data.Entities;
@@ -31,6 +33,12 @@ namespace Zeron.Server.ZServers
         // Settings
         private readonly ServerSettings? m_Settings;
 
+        // Optional enterprise agent scope filter
+        private readonly IAgentAccessScopeFilter? m_ScopeFilter;
+
+        // HTTP context accessor for caller principal
+        private readonly IHttpContextAccessor? m_HttpContextAccessor;
+
         /// <summary>
         /// AgentManagerServer
         /// </summary>
@@ -38,17 +46,23 @@ namespace Zeron.Server.ZServers
         /// <param name="dashboardNotifier"></param>
         /// <param name="alertRuleServer"></param>
         /// <param name="settings"></param>
+        /// <param name="scopeFilter"></param>
+        /// <param name="httpContextAccessor"></param>
         /// <returns>Returns void.</returns>
         public AgentManagerServer(
             ZeronServerDbContext dbContext,
             IDashboardNotifier? dashboardNotifier = null,
             AlertRuleServer? alertRuleServer = null,
-            ServerSettings? settings = null)
+            ServerSettings? settings = null,
+            IAgentAccessScopeFilter? scopeFilter = null,
+            IHttpContextAccessor? httpContextAccessor = null)
         {
             m_DbContext = dbContext;
             m_DashboardNotifier = dashboardNotifier;
             m_AlertRuleServer = alertRuleServer;
             m_Settings = settings;
+            m_ScopeFilter = scopeFilter;
+            m_HttpContextAccessor = httpContextAccessor;
         }
 
         /// <summary>
@@ -185,9 +199,18 @@ namespace Zeron.Server.ZServers
         public async Task<List<AgentEntity>> GetAgentsAsync(
             CancellationToken cancellationToken = default)
         {
-            return await m_DbContext.Agents
+            List<AgentEntity> agents = await m_DbContext.Agents
                 .OrderByDescending(agent => agent.LastHeartbeatAt)
                 .ToListAsync(cancellationToken);
+
+            IReadOnlySet<string>? allowed = await ResolveAllowedAgentKeysAsync(cancellationToken);
+
+            if (allowed == null)
+            {
+                return agents;
+            }
+
+            return agents.Where(agent => allowed.Contains(agent.AgentKey)).ToList();
         }
 
         /// <summary>
@@ -200,6 +223,11 @@ namespace Zeron.Server.ZServers
             string agentKey, 
             CancellationToken cancellationToken = default)
         {
+            if (!await IsAgentAllowedAsync(agentKey, cancellationToken))
+            {
+                return null;
+            }
+
             return await m_DbContext.Agents
                 .FirstOrDefaultAsync(agent => agent.AgentKey == agentKey, cancellationToken);
         }
@@ -273,6 +301,11 @@ namespace Zeron.Server.ZServers
             int limit,
             CancellationToken cancellationToken = default)
         {
+            if (!await IsAgentAllowedAsync(agentKey, cancellationToken))
+            {
+                return [];
+            }
+
             return await m_DbContext.AgentHeartbeats
                 .Include(item => item.Agent)
                 .Where(item => item.Agent!.AgentKey == agentKey)
@@ -293,6 +326,11 @@ namespace Zeron.Server.ZServers
             AgentUpdateRequestType request,
             CancellationToken cancellationToken = default)
         {
+            if (!await IsAgentAllowedAsync(agentKey, cancellationToken))
+            {
+                return null;
+            }
+
             AgentEntity? agent = await m_DbContext.Agents
                 .FirstOrDefaultAsync(item => item.AgentKey == agentKey, cancellationToken);
 
@@ -314,6 +352,39 @@ namespace Zeron.Server.ZServers
             }
 
             return agent;
+        }
+
+        /// <summary>
+        /// Resolves the caller's agent allow-list when a scope filter is registered.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Allow-list or null when unrestricted.</returns>
+        private async Task<IReadOnlySet<string>?> ResolveAllowedAgentKeysAsync(
+            CancellationToken cancellationToken)
+        {
+            if (m_ScopeFilter == null)
+            {
+                return null;
+            }
+
+            ClaimsPrincipal? user = m_HttpContextAccessor?.HttpContext?.User;
+
+            return await m_ScopeFilter.GetAllowedAgentKeysAsync(user, cancellationToken);
+        }
+
+        /// <summary>
+        /// Returns whether the agent key is allowed for the current caller.
+        /// </summary>
+        /// <param name="agentKey"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>True when allowed.</returns>
+        private async Task<bool> IsAgentAllowedAsync(
+            string agentKey,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlySet<string>? allowed = await ResolveAllowedAgentKeysAsync(cancellationToken);
+
+            return allowed == null || allowed.Contains(agentKey);
         }
     }
 }

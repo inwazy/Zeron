@@ -79,5 +79,23 @@ namespace Zeron.Server.Data.Entities
             get;
             set;
         }
+
+        /// <summary>
+        /// AuthProvider - local (null/empty) or oidc for enterprise SSO-provisioned users.
+        /// </summary>
+        public string? AuthProvider
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// ExternalSubject - IdP subject (OIDC sub) when AuthProvider is oidc.
+        /// </summary>
+        public string? ExternalSubject
+        {
+            get;
+            set;
+        }
     }
 }

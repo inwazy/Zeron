@@ -1,23 +1,7 @@
 @inherits LayoutComponentBase
-@rendermode InteractiveServer
 
-<div class="page @(m_SidebarOpen ? "sidebar-open" : "")">
-    <div class="mobile-topbar">
-        <button class="sidebar-toggle btn btn-secondary"
-                type="button"
-                aria-label="Toggle navigation menu"
-                aria-expanded="@m_SidebarOpen"
-                aria-controls="app-sidebar"
-                @onclick="ToggleSidebar">
-            Menu
-        </button>
-        <div class="mobile-brand">
-            <span class="brand-mark">Z</span>
-            <strong>Zeron</strong>
-        </div>
-    </div>
-
-    <div class="sidebar-backdrop" @onclick="CloseSidebar"></div>
+<div class="page">
+    <MobileSidebarControls />
 
     <aside id="app-sidebar" class="sidebar" aria-label="Main navigation">
         <div class="brand">

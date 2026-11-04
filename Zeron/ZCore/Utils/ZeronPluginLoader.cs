@@ -13,6 +13,16 @@ namespace Zeron.ZCore.Utils
     public static class ZeronPluginLoader
     {
         /// <summary>
+        /// Optional hook invoked before loading each plugin assembly file (full path).
+        /// Return false to skip the DLL (e.g. enterprise signature policy).
+        /// </summary>
+        public static Func<string, bool>? CanLoadPluginAssemblyFile
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// LoadAgentPlugins
         /// </summary>
         /// <param name="directory"></param>
@@ -108,6 +118,13 @@ namespace Zeron.ZCore.Utils
             foreach (string file in Directory.GetFiles(directory, "*.dll", SearchOption.TopDirectoryOnly))
             {
                 string name = Path.GetFileName(file);
+
+                if (CanLoadPluginAssemblyFile != null && !CanLoadPluginAssemblyFile(file))
+                {
+                    ZNLogger.Common.Warn(string.Format(CultureInfo.InvariantCulture,
+                        "ZeronPluginLoader skipped '{0}' (load policy rejected).", name));
+                    continue;
+                }
 
                 if (name.StartsWith("Zeron.", StringComparison.OrdinalIgnoreCase)
                     || name.StartsWith("System.", StringComparison.OrdinalIgnoreCase)
